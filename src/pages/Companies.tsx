@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash } from "lucide-react";
 import { formatDate } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
+import Swal from "sweetalert2";
 
 export default function Companies() {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -19,9 +20,63 @@ export default function Companies() {
     fetchCompanies();
   }, []);
 
+  const handleCreate = async () => {
+    const name = prompt("Nome da empresa:");
+    if (!name) return;
+    
+    try {
+      const res = await fetch("/api/admin/companies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          plan: "Trial",
+          status: "active",
+          trial: true,
+          employees: 1,
+          email: "contact@" + name.toLowerCase().replace(/\s/g, '') + ".com",
+          phone: "",
+          nif: "",
+          address: "",
+          createdAt: new Date().toISOString()
+        }),
+      });
+      
+      if (res.ok) {
+        const newCompany = await res.json();
+        setCompanies([...companies, newCompany]);
+        Swal.fire({
+          icon: "success",
+          title: "Sucesso!",
+          text: "Empresa criada com sucesso",
+          confirmButtonColor: "#2563eb"
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Não foi possível criar a empresa",
+        confirmButtonColor: "#ef4444"
+      });
+    }
+  };
+
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
-    if (!confirm(`Deseja realmente ${newStatus === "active" ? "ativar" : "suspender"} esta empresa?`)) return;
+    
+    const result = await Swal.fire({
+      title: "Tem a certeza?",
+      text: `Deseja realmente ${newStatus === "active" ? "ativar" : "suspender"} esta empresa?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Sim, confirmar!",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (!result.isConfirmed) return;
     
     await fetch(`/api/admin/companies/${id}/status`, {
       method: "POST",
@@ -35,11 +90,29 @@ export default function Companies() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`ATENÇÃO: Deseja realmente remover a empresa "${name}"? Esta ação é irreversível.`)) return;
+    const result = await Swal.fire({
+      title: "ATENÇÃO!",
+      text: `Deseja realmente remover a empresa "${name}"? Esta ação é irreversível.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (!result.isConfirmed) return;
     
     await fetch(`/api/admin/companies/${id}`, { method: "DELETE" });
     fetchCompanies();
     setSelectedCompany(null);
+    
+    Swal.fire({
+      icon: "success",
+      title: "Removida!",
+      text: "A empresa foi removida com sucesso",
+      confirmButtonColor: "#2563eb"
+    });
   };
 
   const viewDetails = async (id: string) => {
@@ -56,17 +129,27 @@ export default function Companies() {
   };
 
   const filteredCompanies = companies.filter(c => 
-    (c.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.nif ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 leading-tight">Gestão de Empresas</h1>
-          <p className="text-slate-500 mt-1">Controle total das organizações registradas.</p>
+          <p className="text-slate-500 mt-1">Controle de cadastros, status e informações das empresas parceiras.</p>
         </div>
+        <button
+          onClick={handleCreate}
+          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary-500/20"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Nova Empresa
+        </button>
+      </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -82,7 +165,6 @@ export default function Companies() {
             <Filter className="w-5 h-5" />
           </button>
         </div>
-      </div>
 
       <div className="bento-card overflow-hidden">
         <div className="overflow-x-auto">

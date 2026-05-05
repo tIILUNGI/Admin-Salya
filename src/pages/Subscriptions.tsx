@@ -2,15 +2,20 @@ import { useState, useEffect } from "react";
 import { History, Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle } from "lucide-react";
 import { formatDate } from "../lib/formatters";
 import { motion } from "motion/react";
+import Swal from "sweetalert2";
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState<any[]>([]);
   const [companies, setCompanies] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  const fetchSubscriptions = () => {
     fetch("/api/admin/subscriptions")
       .then(res => res.json())
       .then(setSubs);
+  };
+
+  useEffect(() => {
+    fetchSubscriptions();
     
     fetch("/api/admin/companies")
       .then(res => res.json())
@@ -22,9 +27,38 @@ export default function Subscriptions() {
   }, []);
 
   const handleAction = async (id: string, action: string) => {
-    if (!confirm(`Deseja realmente ${action} esta subscrição?`)) return;
-    // In a real app, this would hit /api/admin/subscriptions/:id/action
-    alert(`Ação "${action}" executada com sucesso.`);
+    const result = await Swal.fire({
+      title: "Confirmar Ação",
+      text: `Deseja realmente ${action} esta subscrição?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Sim, confirmar!",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    try {
+      // Simulando a ação
+      Swal.fire({
+        icon: "success",
+        title: "Ação Realizada!",
+        text: `Subscrição ${action} com sucesso`,
+        confirmButtonColor: "#2563eb",
+        timer: 1500,
+        showConfirmButton: false
+      });
+      fetchSubscriptions();
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Não foi possível realizar a ação",
+        confirmButtonColor: "#ef4444"
+      });
+    }
   };
 
   return (

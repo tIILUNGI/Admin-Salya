@@ -1,11 +1,10 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import fs from "fs";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = 3001;
 
   app.use(express.json());
 
@@ -101,6 +100,7 @@ async function startServer() {
 
   // --- API ROUTES ---
 
+  // Auth
   app.post("/api/admin/login", (req, res) => {
     const { email, password } = req.body;
     if (email === "admin@salya.com" && password === "admin123") {
@@ -137,45 +137,40 @@ async function startServer() {
     });
   });
 
-  // Companies CRUD
-  app.get("/api/admin/companies", (req, res) => res.json(companies));
-  app.get("/api/admin/companies/:id", (req, res) => {
-    const company = companies.find(c => c.id === req.params.id);
-    if (company) res.json(company);
-    else res.status(404).send();
-  });
-  app.post("/api/admin/companies/:id/status", (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-    const company = companies.find(c => c.id === id);
-    if (company) {
-      company.status = status;
-      logs.unshift({ 
-        id: `l${Date.now()}`, 
-        user: adminProfile.name, 
-        action: "COMPANY", 
-        details: `Status da empresa ${company.name} alterado para ${status}`, 
-        timestamp: new Date().toISOString() 
-      });
-      res.json(company);
-    } else res.status(404).send();
-  });
-  app.delete("/api/admin/companies/:id", (req, res) => {
-    const { id } = req.params;
-    const company = companies.find(c => c.id === id);
-    companies = companies.filter(c => c.id !== id);
+  // Users CRUD
+  app.get("/api/admin/users", (req, res) => res.json(users));
+  
+  app.post("/api/admin/users", (req, res) => {
+    const { name, email, role, status, phone, companyId } = req.body;
+    const newUser = { 
+      id: `u${users.length + 1}`, 
+      name, 
+      email, 
+      role: role || "USER", 
+      status: status || "active", 
+      phone: phone || "", 
+      companyId: companyId || "" 
+    };
+    users.push(newUser);
     logs.unshift({ 
       id: `l${Date.now()}`, 
       user: adminProfile.name, 
-      action: "COMPANY", 
-      details: `Empresa removida: ${company?.name || id}`, 
+      action: "USER_CREATE", 
+      details: `Novo usuário criado: ${newUser.name}`, 
       timestamp: new Date().toISOString() 
     });
-    res.status(204).send();
+    res.status(201).json(newUser);
+  });
+  
+  app.put("/api/admin/users/:id", (req, res) => {
+    const { id } = req.params;
+    const idx = users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...req.body };
+      res.json(users[idx]);
+    } else res.status(404).send();
   });
 
-  // Users CRUD
-  app.get("/api/admin/users", (req, res) => res.json(users));
   app.post("/api/admin/users/:id/status", (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -193,12 +188,101 @@ async function startServer() {
     } else res.status(404).send();
   });
 
+  app.delete("/api/admin/users/:id", (req, res) => {
+    const { id } = req.params;
+    const user = users.find(u => u.id === id);
+    users = users.filter(u => u.id !== id);
+    logs.unshift({ 
+      id: `l${Date.now()}`, 
+      user: adminProfile.name, 
+      action: "USER_DELETE", 
+      details: `Usuário removido: ${user?.name || id}`, 
+      timestamp: new Date().toISOString() 
+    });
+    res.status(204).send();
+  });
+
+  // Companies CRUD
+  app.get("/api/admin/companies", (req, res) => res.json(companies));
+  
+  app.post("/api/admin/companies", (req, res) => {
+    const newCompany = { ...req.body, id: `c${companies.length + 1}` };
+    companies.push(newCompany);
+    logs.unshift({ 
+      id: `l${Date.now()}`, 
+      user: adminProfile.name, 
+      action: "COMPANY_CREATE", 
+      details: `Nova empresa criada: ${newCompany.name}`, 
+      timestamp: new Date().toISOString() 
+    });
+    res.status(201).json(newCompany);
+  });
+  
+  app.get("/api/admin/companies/:id", (req, res) => {
+    const company = companies.find(c => c.id === req.params.id);
+    if (company) res.json(company);
+    else res.status(404).send();
+  });
+
+  app.put("/api/admin/companies/:id", (req, res) => {
+    const { id } = req.params;
+    const idx = companies.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      companies[idx] = { ...companies[idx], ...req.body };
+      logs.unshift({ 
+        id: `l${Date.now()}`, 
+        user: adminProfile.name, 
+        action: "COMPANY_UPDATE", 
+        details: `Empresa atualizada: ${companies[idx].name}`, 
+        timestamp: new Date().toISOString() 
+      });
+      res.json(companies[idx]);
+    } else res.status(404).send();
+  });
+
+  app.post("/api/admin/companies/:id/status", (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const company = companies.find(c => c.id === id);
+    if (company) {
+      company.status = status;
+      logs.unshift({ 
+        id: `l${Date.now()}`, 
+        user: adminProfile.name, 
+        action: "COMPANY", 
+        details: `Status da empresa ${company.name} alterado para ${status}`, 
+        timestamp: new Date().toISOString() 
+      });
+      res.json(company);
+    } else res.status(404).send();
+  });
+
+  app.delete("/api/admin/companies/:id", (req, res) => {
+    const { id } = req.params;
+    const company = companies.find(c => c.id === id);
+    companies = companies.filter(c => c.id !== id);
+    logs.unshift({ 
+      id: `l${Date.now()}`, 
+      user: adminProfile.name, 
+      action: "COMPANY", 
+      details: `Empresa removida: ${company?.name || id}`, 
+      timestamp: new Date().toISOString() 
+    });
+    res.status(204).send();
+  });
+
   // Plans CRUD
   app.get("/api/admin/plans", (req, res) => res.json(plans));
   app.post("/api/admin/plans", (req, res) => {
     const newPlan = { ...req.body, id: `p${plans.length + 1}` };
     plans.push(newPlan);
-    logs.unshift({ id: `l${Date.now()}`, action: `Novo plano criado: ${newPlan.name}`, performedBy: "SuperAdmin", date: new Date().toISOString() });
+    logs.unshift({ 
+      id: `l${Date.now()}`,
+      user: adminProfile.name,
+      action: `Novo plano criado: ${newPlan.name}`,
+      details: `Plano ${newPlan.name} criado com preço ${newPlan.price}`,
+      timestamp: new Date().toISOString()
+    });
     res.status(201).json(newPlan);
   });
   app.put("/api/admin/plans/:id", (req, res) => {
@@ -227,23 +311,9 @@ async function startServer() {
 
   app.get("/api/admin/logs", (req, res) => res.json(logs));
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  app.listen(PORT, "127.0.0.1", () => {
+    console.log(`Server running on http://127.0.0.1:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 

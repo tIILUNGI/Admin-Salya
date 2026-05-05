@@ -28,7 +28,7 @@ const navItems = [
   { path: "/subscriptions", label: "Subscrições", icon: History },
   { path: "/payments", label: "Pagamentos", icon: CreditCard },
   { path: "/plans", label: "Planos", icon: Package },
-  { path: "/logs", label: "Audit Logs", icon: ShieldCheck },
+  { path: "/logs", label: "Logs", icon: ShieldCheck },
 ];
 
 export default function Sidebar() {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { DollarSign, Search, CheckCircle, Clock, MoreVertical, CreditCard, ExternalLink, Check, Download, Filter } from "lucide-react";
 import { formatCurrency, formatDate } from "../lib/formatters";
+import Swal from "sweetalert2";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -17,12 +18,43 @@ export default function Payments() {
   }, []);
 
   const handleConfirmPayment = async (id: string) => {
-    if (!confirm("Confirmar recebimento manual deste pagamento?")) return;
-    
-    await fetch(`/api/admin/payments/${id}/confirm`, {
-      method: "POST",
+    const result = await Swal.fire({
+      title: "Confirmar Pagamento",
+      text: "Tem a certeza que deseja confirmar este pagamento?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Sim, confirmar!",
+      cancelButtonText: "Cancelar"
     });
-    fetchPayments();
+    
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/admin/payments/${id}/confirm`, {
+        method: "POST",
+      });
+      
+      if (res.ok) {
+        fetchPayments();
+        Swal.fire({
+          icon: "success",
+          title: "Confirmado!",
+          text: "Pagamento confirmado com sucesso",
+          confirmButtonColor: "#2563eb",
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Não foi possível confirmar o pagamento",
+        confirmButtonColor: "#ef4444"
+      });
+    }
   };
 
   const filteredPayments = payments.filter(p => 

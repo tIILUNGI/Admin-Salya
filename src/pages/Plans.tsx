@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Package, Edit2, CheckCircle, Trash2, Tag, X, Loader2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
+import Swal from "sweetalert2";
 
 export default function Plans() {
   const [plans, setPlans] = useState<any[]>([]);
@@ -23,29 +24,67 @@ export default function Plans() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const method = editingPlan ? "PUT" : "POST";
-    const url = editingPlan ? `/api/admin/plans/${editingPlan.id}` : "/api/admin/plans";
-
     try {
-      await fetch(url, {
+      const url = editingPlan ? `/api/admin/plans/${editingPlan.id}` : '/api/admin/plans';
+      const method = editingPlan ? 'PUT' : 'POST';
+      const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
-      fetchPlans();
-      closeModal();
-    } catch (err) {
-      console.error(err);
+      if (response.ok) {
+        fetchPlans();
+        closeModal();
+        Swal.fire({
+          icon: 'success',
+          title: editingPlan ? 'Atualizado!' : 'Criado!',
+          text: `Plano ${editingPlan ? 'atualizado' : 'criado'} com sucesso`,
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        throw new Error('Erro ao salvar plano');
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Erro ao salvar plano'
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover este plano?")) return;
+    const result = await Swal.fire({
+      title: "Tem a certeza?",
+      text: "Esta ação removerá o plano permanentemente!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (!result.isConfirmed) return;
+    
     await fetch(`/api/admin/plans/${id}`, { method: "DELETE" });
     fetchPlans();
+    
+    Swal.fire({
+      icon: "success",
+      title: "Removido!",
+      text: "Plano removido com sucesso",
+      confirmButtonColor: "#2563eb",
+      timer: 1500,
+      showConfirmButton: false
+    });
   };
+
+// handleSubmit duplicado removido
+
 
   const openModal = (plan?: any) => {
     if (plan) {
@@ -64,24 +103,26 @@ export default function Plans() {
   };
 
   return (
-    <div className="space-y-10 pb-12">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Planos e Precificação</h1>
-          <p className="text-slate-500 mt-1 italic-none">Estratégia de monetização da plataforma Salya.</p>
+          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Gestão de Planos</h1>
+          <p className="text-slate-500 mt-1">Criação e manutenção de planos de subscrição.</p>
         </div>
-        <button 
+        <button
           onClick={() => openModal()}
-          className="bg-primary-600 text-white px-8 py-4 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-[0.2em] hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/30"
+          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary-500/20"
         >
-          <Plus className="w-5 h-5" /> Adicionar Plano
+          <Plus className="w-5 h-5" />
+          Novo Plano
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 italic-none">
-        {plans.map((plan, idx) => (
-          <div key={plan.id} className="relative group">
-            <div className="absolute inset-0 bg-primary-500 rounded-[3rem] rotate-1 scale-95 opacity-0 group-hover:opacity-5 group-hover:rotate-2 transition-all duration-500" />
+          {plans.map((plan, idx) => (
+            <div key={plan.id} className="relative group">
+              <div className="absolute inset-0 bg-primary-500 rounded-[3rem] rotate-1 scale-95 opacity-0 group-hover:opacity-5 group-hover:rotate-2 transition-all duration-500" />
+
             <div className={`relative bg-white border-2 border-slate-100 p-10 rounded-[2.5rem] flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
               
               {idx === 1 && (

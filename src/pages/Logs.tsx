@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Clock, User, Globe, AlertTriangle, Monitor, Shield, Download, Terminal, Activity } from "lucide-react";
+import { Search, Filter, Clock, User, Globe, AlertTriangle, Monitor, Shield, Download } from "lucide-react";
 import { formatDate } from "../lib/formatters";
-import { motion } from "motion/react";
 
 export default function Logs() {
   const [logs, setLogs] = useState<any[]>([]);
