@@ -26,7 +26,7 @@
 }
 
 .bento-card {
-  @apply bg-white rounded-3xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary-200;
+  @apply bg-white rounded-3xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary-200 relative overflow-hidden;
 }
 
 .bento-card-dark {

@@ -60,8 +60,9 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="p-4 lg:p-8 flex-1">
-          <div className="max-w-7xl mx-auto">
+        <main className="-ml-1 lg:-ml-0 p-4 lg:p-8 flex-1">
+          <div className="max-w-7xl mx-auto -ml-1 lg:-ml-0">
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={window.location.pathname + window.location.search}
@@ -75,6 +76,7 @@ export default function AdminLayout() {
             </AnimatePresence>
           </div>
         </main>
+
       </div>
     </div>
   );
