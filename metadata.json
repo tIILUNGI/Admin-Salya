@@ -1,0 +1,6 @@
+{
+  "name": "Salya Super Admin",
+  "description": "Central administrative dashboard for the Salya SaaS platform, featuring global metrics, company management, user control, subscription/plan management, and audit logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
