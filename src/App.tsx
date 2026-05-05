@@ -10,6 +10,7 @@ import Plans from "./pages/Plans";
 import Logs from "./pages/Logs";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -44,30 +45,32 @@ export default function App() {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="companies" element={<Companies />} />
-            <Route path="users" element={<Users />} />
-            <Route path="subscriptions" element={<Subscriptions />} />
-            <Route path="payments" element={<Payments />} />
-            <Route path="plans" element={<Plans />} />
-            <Route path="logs" element={<Logs />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthContext.Provider>
+    <NotificationProvider>
+      <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="companies" element={<Companies />} />
+              <Route path="users" element={<Users />} />
+              <Route path="subscriptions" element={<Subscriptions />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="plans" element={<Plans />} />
+              <Route path="logs" element={<Logs />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthContext.Provider>
+    </NotificationProvider>
   );
 }

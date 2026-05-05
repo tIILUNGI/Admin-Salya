@@ -1,34 +1,70 @@
-import { ReactNode } from "react";
-import { Outlet } from "react-router-dom";
+import React, { ReactNode, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import NotificationDropdown from "../NotificationDropdown";
 import { motion, AnimatePresence } from "motion/react";
+import { Search, Menu } from "lucide-react";
 
 export default function AdminLayout() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Redirecionar para busca em empresas por padrão
+      navigate(`/companies?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
-      <Sidebar />
+      <Sidebar isMobileOpen={isMobileMenuOpen} onCloseMobileMenu={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40">
-          <h1 className="text-slate-900 font-black text-xl uppercase tracking-tighter">Centro de Comando</h1>
-          <div className="flex items-center gap-6">
-            <div className="relative hidden md:block">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-              </span>
-              <input type="text" placeholder="Pesquisar..." className="pl-12 pr-6 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none w-72 transition-all"/>
-            </div>
-            <button className="relative p-2.5 text-slate-400 hover:bg-slate-50 rounded-2xl transition-colors border border-transparent hover:border-slate-100">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-              <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+        <header className="h-16 lg:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <Menu className="w-6 h-6" />
             </button>
+            <h1 className="text-lg lg:text-xl font-black text-slate-900 uppercase tracking-tighter hidden md:block">
+              Centro de Comando
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2 lg:gap-6">
+            {/* Global Search */}
+            <form onSubmit={handleSearch} className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 lg:pr-16 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none w-40 lg:w-64 transition-all placeholder:text-slate-400"
+              />
+              <kbd className="hidden md:inline-flex absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none px-2 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded">
+                ↵
+              </kbd>
+            </form>
+
+            {/* Notifications */}
+            <NotificationDropdown />
           </div>
         </header>
 
-        <main className="p-8 flex-1">
+        <main className="p-4 lg:p-8 flex-1">
           <div className="max-w-7xl mx-auto">
             <AnimatePresence mode="wait">
               <motion.div
-                key={window.location.pathname}
+                key={window.location.pathname + window.location.search}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}

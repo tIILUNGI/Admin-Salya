@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash } from "lucide-react";
 import { formatDate } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
@@ -9,6 +10,11 @@ export default function Companies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    document.title = "Empresas | Salya Admin";
+  }, []);
 
   const fetchCompanies = () => {
     fetch("/api/admin/companies")
@@ -19,6 +25,26 @@ export default function Companies() {
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  // Sincronizar search term com query param (evita loop)
+  useEffect(() => {
+    const querySearch = searchParams.get("search") || "";
+    if (querySearch !== searchTerm) {
+      setSearchTerm(querySearch);
+    }
+  }, [searchParams, searchTerm]);
+
+  // Atualizar query param quando search term mudar (evita loop)
+  useEffect(() => {
+    const currentQuery = searchParams.get("search") || "";
+    if (searchTerm !== currentQuery) {
+      if (searchTerm.trim()) {
+        setSearchParams({ search: searchTerm.trim() });
+      } else {
+        setSearchParams({});
+      }
+    }
+  }, [searchTerm, searchParams, setSearchParams]);
 
   const handleCreate = async () => {
     const name = prompt("Nome da empresa:");
@@ -150,84 +176,84 @@ export default function Companies() {
           Nova Empresa
         </button>
       </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar por nome ou NIF..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 w-full md:w-64 text-sm font-medium transition-all"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou NIF..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
+              />
+            </div>
+            <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-colors hover:border-primary-200">
+              <Filter className="w-5 h-5" />
+            </button>
           </div>
-          <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-colors">
-            <Filter className="w-5 h-5" />
-          </button>
-        </div>
 
       <div className="bento-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Empresa</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Plano</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Empresa</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Plano</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredCompanies.map((company) => (
                 <tr key={company.id} className="hover:bg-primary-50/20 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-110 transition-transform">
+                  <td className="px-4 md:px-8 py-4 md:py-5">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-110 transition-transform">
                         {company.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">{company.name}</p>
+                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors text-sm md:text-base">{company.name}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Desde {formatDate(company.createdAt)}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                  <td className="px-4 md:px-8 py-4 md:py-5">
+                    <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                       company.trial ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-primary-50 text-primary-600 border-primary-100'
                     }`}>
                       {company.plan} {company.trial && '• TRIAL'}
                     </span>
                   </td>
-                  <td className="px-8 py-5 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-600 font-bold">
+                  <td className="px-4 md:px-8 py-4 md:py-5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-slate-600 font-bold text-sm">
                        <Users className="w-4 h-4 text-slate-400" />
                        {company.employees || 0}
                     </div>
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className="px-4 md:px-8 py-4 md:py-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                      <button 
+                      <button
                         onClick={() => viewDetails(company.id)}
-                        className="p-2.5 bg-white border border-slate-100 hover:bg-primary-50 text-primary-600 rounded-xl shadow-sm transition-all" 
+                        className="p-2 md:p-2.5 bg-white border border-slate-100 hover:bg-primary-50 text-primary-600 rounded-xl shadow-sm transition-all"
                         title="Ver Detalhes"
                       >
-                        <Eye className="w-4.5 h-4.5" />
+                        <Eye className="w-4 md:w-4.5 h-4 md:h-4.5" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleToggleStatus(company.id, company.status)}
-                        className={`p-2.5 bg-white border border-slate-100 rounded-xl shadow-sm transition-all ${
+                        className={`p-2 md:p-2.5 bg-white border border-slate-100 rounded-xl shadow-sm transition-all ${
                           company.status === 'active' ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-emerald-50 text-emerald-600'
-                        }`} 
+                        }`}
                         title={company.status === 'active' ? "Suspender" : "Ativar"}
                       >
-                        {company.status === 'active' ? <Ban className="w-4.5 h-4.5" /> : <CheckCircle2 className="w-4.5 h-4.5" />}
+                        {company.status === 'active' ? <Ban className="w-4 md:w-4.5 h-4 md:h-4.5" /> : <CheckCircle2 className="w-4 md:w-4.5 h-4 md:h-4.5" />}
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(company.id, company.name)}
-                        className="p-2.5 bg-white border border-slate-100 hover:bg-rose-50 text-rose-600 rounded-xl shadow-sm transition-all" 
+                        className="p-2 md:p-2.5 bg-white border border-slate-100 hover:bg-rose-50 text-rose-600 rounded-xl shadow-sm transition-all"
                         title="Remover"
                       >
-                        <Trash2 className="w-4.5 h-4.5" />
+                        <Trash2 className="w-4 md:w-4.5 h-4 md:h-4.5" />
                       </button>
                     </div>
                   </td>

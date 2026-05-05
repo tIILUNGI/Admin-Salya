@@ -79,6 +79,4 @@ npm run dev
 
 **Sistema rodando perfeitamente!** Teste todos CRUD - dados persistem na sessão.
 
----
-*Desenvolvido por BLACKBOXAI - Admin-Salya otimizado*
 

@@ -1,11 +1,20 @@
 import { useState, useEffect } from "react";
-import { DollarSign, Search, CheckCircle, Clock, MoreVertical, CreditCard, ExternalLink, Check, Download, Filter } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { DollarSign, Search, CheckCircle, Clock, CreditCard, ExternalLink, Check, Download, Filter, FileText, Printer, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency, formatDate } from "../lib/formatters";
 import Swal from "sweetalert2";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    document.title = "Pagamentos | Salya Admin";
+  }, []);
 
   const fetchPayments = () => {
     fetch("/api/admin/payments")
@@ -16,6 +25,26 @@ export default function Payments() {
   useEffect(() => {
     fetchPayments();
   }, []);
+
+  // Sincronizar search term com query param (evita loop)
+  useEffect(() => {
+    const querySearch = searchParams.get("search") || "";
+    if (querySearch !== searchTerm) {
+      setSearchTerm(querySearch);
+    }
+  }, [searchParams, searchTerm]);
+
+  // Atualizar query param quando search term mudar (evita loop)
+  useEffect(() => {
+    const currentQuery = searchParams.get("search") || "";
+    if (searchTerm !== currentQuery) {
+      if (searchTerm.trim()) {
+        setSearchParams({ search: searchTerm.trim() });
+      } else {
+        setSearchParams({});
+      }
+    }
+  }, [searchTerm, searchParams, setSearchParams]);
 
   const handleConfirmPayment = async (id: string) => {
     const result = await Swal.fire({
@@ -28,14 +57,14 @@ export default function Payments() {
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
     });
-    
+
     if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`/api/admin/payments/${id}/confirm`, {
         method: "POST",
       });
-      
+
       if (res.ok) {
         fetchPayments();
         Swal.fire({
@@ -57,6 +86,44 @@ export default function Payments() {
     }
   };
 
+  const handleViewPaymentDetails = (payment: any) => {
+    setSelectedPayment(payment);
+    setShowDetails(true);
+  };
+
+  const handleExportPayments = () => {
+    // Criar CSV
+    const headers = ["ID", "Valor", "Método", "Data", "Status", "Referência"];
+    const rows = payments.map(p => [
+      p.id,
+      p.amount.toString(),
+      p.method,
+      p.date,
+      p.status,
+      p.subscriptionId
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    Swal.fire({
+      icon: "success",
+      title: "Exportado!",
+      text: "Os pagamentos foram exportados com sucesso",
+      timer: 1500,
+      showConfirmButton: false
+    });
+  };
+
   const filteredPayments = payments.filter(p => 
     (p.id ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.subscriptionId ?? "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -70,81 +137,88 @@ export default function Payments() {
           <p className="text-slate-500 mt-1">Gestão de transações e conciliação bancária.</p>
         </div>
         <div className="flex items-center gap-3">
-           <div className="relative">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Buscar transação..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 w-full md:w-64 text-sm font-medium transition-all"
             />
           </div>
-          <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3.5 rounded-2xl text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-primary-500/20 flex items-center gap-2 transition-all">
+          <button
+            onClick={handleExportPayments}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3.5 rounded-2xl text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-primary-500/20 flex items-center gap-2 transition-all"
+          >
             <Download className="w-4 h-4" /> Exportar
           </button>
         </div>
       </div>
 
       <div className="bento-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto -mx-4 md:mx-0">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">ID Transação</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Valor Pago</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Método</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Data Processada</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Estado</th>
-                <th className="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ação</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">ID Transação</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Valor Pago</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Método</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Data</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Estado</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 italic-none">
               {filteredPayments.map(pay => (
                 <tr key={pay.id} className="group hover:bg-primary-50/20 transition-colors">
-                  <td className="px-8 py-5">
+                  <td className="px-4 md:px-8 py-4 md:py-5">
                     <div className="flex flex-col">
                       <span className="font-black text-slate-900 text-sm tracking-tighter uppercase">{pay.id}</span>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Referência: {pay.subscriptionId}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Ref: {pay.subscriptionId}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-4 md:px-8 py-4 md:py-5">
                     <span className="text-sm font-black text-primary-600 font-mono tracking-tight">{formatCurrency(pay.amount)}</span>
                   </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-primary-600 shadow-sm transition-colors">
-                        <CreditCard className="w-5 h-5" />
+                  <td className="px-4 md:px-8 py-4 md:py-5">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-primary-600 shadow-sm transition-colors">
+                        <CreditCard className="w-4 md:w-5 h-4 md:h-5" />
                       </div>
                       <span className="text-xs font-black text-slate-600 uppercase tracking-widest">{pay.method}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <td className="px-4 md:px-8 py-4 md:py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
                      {formatDate(pay.date)}
-                  </td>
-                  <td className="px-8 py-5 text-center">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                      pay.status === 'completed' 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                        : 'bg-amber-50 text-amber-700 border-amber-100'
-                    }`}>
-                      <div className={`w-1 h-1 rounded-full ${pay.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      {pay.status === 'completed' ? 'Validado' : 'Pendente'}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
+                   </td>
+                  <td className="px-4 md:px-8 py-4 md:py-5 text-center">
+                     <span className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                       pay.status === 'completed'
+                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                         : 'bg-amber-50 text-amber-700 border-amber-100'
+                     }`}>
+                       <div className={`w-1 h-1 rounded-full ${pay.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                       {pay.status === 'completed' ? 'Validado' : 'Pendente'}
+                     </span>
+                   </td>
+                  <td className="px-4 md:px-8 py-4 md:py-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                       {pay.status === 'pending' ? (
-                        <button 
+                        <button
                           onClick={() => handleConfirmPayment(pay.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 md:p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
                           title="Confirmar Pagamento"
                         >
-                          <Check className="w-4.5 h-4.5" />
+                          <Check className="w-4 md:w-4.5 h-4 md:h-4.5" />
                         </button>
                       ) : (
-                        <button className="bg-white border border-slate-100 text-slate-400 hover:text-primary-600 transition-all p-2.5 rounded-xl shadow-sm">
-                          <ExternalLink className="w-4.5 h-4.5" />
+                        <button
+                          onClick={() => handleViewPaymentDetails(pay)}
+                          className="bg-white border border-slate-100 text-slate-400 hover:text-primary-600 transition-all p-2 md:p-2.5 rounded-xl shadow-sm hover:shadow-md"
+                          title="Ver detalhes"
+                        >
+                          <ExternalLink className="w-4 md:w-4.5 h-4 md:h-4.5" />
                         </button>
                       )}
                     </div>
@@ -155,6 +229,107 @@ export default function Payments() {
           </table>
         </div>
       </div>
+
+      {/* Payment Details Modal */}
+      <AnimatePresence>
+        {showDetails && selectedPayment && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDetails(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden">
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
+                        <FileText className="w-7 h-7 text-primary-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900">Recibo de Pagamento</h3>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-0.5">{selectedPayment.id}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowDetails(false)}
+                      className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                    >
+                      <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor</p>
+                        <p className="text-2xl font-black text-primary-600">{formatCurrency(selectedPayment.amount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Método</p>
+                        <p className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <CreditCard className="w-5 h-5 text-slate-400" />
+                          {selectedPayment.method}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Data</p>
+                        <p className="text-sm font-bold text-slate-700">{formatDate(selectedPayment.date)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado</p>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                          selectedPayment.status === 'completed'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
+                          {selectedPayment.status === 'completed' ? 'Validado' : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Referência da Subscrição</p>
+                      <p className="font-mono text-sm text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        {selectedPayment.subscriptionId}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => {
+                          // Simular impressão
+                          window.print();
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+                      >
+                        <Printer className="w-4 h-4" /> Imprimir
+                      </button>
+                      <button
+                        onClick={() => setShowDetails(false)}
+                        className="flex-1 px-6 py-3.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

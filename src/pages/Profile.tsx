@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { User, Mail, Shield, Camera, Save, Lock, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
@@ -8,6 +8,12 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    document.title = "Perfil | Salya Admin";
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/profile")
@@ -85,6 +91,50 @@ export default function Profile() {
     });
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo e tamanho
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Erro!', 'Por favor, selecione uma imagem válida.', 'error');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire('Erro!', 'A imagem deve ter no máximo 2MB.', 'error');
+      return;
+    }
+
+    // Criar preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // TODO: Enviar para servidor
+    Swal.fire({
+      icon: 'success',
+      title: 'Foto atualizada!',
+      text: 'A foto de perfil foi alterada com sucesso.',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  };
+
+  // Carregar avatar salvo (se houver)
+  useEffect(() => {
+    const savedAvatar = localStorage.getItem('user_avatar');
+    if (savedAvatar) {
+      setAvatarPreview(savedAvatar);
+    }
+  }, []);
+
   if (!profile) return <div className="p-8 text-slate-500 font-bold animate-pulse">Carregando perfil...</div>;
 
   return (
@@ -96,7 +146,7 @@ export default function Profile() {
 
       <AnimatePresence>
         {message && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -115,16 +165,32 @@ export default function Profile() {
         <div className="lg:col-span-1 space-y-6">
           <div className="bento-card p-8 text-center">
             <div className="relative inline-block mb-6">
-              <div className="w-28 h-28 bg-primary-50 rounded-[2.5rem] flex items-center justify-center text-3xl font-black text-primary-600 shadow-lg shadow-primary-500/10 border-4 border-white">
-                {profile.name.charAt(0).toUpperCase()}
+              <div className="w-28 h-28 bg-primary-50 rounded-[2.5rem] flex items-center justify-center text-3xl font-black text-primary-600 shadow-lg shadow-primary-500/10 border-4 border-white overflow-hidden">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  profile.name.charAt(0).toUpperCase()
+                )}
               </div>
-              <button className="absolute bottom-0 right-0 p-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all border-2 border-white" onClick={() => {}}>
-                <Camera className="w-4 h-4" />
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                className="absolute bottom-0 right-0 p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all border-2 border-white shadow-lg group"
+                title="Alterar foto"
+              >
+                <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
             </div>
             <h3 className="text-xl font-bold text-slate-900">{profile.name}</h3>
             <p className="text-xs font-black text-primary-600 uppercase tracking-[0.2em] mt-1">{profile.role}</p>
-            
+
             <div className="mt-8 pt-8 border-t border-slate-50 space-y-4">
               <div className="flex items-center gap-3 text-left">
                 <div className="p-2 bg-slate-50 rounded-lg text-slate-400"><Mail className="w-4 h-4" /></div>

@@ -1,16 +1,14 @@
 import { NavLink, useNavigate, Link } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  CreditCard, 
-  History, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  CreditCard,
+  History,
   LogOut,
   Package,
   ShieldCheck,
-  ChevronRight,
-  UserCircle
+  ChevronRight
 } from "lucide-react";
 import { useAuth } from "../../App";
 import { clsx, type ClassValue } from "clsx";
@@ -22,19 +20,22 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/companies", label: "Empresas", icon: Building2 },
-  { path: "/users", label: "Usuários", icon: Users },
-  { path: "/subscriptions", label: "Subscrições", icon: History },
-  { path: "/payments", label: "Pagamentos", icon: CreditCard },
-  { path: "/plans", label: "Planos", icon: Package },
-  { path: "/logs", label: "Logs", icon: ShieldCheck },
+  { path: "/", label: "Dashboard", icon: LayoutDashboard, badge: null },
+  { path: "/companies", label: "Empresas", icon: Building2, badge: null },
+  { path: "/users", label: "Usuários", icon: Users, badge: null },
+  { path: "/subscriptions", label: "Subscrições", icon: History, badge: "Novo" },
+  { path: "/payments", label: "Pagamentos", icon: CreditCard, badge: null },
+  { path: "/plans", label: "Planos", icon: Package, badge: null },
+  { path: "/logs", label: "Logs", icon: ShieldCheck, badge: null },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileOpen: boolean; onCloseMobileMenu: () => void }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [admin, setAdmin] = useState<any>(null);
+
+  // Wrapper para fechar o menu mobile
+  const closeMobileMenu = onCloseMobileMenu;
 
   useEffect(() => {
     fetch("/api/admin/profile")
@@ -48,57 +49,90 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 hidden lg:flex flex-col border-r border-slate-800 italic-none">
-      <div className="p-8 pb-4 flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary-500 rounded-2xl flex items-center justify-center font-black text-white shadow-[0_8px_20px_rgba(var(--primary-color-rgb),0.3)]">
+    <aside className={cn(
+      "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 italic-none transition-transform duration-300",
+      "lg:translate-x-0 lg:static",
+      isMobileOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
+      {/* Logo Section */}
+      <div className="p-6 pb-4 flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center font-black text-white shadow-lg shadow-primary-500/30">
           S
         </div>
-        <span className="text-2xl font-black text-white tracking-tighter">Salya <span className="text-primary-400">Admin</span></span>
+        <div className="flex flex-col">
+          <span className="text-xl font-black text-white tracking-tighter leading-none">Salya</span>
+          <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest leading-none">Admin Panel</span>
+        </div>
       </div>
 
-      <nav className="flex-1 px-6 space-y-2 mt-8">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              cn(
-                "group flex items-center justify-between px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300",
-                isActive 
-                  ? "bg-primary-500 text-white shadow-[0_8px_16px_rgba(var(--primary-color-rgb),0.2)]" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <div className="flex items-center gap-3">
-                  <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-400")} />
-                  {item.label}
-                </div>
-                {isActive && <div className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_white]" />}
-              </>
-            )}
-          </NavLink>
-        ))}
+      {/* Navigation */}
+      <nav className="flex-1 px-4 space-y-1 mt-6 overflow-y-auto custom-scrollbar">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={closeMobileMenu}
+              className={({ isActive }) =>
+                cn(
+                  "group flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 relative overflow-hidden",
+                  isActive
+                    ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30 before:absolute before:inset-0 before:bg-white/10 before:translate-x-[-100%] before:skew-x-12 before:animate-shimmer"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/70"
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3 z-10">
+                    <div className={cn(
+                      "p-1.5 rounded-lg transition-transform",
+                      isActive ? "bg-white/20" : "group-hover:bg-slate-700/50"
+                    )}>
+                      <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-400")} />
+                    </div>
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.badge && isActive && (
+                    <span className="z-10 px-2 py-0.5 bg-amber-400 text-amber-900 text-[8px] font-black uppercase rounded-full shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                  {isActive && (
+                    <div className="absolute right-2 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_white]" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
-      <div className="p-6 mt-auto">
-        <Link 
+      {/* User Profile Section */}
+      <div className="p-4 mt-auto border-t border-slate-800/50">
+        <Link
           to="/profile"
-          className="flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-800/50 hover:bg-slate-800 transition-all group mb-4 border border-slate-800"
+          onClick={closeMobileMenu}
+          className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all group border border-slate-800 hover:border-slate-700 mb-3"
         >
-          <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center text-primary-400 font-black group-hover:scale-105 transition-transform">
-            {admin ? admin.name.charAt(0) : "A"}
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-105 transition-transform">
+            {admin ? admin.name?.charAt(0)?.toUpperCase() || "A" : "A"}
           </div>
-          <div className="overflow-hidden">
-            <p className="text-white text-sm font-bold truncate">{admin?.name || "Carregando..."}</p>
-            <p className="text-slate-500 text-[10px] truncate uppercase font-black tracking-widest">{admin?.role || "Super Admin"}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-bold truncate">
+              {admin?.name || "Carregando..."}
+            </p>
+            <p className="text-slate-500 text-[10px] truncate uppercase tracking-wider">
+              {admin?.role || "Super Admin"}
+            </p>
           </div>
+          <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
         </Link>
+
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-6 py-4 w-full text-[10px] font-black text-slate-500 hover:text-rose-400 hover:bg-rose-400/5 rounded-2xl transition-all uppercase tracking-[0.2em] border border-transparent hover:border-rose-400/10"
+          className="flex items-center gap-3 px-4 py-3 w-full text-[10px] font-black text-slate-400 hover:text-rose-400 hover:bg-rose-400/5 rounded-xl transition-all uppercase tracking-[0.2em] border border-transparent hover:border-rose-400/10"
         >
           <LogOut className="w-4 h-4" />
           Terminar Sessão

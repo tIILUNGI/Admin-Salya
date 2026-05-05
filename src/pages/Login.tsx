@@ -22,7 +22,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = isRegistering ? "Criar Conta - Salya Admin" : "Salya Admin - Login";
+    document.title = isRegistering ? "Criar Conta" : "Salya Admin";
   }, [isRegistering]);
 
   const handleLogin = async (e: FormEvent) => {

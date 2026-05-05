@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Package, Edit2, CheckCircle, Trash2, Tag, X, Loader2, Sparkles } from "lucide-react";
+import { Plus, Package, Edit2, CheckCircle, Trash2, X, Loader2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
 import Swal from "sweetalert2";
@@ -10,6 +10,10 @@ export default function Plans() {
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", price: 0, durationDays: 30, isActive: true });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = "Planos | Salya Admin";
+  }, []);
 
   const fetchPlans = () => {
     fetch("/api/admin/plans")

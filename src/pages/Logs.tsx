@@ -8,6 +8,10 @@ export default function Logs() {
   const [filterAction, setFilterAction] = useState("ALL");
 
   useEffect(() => {
+    document.title = "Logs | Salya Admin";
+  }, []);
+
+  useEffect(() => {
     fetch("/api/admin/logs")
       .then(res => res.json())
       .then(setLogs);

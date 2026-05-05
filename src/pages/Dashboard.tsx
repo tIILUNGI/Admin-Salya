@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
-import { 
-  Building2, 
-  Users as UsersIcon, 
-  Clock, 
-  TrendingUp, 
-  DollarSign, 
-  Search,
-  ChevronRight,
-  Filter
-} from "lucide-react";
+import { TrendingUp, Building2, Clock, DollarSign, Users } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
@@ -18,6 +9,10 @@ import Swal from "sweetalert2";
 export default function Dashboard() {
   const [data, setData] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Dashboard | Salya Admin";
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/dashboard")
@@ -117,30 +112,30 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Summary Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="col-span-12 lg:col-span-8 row-span-1 bento-card-dark flex items-center justify-around"
+          className="col-span-12 lg:col-span-8 row-span-1 bento-card-dark flex flex-col md:flex-row items-center justify-around gap-4 md:gap-0 p-4 md:p-6"
         >
-          <div className="text-center group cursor-pointer" onClick={() => navigate("/subscriptions")}>
+          <div className="text-center group cursor-pointer w-full md:w-auto" onClick={() => navigate("/subscriptions")}>
             <p className="text-primary-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Subscrições</p>
-            <p className="text-2xl font-black">{metrics.activeSubscriptions}</p>
+            <p className="text-2xl md:text-3xl font-black">{metrics.activeSubscriptions}</p>
           </div>
-          <div className="h-10 w-px bg-white/20"></div>
-          <div className="text-center group cursor-pointer" onClick={() => navigate("/subscriptions")}>
+          <div className="hidden md:block h-10 w-px bg-white/20"></div>
+          <div className="text-center group cursor-pointer w-full md:w-auto" onClick={() => navigate("/subscriptions")}>
             <p className="text-primary-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Expiradas</p>
-            <p className="text-2xl font-black text-rose-300">{metrics.expiredSubscriptions}</p>
+            <p className="text-2xl md:text-3xl font-black text-rose-300">{metrics.expiredSubscriptions}</p>
           </div>
-          <div className="h-10 w-px bg-white/20"></div>
-          <div className="text-center group cursor-pointer" onClick={() => navigate("/users")}>
+          <div className="hidden md:block h-10 w-px bg-white/20"></div>
+          <div className="text-center group cursor-pointer w-full md:w-auto" onClick={() => navigate("/users")}>
             <p className="text-primary-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total Usuários</p>
-            <p className="text-2xl font-black">{metrics.totalUsers}</p>
+            <p className="text-2xl md:text-3xl font-black">{metrics.totalUsers}</p>
           </div>
-          <div className="h-10 w-px bg-white/20"></div>
-          <div className="text-center group cursor-pointer" onClick={() => navigate("/companies")}>
+          <div className="hidden md:block h-10 w-px bg-white/20"></div>
+          <div className="text-center group cursor-pointer w-full md:w-auto" onClick={() => navigate("/companies")}>
             <p className="text-primary-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Inativas</p>
-            <p className="text-2xl font-black text-amber-300">{metrics.totalCompanies - metrics.activeSubscriptions}</p>
+            <p className="text-2xl md:text-3xl font-black text-amber-300">{metrics.totalCompanies - metrics.activeSubscriptions}</p>
           </div>
         </motion.div>
 
@@ -187,7 +182,7 @@ export default function Dashboard() {
           <div className="space-y-3">
             {[
               { icon: Building2, label: "Nova Empresa", color: "emerald", path: "/companies" },
-              { icon: UsersIcon, label: "Novo Usuário", color: "blue", path: "/users" },
+               { icon: Users, label: "Novo Usuário", color: "blue", path: "/users" },
               { icon: Clock, label: "Novo Plano", color: "purple", path: "/plans" },
               { icon: DollarSign, label: "Registrar Pagamento", color: "amber", path: "/payments" },
             ].map((action, i) => (
