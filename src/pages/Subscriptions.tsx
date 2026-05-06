@@ -13,6 +13,7 @@ export default function Subscriptions() {
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
 
   useEffect(() => {
     document.title = "Subscrições | Salya Admin";
@@ -39,6 +40,8 @@ export default function Subscriptions() {
       .then(res => res.json())
       .then(setPlans);
   }, []);
+
+  const filteredSubs = showActiveOnly ? subs.filter(sub => sub.status === 'active') : subs;
 
   const handleChangePlan = async (subscription: any) => {
     setSelectedSubscription(subscription);
@@ -177,14 +180,24 @@ export default function Subscriptions() {
           <h1 className="text-3xl font-bold text-slate-900 leading-tight">Gestão de Subscrições</h1>
           <p className="text-slate-500 mt-1">Controle de ciclos, renovações e ativações globais.</p>
         </div>
-        <div className="flex bg-white p-1 rounded-2xl border border-slate-200">
-          <button className="px-6 py-2.5 text-xs font-black uppercase bg-slate-900 text-white rounded-xl tracking-[0.1em]">Ativas</button>
-          <button className="px-6 py-2.5 text-xs font-black uppercase text-slate-500 hover:text-primary-600 rounded-xl tracking-[0.1em]">Todas</button>
+        <div className="flex flex-wrap gap-2 bg-white p-1 rounded-2xl border border-slate-200">
+          <button
+            onClick={() => setShowActiveOnly(true)}
+            className={`px-6 py-2.5 text-xs font-black uppercase rounded-xl tracking-[0.1em] transition-all ${showActiveOnly ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-primary-600 bg-white'}`}
+          >
+            Ativas
+          </button>
+          <button
+            onClick={() => setShowActiveOnly(false)}
+            className={`px-6 py-2.5 text-xs font-black uppercase rounded-xl tracking-[0.1em] transition-all ${!showActiveOnly ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-primary-600 bg-white'}`}
+          >
+            Todas
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {subs.map(sub => (
+        {filteredSubs.map(sub => (
           <motion.div 
             layout
             key={sub.id} 
