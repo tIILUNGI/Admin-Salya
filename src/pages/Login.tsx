@@ -4,6 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { Lock, Mail, Loader2, Eye, EyeOff, Wallet, UserPlus, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
 import Swal from "sweetalert2";
+import { apiGet, apiPost } from "../lib/api";
+
+type Plan = {
+  id: number;
+  name: string;
+  price?: number;
+  durationDays: number;
+  type: string;
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +21,9 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationStep, setRegistrationStep] = useState<"choosePlan" | "form">("choosePlan");
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [registerData, setRegisterData] = useState({
     name: "",
     email: "",
@@ -23,6 +35,23 @@ export default function Login() {
 
   useEffect(() => {
     document.title = isRegistering ? "Criar Conta" : "Salya Admin";
+
+    if (isRegistering) {
+      setRegistrationStep("choosePlan");
+      setSelectedPlanId("");
+
+      apiGet("/auth/plans")
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setPlans(data);
+          }
+        })
+        .catch((err) => console.error("Erro ao buscar planos:", err));
+    }
   }, [isRegistering]);
 
   const handleLogin = async (e: FormEvent) => {
@@ -31,14 +60,21 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
+      const res = await apiPost("/auth/login", { email, password });
       const data = await res.json();
-      if (res.ok) {
+
+      if (res.ok && data.token) {
+        // Verificar se o utilizador tem papel de administrador
+        if (data.user?.planType !== 'ADMIN') {
+          setError("Acesso negado. Esta área é exclusiva para administradores.");
+          Swal.fire({
+            icon: "error",
+            title: "Acesso Negado",
+            text: "Esta área é exclusiva para administradores do sistema.",
+            confirmButtonColor: "#ef4444"
+          });
+          return;
+        }
         login(data.token);
         Swal.fire({
           icon: "success",
@@ -49,11 +85,12 @@ export default function Login() {
         });
         navigate("/");
       } else {
-        setError(data.message || "Credenciais inválidas");
+        const errorMsg = data.error || data.message || "Credenciais inválidas";
+        setError(errorMsg);
         Swal.fire({
           icon: "error",
           title: "Erro de Autenticação",
-          text: data.message || "Email ou senha incorretos",
+          text: errorMsg,
           confirmButtonColor: "#ef4444"
         });
       }
@@ -72,7 +109,7 @@ export default function Login() {
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (registerData.password !== registerData.confirmPassword) {
       Swal.fire({
         icon: "warning",
@@ -93,37 +130,48 @@ export default function Login() {
       return;
     }
 
+    if (!selectedPlanId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Plano Obrigatório",
+        text: "Por favor, selecione um plano para continuar.",
+        confirmButtonColor: "#f59e0b"
+      });
+      return;
+    }
+
     setIsLoading(true);
-    
+
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: registerData.name,
-          email: registerData.email,
-          password: registerData.password,
-          role: "USER",
-          status: "active",
-          phone: "",
-          companyId: ""
-        }),
+      const res = await apiPost("/auth/register", {
+        name: registerData.name,
+        email: registerData.email,
+        password: registerData.password,
+        planId: Number(selectedPlanId)
       });
 
       if (res.ok) {
+        const plan = plans.find((plan) => String(plan.id) === selectedPlanId);
+        const message = plan?.type === "DEMO"
+          ? "Conta criada! Seu plano Demo está ativo por 24 horas."
+          : "Conta criada! Aguarde a autorização do admin para acessar o sistema.";
+
         Swal.fire({
           icon: "success",
           title: "Conta Criada!",
-          text: "Sua conta foi criada com sucesso. Faça login para continuar.",
+          text: message,
           confirmButtonColor: "#2563eb"
         });
         setIsRegistering(false);
+        setRegistrationStep("choosePlan");
+        setSelectedPlanId("");
         setRegisterData({ name: "", email: "", password: "", confirmPassword: "" });
       } else {
+        const data = await res.json();
         Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Não foi possível criar a conta",
+          text: data.message || "Não foi possível criar a conta",
           confirmButtonColor: "#ef4444"
         });
       }
@@ -161,30 +209,95 @@ export default function Login() {
     }
   };
 
+  const selectedPlan = plans.find((plan) => String(plan.id) === selectedPlanId);
+
   if (isRegistering) {
+    if (registrationStep === "choosePlan") {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+          <div className="w-full max-w-4xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-8">
+                <button
+                  onClick={() => setIsRegistering(false)}
+                  className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Voltar ao login
+                </button>
+
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Wallet className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900">Escolha o seu plano</h2>
+                  <p className="text-slate-500 mt-2">Selecione o plano de inscrição antes de preencher o cadastro.</p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {plans.map((plan) => (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPlanId(String(plan.id));
+                        setRegistrationStep("form");
+                      }}
+                      className="rounded-3xl border border-slate-200 p-6 text-left hover:border-primary-500 transition-colors bg-slate-50"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-lg font-semibold text-slate-900">{plan.name}</span>
+                        <span className="text-sm text-slate-500">{plan.type}</span>
+                      </div>
+                      <p className="text-slate-600 mb-4">{plan.price ? `Kz ${plan.price}` : "Gratuito"}</p>
+                      <p className="text-sm text-slate-500">{plan.durationDays} dia{plan.durationDays === 1 ? "" : "s"} de validade</p>
+                      <div className="mt-6 rounded-2xl bg-white p-3 border border-slate-200 text-sm text-slate-700">
+                        {plan.type === "DEMO"
+                          ? "Demo ativo imediatamente por 24h."
+                          : "Necessita autorização do admin após o cadastro."}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
         <div className="w-full max-w-md">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-2xl overflow-hidden"
           >
             <div className="p-8">
-              <button 
-                onClick={() => setIsRegistering(false)}
+              <button
+                onClick={() => setRegistrationStep("choosePlan")}
                 className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Voltar ao login
+                Voltar para escolha de plano
               </button>
-              
+
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <UserPlus className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900">Criar Conta</h2>
-                <p className="text-slate-500 mt-2">Registre-se no Salya Admin</p>
+                <p className="text-slate-500 mt-2">Cadastre-se com o plano selecionado.</p>
+                {selectedPlan && (
+                  <p className="mt-2 text-sm text-slate-500">
+                    Plano selecionado: <strong>{selectedPlan.name}</strong> ({selectedPlan.type})
+                  </p>
+                )}
               </div>
 
               <form onSubmit={handleRegister} className="space-y-4">
@@ -194,19 +307,19 @@ export default function Login() {
                     type="text"
                     required
                     value={registerData.name}
-                    onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                    onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary-500 transition-all font-medium text-slate-900"
                     placeholder="João Silva"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold text-slate-600 mb-2">Email</label>
                   <input
                     type="email"
                     required
                     value={registerData.email}
-                    onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                    onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary-500 transition-all font-medium text-slate-900"
                     placeholder="joao@empresa.com"
                   />
@@ -219,7 +332,7 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       required
                       value={registerData.password}
-                      onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary-500 transition-all font-medium text-slate-900 pr-12"
                       placeholder="Mínimo 6 caracteres"
                     />
@@ -240,7 +353,7 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       required
                       value={registerData.confirmPassword}
-                      onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                      onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary-500 transition-all font-medium text-slate-900 pr-12"
                       placeholder="Confirme a senha"
                     />
@@ -279,7 +392,7 @@ export default function Login() {
             <Wallet className="w-20 h-20 text-white mb-6" />
           </div>
           <h1 className="text-5xl font-bold tracking-tight mb-4">SALYA ADMIN</h1>
-<p className="text-lg opacity-90 font-medium">Salya Admin - Painel Administrativo</p>
+          <p className="text-lg opacity-90 font-medium">Salya Admin - Painel Administrativo</p>
         </div>
 
         <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white w-full md:w-1/2">

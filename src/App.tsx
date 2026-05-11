@@ -45,8 +45,8 @@ export default function App() {
   };
 
   return (
-    <NotificationProvider>
-      <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+      <NotificationProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -70,7 +70,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
-      </AuthContext.Provider>
-    </NotificationProvider>
+      </NotificationProvider>
+    </AuthContext.Provider>
   );
 }

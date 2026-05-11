@@ -3,12 +3,20 @@ import { Plus, Package, Edit2, CheckCircle, Trash2, X, Loader2, Sparkles } from 
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
 import Swal from "sweetalert2";
+import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 
 export default function Plans() {
   const [plans, setPlans] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: "", price: 0, durationDays: 30, isActive: true });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    price: 0, 
+    durationDays: 30, 
+    isActive: true,
+    type: "BASIC",
+    category: "PAGO"
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -16,9 +24,10 @@ export default function Plans() {
   }, []);
 
   const fetchPlans = () => {
-    fetch("/api/admin/plans")
+    apiGet("/admin/plans")
       .then(res => res.json())
-      .then(setPlans);
+      .then(setPlans)
+      .catch(() => setPlans([]));
   };
 
   useEffect(() => {
@@ -29,13 +38,9 @@ export default function Plans() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = editingPlan ? `/api/admin/plans/${editingPlan.id}` : '/api/admin/plans';
-      const method = editingPlan ? 'PUT' : 'POST';
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const response = editingPlan 
+        ? await apiPut(`/admin/plans/${editingPlan.id}`, formData)
+        : await apiPost('/admin/plans', formData);
       if (response.ok) {
         fetchPlans();
         closeModal();
@@ -74,7 +79,7 @@ export default function Plans() {
     
     if (!result.isConfirmed) return;
     
-    await fetch(`/api/admin/plans/${id}`, { method: "DELETE" });
+    await apiDelete(`/admin/plans/${id}`);
     fetchPlans();
     
     Swal.fire({
@@ -93,10 +98,24 @@ export default function Plans() {
   const openModal = (plan?: any) => {
     if (plan) {
       setEditingPlan(plan);
-      setFormData({ name: plan.name, price: plan.price, durationDays: plan.durationDays, isActive: plan.isActive });
+      setFormData({ 
+        name: plan.name, 
+        price: plan.price, 
+        durationDays: plan.durationDays, 
+        isActive: plan.isActive,
+        type: plan.type || "BASIC",
+        category: plan.category || "PAGO"
+      });
     } else {
       setEditingPlan(null);
-      setFormData({ name: "", price: 0, durationDays: 30, isActive: true });
+      setFormData({ 
+        name: "", 
+        price: 0, 
+        durationDays: 30, 
+        isActive: true,
+        type: "BASIC",
+        category: "PAGO"
+      });
     }
     setIsModalOpen(true);
   };
@@ -220,28 +239,56 @@ export default function Plans() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Preço (Kz)</label>
-                      <input 
-                        type="number" 
-                        required
-                        value={formData.price}
-                        onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                      />
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tipo de Plano</label>
+                        <select 
+                          value={formData.type}
+                          onChange={e => setFormData({ ...formData, type: e.target.value })}
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        >
+                          <option value="DEMO">DEMO</option>
+                          <option value="BASIC">BASIC</option>
+                          <option value="PRO">PRO</option>
+                          <option value="ENTERPRISE">ENTERPRISE</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Categoria</label>
+                        <select 
+                          value={formData.category}
+                          onChange={e => setFormData({ ...formData, category: e.target.value })}
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        >
+                          <option value="PAGO">PAGO</option>
+                          <option value="GRATUITO">GRATUITO</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ciclo (Dias)</label>
-                      <input 
-                        type="number" 
-                        required
-                        value={formData.durationDays}
-                        onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
-                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                      />
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Preço (Kz)</label>
+                        <input 
+                          type="number" 
+                          required
+                          value={formData.price}
+                          onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ciclo (Dias)</label>
+                        <input 
+                          type="number" 
+                          required
+                          value={formData.durationDays}
+                          onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        />
+                      </div>
                     </div>
-                  </div>
 
                   <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex items-center justify-between">
                     <div>

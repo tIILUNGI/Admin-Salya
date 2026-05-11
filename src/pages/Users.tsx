@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
+import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
@@ -10,6 +11,9 @@ export default function Users() {
   const [filterRole, setFilterRole] = useState("ALL");
   const [showFilters, setShowFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [similarUsers, setSimilarUsers] = useState<any[]>([]);
+  const [showSimilarModal, setShowSimilarModal] = useState(false);
+  const [isDetectingSimilar, setIsDetectingSimilar] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -18,9 +22,10 @@ export default function Users() {
   }, []);
 
   const fetchUsers = () => {
-    fetch("/api/admin/users")
+    apiGet("/admin/users")
       .then(res => res.json())
-      .then(setUsers);
+      .then(setUsers)
+      .catch(() => setUsers([]));
   };
 
   useEffect(() => {
@@ -46,11 +51,23 @@ export default function Users() {
   }, []);
 
   const handleToggleBlock = async (id: string, currentStatus: string) => {
-    const isBlocked = currentStatus === "blocked";
-    
+    let actionLabel = "desativar";
+    let endpoint = `/admin/users/${id}/toggle-status`;
+
+    if (currentStatus === "suspended") {
+      actionLabel = "desbloquear";
+      endpoint = `/admin/users/${id}/unlock`;
+    } else if (currentStatus === "inactive") {
+      actionLabel = "ativar";
+      endpoint = `/admin/users/${id}/toggle-status`;
+    } else if (currentStatus === "active") {
+      actionLabel = "desativar";
+      endpoint = `/admin/users/${id}/toggle-status`;
+    }
+
     const result = await Swal.fire({
       title: "Tem a certeza?",
-      text: `Deseja realmente ${isBlocked ? "desbloquear" : "bloquear"} este usuário?`,
+      text: `Deseja realmente ${actionLabel} este usuário?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2563eb",
@@ -61,17 +78,13 @@ export default function Users() {
     
     if (!result.isConfirmed) return;
 
-    await fetch(`/api/admin/users/${id}/status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: isBlocked ? "active" : "blocked" }),
-    });
+    await apiPost(endpoint, {});
     fetchUsers();
     
     Swal.fire({
       icon: "success",
       title: "Sucesso!",
-      text: `Usuário ${isBlocked ? "desbloqueado" : "bloqueado"} com sucesso`,
+      text: `Usuário ${actionLabel} com sucesso`,
       confirmButtonColor: "#2563eb",
       timer: 1500,
       showConfirmButton: false
@@ -106,16 +119,69 @@ export default function Users() {
     Swal.fire({
       title: user.name,
       html: `
-        <div style="text-align: left; font-size: 14px;">
+        <div style="text-align: left; font-size: 14px; line-height: 1.6;">
           <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Telefone:</strong> ${user.phone || 'Não informado'}</p>
           <p><strong>Papel:</strong> ${user.role}</p>
-          <p><strong>Status:</strong> ${user.status}</p>
-          <p><strong>Empresa:</strong> ${user.companyId || 'N/A'}</p>
+          <p><strong>Plano Atual:</strong> ${user.activePlanName || user.planType || 'DEMO'}</p>
+          <p><strong>Estado Subscrição:</strong> ${user.subscriptionStatus || 'N/A'}</p>
+          <p><strong>Status Conta:</strong> ${user.status}</p>
+          <p><strong>Data Cadastro:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
         </div>
       `,
       confirmButtonColor: "#2563eb",
       confirmButtonText: "Fechar"
     });
+  };
+
+  const handleViewHistory = async (id: string) => {
+    try {
+      const res = await apiGet(`/admin/users/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch user history");
+      const data = await res.json();
+      
+      const subsHtml = data.subscriptions.map((s: any) => `
+        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+          <div style="display:flex; justify-content: space-between; font-weight: bold;">
+            <span>${s.planName} ${s.durationDays ? `(${s.durationDays} dias)` : ''}</span>
+            <span style="color: ${s.status === 'ATIVA' ? '#10b981' : '#6b7280'}">${s.status}</span>
+          </div>
+          <div style="color: #666; font-size: 11px;">
+            ${new Date(s.startDate).toLocaleDateString()} - ${s.endDate ? new Date(s.endDate).toLocaleDateString() : 'N/A'}
+          </div>
+          <div style="font-weight: bold; margin-top: 4px;">Kz ${s.price?.toLocaleString() || '0'}</div>
+        </div>
+      `).join('') || '<p style="text-align:center; color:#999; padding:20px;">Nenhuma subscrição encontrada</p>';
+
+      const paymentsHtml = data.payments.map((p: any) => `
+        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+          <div style="display:flex; justify-content: space-between;">
+            <span style="font-weight: bold;">Kz ${p.amount.toLocaleString()}</span>
+            <span style="color: ${p.status === 'CONFIRMADO' ? '#10b981' : '#f59e0b'}">${p.status}</span>
+          </div>
+          <div style="color: #666; font-size: 11px;">
+            ${p.date ? new Date(p.date).toLocaleDateString() : 'N/A'} - ${p.method || 'Transferência'}
+          </div>
+        </div>
+      `).join('') || '<p style="text-align:center; color:#999; padding:20px;">Nenhum pagamento encontrado</p>';
+
+      Swal.fire({
+        title: `Histórico: ${data.user.name}`,
+        html: `
+          <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+            <h4 style="margin-top:0; color:#2563eb; border-bottom: 2px solid #2563eb; padding-bottom:4px;">Subscrições</h4>
+            ${subsHtml}
+            <h4 style="margin-top:20px; color:#2563eb; border-bottom: 2px solid #2563eb; padding-bottom:4px;">Pagamentos</h4>
+            ${paymentsHtml}
+          </div>
+        `,
+        width: '600px',
+        confirmButtonColor: "#2563eb",
+        confirmButtonText: "Fechar"
+      });
+    } catch (err) {
+      Swal.fire("Erro", "Não foi possível carregar o histórico", "error");
+    }
   };
 
   const handleEditUser = (user: any) => {
@@ -142,11 +208,7 @@ export default function Users() {
     }).then(async (result) => {
       if (result.isConfirmed && result.value) {
         try {
-          const res = await fetch(`/api/admin/users/${user.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(result.value),
-          });
+          const res = await apiPut(`/admin/users/${user.id}`, result.value);
           if (res.ok) {
             fetchUsers();
             Swal.fire('Atualizado!', 'Usuário atualizado com sucesso.', 'success');
@@ -173,7 +235,7 @@ export default function Users() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+      const res = await apiDelete(`/admin/users/${user.id}`);
       if (res.ok) {
         setUsers(users.filter(u => u.id !== user.id));
         Swal.fire('Removido!', 'Usuário excluído com sucesso.', 'success');
@@ -181,7 +243,7 @@ export default function Users() {
         throw new Error('Delete failed');
       }
     } catch (err) {
-      Swal.fire('Erro!', 'Não foi possível excluir o usuário.', 'error');
+      Swal.fire('Erro!', 'Não foi possível excluir the user.', 'error');
     }
   };
 
@@ -191,7 +253,8 @@ export default function Users() {
       html:
         '<input id="swal-input1" class="swal2-input" placeholder="Nome">' +
         '<input id="swal-input2" class="swal2-input" placeholder="Email">' +
-        '<input id="swal-input3" class="swal2-input" type="password" placeholder="Senha (opcional)">',
+        '<input id="swal-input3" class="swal2-input" type="password" placeholder="Senha (opcional)">' +
+        '<select id="swal-input4" class="swal2-select" style="display:flex;width:100%;max-width:100%;"><option value="USER">Usuário Comum</option><option value="ADMIN">Administrador</option></select>',
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Criar Usuário',
@@ -201,27 +264,25 @@ export default function Users() {
         const name = (document.getElementById('swal-input1') as HTMLInputElement).value;
         const email = (document.getElementById('swal-input2') as HTMLInputElement).value;
         const password = (document.getElementById('swal-input3') as HTMLInputElement).value;
+        const role = (document.getElementById('swal-input4') as HTMLSelectElement).value;
         if (!name || !email) {
           Swal.showValidationMessage('Nome e email são obrigatórios');
           return false;
         }
-        return { name, email };
+        return { name, email, password, role };
       }
     });
 
     if (formValues) {
       try {
-        const res = await fetch("/api/admin/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formValues.name,
-            email: formValues.email,
-            role: "USER",
-            status: "active",
-            phone: "",
-            companyId: ""
-          }),
+        const res = await apiPost("/admin/users", {
+          name: formValues.name,
+          email: formValues.email,
+          password: formValues.password,
+          role: formValues.role,
+          status: "active",
+          phone: "",
+          companyId: ""
         });
 
         if (res.ok) {
@@ -244,6 +305,22 @@ export default function Users() {
           confirmButtonColor: "#ef4444"
         });
       }
+    }
+  };
+
+  const handleDetectSimilar = async () => {
+    setIsDetectingSimilar(true);
+    try {
+      const res = await apiGet("/admin/users/similar");
+      if (res.ok) {
+        const data = await res.json();
+        setSimilarUsers(data);
+        setShowSimilarModal(true);
+      }
+    } catch (err) {
+      Swal.fire("Erro", "Falha ao detectar usuários semelhantes", "error");
+    } finally {
+      setIsDetectingSimilar(false);
     }
   };
 
@@ -291,6 +368,14 @@ export default function Users() {
           >
             <UserPlus className="w-5 h-5" />
             Novo Usuário
+          </button>
+          <button
+            onClick={handleDetectSimilar}
+            disabled={isDetectingSimilar}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+          >
+            {isDetectingSimilar ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Eye className="w-5 h-5" />}
+            Detectar Duplicados
           </button>
         </div>
       </div>
@@ -385,7 +470,7 @@ export default function Users() {
                       } border`}>
                         {user.status.toUpperCase()}
                       </span>
-</td>
+                    </td>
                      <td className="px-4 md:px-6 py-3 md:py-4">
                        <div className="flex items-center gap-1 md:gap-2 relative">
                          <motion.button
@@ -411,20 +496,49 @@ export default function Users() {
                           <RefreshCcw className="w-3 md:w-4 h-3 md:h-4" />
                         </motion.button>
                         <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
-                          className={`p-2 md:p-2.5 rounded-xl transition-all shadow-sm ${
-                            openMenuId === user.id
-                              ? 'bg-primary-50 text-primary-600 border border-primary-200'
-                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 border border-slate-200'
-                          }`}
-                          title="Mais opções"
-                        >
-                          <MoreHorizontal className="w-3 md:w-4 h-3 md:h-4" />
-                        </motion.button>
-                      </div>
-                    </td>
+                           whileHover={{ scale: 1.05 }}
+                           whileTap={{ scale: 0.95 }}
+                           onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
+                           className={`p-2 md:p-2.5 rounded-xl transition-all shadow-sm ${
+                             openMenuId === user.id
+                               ? 'bg-primary-50 text-primary-600 border border-primary-200'
+                               : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 border border-slate-200'
+                           }`}
+                           title="Mais opções"
+                         >
+                           <MoreHorizontal className="w-3 md:w-4 h-3 md:h-4" />
+                         </motion.button>
+
+                         {openMenuId === user.id && (
+                           <div ref={menuRef} className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                             <button
+                               onClick={() => { handleViewUser(user); setOpenMenuId(null); }}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                             >
+                               <Eye className="w-4 h-4" /> Perfil Detalhado
+                             </button>
+                             <button
+                               onClick={() => { handleViewHistory(user.id); setOpenMenuId(null); }}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                             >
+                               <FileText className="w-4 h-4" /> Histórico Completo
+                             </button>
+                             <button
+                               onClick={() => { handleEditUser(user); setOpenMenuId(null); }}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                             >
+                               <Edit className="w-4 h-4" /> Editar Dados
+                             </button>
+                             <button
+                               onClick={() => { handleDeleteUser(user); setOpenMenuId(null); }}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                             >
+                               <Trash2 className="w-4 h-4" /> Excluir Conta
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     </td>
                   </motion.tr>
                 ))}
               </AnimatePresence>
@@ -440,6 +554,77 @@ export default function Users() {
           </div>
         )}
       </div>
+
+      {/* Similar Users Modal */}
+      <AnimatePresence>
+        {showSimilarModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSimilarModal(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 z-[101] flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Possíveis Duplicados</h2>
+                    <p className="text-slate-500 text-sm">Usuários com nomes ou domínios semelhantes detectados.</p>
+                  </div>
+                  <button onClick={() => setShowSimilarModal(false)} className="p-2 hover:bg-slate-100 rounded-xl">
+                    <Shield className="w-6 h-6 text-slate-400 rotate-45" />
+                  </button>
+                </div>
+                
+                <div className="p-8 overflow-y-auto space-y-4">
+                  {similarUsers.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nenhum duplicado óbvio encontrado</p>
+                    </div>
+                  ) : (
+                    similarUsers.map((pair, i) => (
+                      <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full tracking-widest">
+                            {pair.reason}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-8 relative">
+                          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 font-black text-xs z-10">VS</div>
+                          <div className="space-y-1">
+                            <p className="font-black text-slate-900 text-sm">{pair.user1.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{pair.user1.email}</p>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <p className="font-black text-slate-900 text-sm">{pair.user2.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{pair.user2.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="p-8 border-t border-slate-100 bg-slate-50">
+                  <button 
+                    onClick={() => setShowSimilarModal(false)}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-lg"
+                  >
+                    Entendido
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

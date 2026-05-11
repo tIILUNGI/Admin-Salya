@@ -14,6 +14,7 @@ import { useAuth } from "../../App";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useState, useEffect } from "react";
+import { apiGet } from "../../lib/api";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -37,9 +38,10 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
   const closeMobileMenu = onCloseMobileMenu;
 
   useEffect(() => {
-    fetch("/api/admin/profile")
+    apiGet("/admin/profile")
       .then(res => res.json())
-      .then(setAdmin);
+      .then(setAdmin)
+      .catch(() => setAdmin(null));
   }, []);
 
   const handleLogout = () => {

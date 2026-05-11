@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, Clock, User, Globe, AlertTriangle, Monitor, Shield, Download } from "lucide-react";
 import { formatDate } from "../lib/formatters";
+import { apiGet } from "../lib/api";
 
 export default function Logs() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -12,9 +13,10 @@ export default function Logs() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/logs")
+    apiGet("/admin/logs")
       .then(res => res.json())
-      .then(setLogs);
+      .then(setLogs)
+      .catch(() => setLogs([]));
   }, []);
 
   const filteredLogs = logs.filter(log => {

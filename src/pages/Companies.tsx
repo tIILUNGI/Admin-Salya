@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash } from "lucide-react";
 import { formatDate } from "../lib/formatters";
-import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
+import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 
 export default function Companies() {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -17,9 +17,10 @@ export default function Companies() {
   }, []);
 
   const fetchCompanies = () => {
-    fetch("/api/admin/companies")
+    apiGet("/admin/companies")
       .then(res => res.json())
-      .then(setCompanies);
+      .then(setCompanies)
+      .catch(() => setCompanies([]));
   };
 
   useEffect(() => {
@@ -51,21 +52,14 @@ export default function Companies() {
     if (!name) return;
     
     try {
-      const res = await fetch("/api/admin/companies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          plan: "Trial",
-          status: "active",
-          trial: true,
-          employees: 1,
-          email: "contact@" + name.toLowerCase().replace(/\s/g, '') + ".com",
-          phone: "",
-          nif: "",
-          address: "",
-          createdAt: new Date().toISOString()
-        }),
+      const res = await apiPost("/admin/companies", {
+        nome: name,
+        demo: true,
+        status: "active",
+        email: "contact@" + name.toLowerCase().replace(/\s/g, '') + ".com",
+        telefone: "",
+        nif: "NIF-" + Math.floor(Math.random() * 1000000000),
+        endereco: ""
       });
       
       if (res.ok) {
@@ -104,11 +98,7 @@ export default function Companies() {
     
     if (!result.isConfirmed) return;
     
-    await fetch(`/api/admin/companies/${id}/status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
+    await apiPost(`/admin/companies/${id}/status`, { status: newStatus });
     fetchCompanies();
     if (selectedCompany?.id === id) {
        setSelectedCompany({ ...selectedCompany, status: newStatus });
@@ -129,7 +119,7 @@ export default function Companies() {
     
     if (!result.isConfirmed) return;
     
-    await fetch(`/api/admin/companies/${id}`, { method: "DELETE" });
+    await apiDelete(`/admin/companies/${id}`);
     fetchCompanies();
     setSelectedCompany(null);
     
@@ -144,7 +134,7 @@ export default function Companies() {
   const viewDetails = async (id: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/companies/${id}`);
+      const res = await apiGet(`/admin/companies/${id}`);
       const data = await res.json();
       setSelectedCompany(data);
     } catch (err) {
@@ -154,9 +144,9 @@ export default function Companies() {
     }
   };
 
-  const filteredCompanies = companies.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCompanies = (companies || []).filter(c => 
+    (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -266,20 +256,13 @@ export default function Companies() {
       </div>
 
       {/* Details Modal */}
-      <AnimatePresence>
-        {selectedCompany && (
+      {selectedCompany && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div 
               onClick={() => setSelectedCompany(null)}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div 
               className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-10"
             >
               <button 
@@ -332,10 +315,9 @@ export default function Companies() {
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

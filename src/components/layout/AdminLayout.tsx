@@ -2,7 +2,6 @@ import React, { ReactNode, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import NotificationDropdown from "../NotificationDropdown";
-import { motion, AnimatePresence } from "motion/react";
 import { Search, Menu } from "lucide-react";
 
 export default function AdminLayout() {
@@ -63,17 +62,7 @@ export default function AdminLayout() {
         <main className="-ml-1 lg:-ml-0 p-4 lg:p-8 flex-1">
           <div className="max-w-7xl mx-auto -ml-1 lg:-ml-0">
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={window.location.pathname + window.location.search}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
+            <Outlet />
           </div>
         </main>
 

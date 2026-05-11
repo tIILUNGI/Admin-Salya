@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, X, CheckCircle2, AlertTriangle, Info, AlertCircle, Trash2 } from "lucide-react";
 import { useNotifications, Notification } from "../contexts/NotificationContext";
-import { motion, AnimatePresence } from "motion/react";
 
 export default function NotificationDropdown() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
@@ -74,13 +73,8 @@ export default function NotificationDropdown() {
         )}
       </button>
 
-      <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
+          <div
             className="absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 max-h-[80vh] md:max-h-96"
           >
             {/* Header */}
@@ -124,10 +118,8 @@ export default function NotificationDropdown() {
               ) : (
                 <div className="py-2">
                   {notifications.map((notification) => (
-                    <motion.div
+                    <div
                       key={notification.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
                       className={cn(
                         "mx-2 md:mx-3 p-2 md:p-3 rounded-xl border transition-all cursor-pointer group",
                         notification.read ? "bg-white border-slate-100" : getTypeStyles(notification.type)
@@ -155,7 +147,7 @@ export default function NotificationDropdown() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -172,9 +164,8 @@ export default function NotificationDropdown() {
                 </button>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

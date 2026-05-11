@@ -7,8 +7,11 @@ export const formatCurrency = (value: number) => {
   }).format(value).replace('AOA', 'Kz');
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return '---';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '---';
+  
   return new Intl.DateTimeFormat('pt-PT', {
     day: '2-digit',
     month: 'short',

@@ -4,6 +4,7 @@ import { DollarSign, Search, CheckCircle, Clock, CreditCard, ExternalLink, Check
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency, formatDate } from "../lib/formatters";
 import Swal from "sweetalert2";
+import { apiGet, apiPost } from "../lib/api";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -21,7 +22,7 @@ export default function Payments() {
   const fetchPayments = () => {
     setIsLoading(true);
     setError(null);
-    fetch("/api/admin/payments")
+    apiGet("/admin/payments")
       .then(res => {
         if (!res.ok) throw new Error("Falha ao carregar pagamentos");
         return res.json();
@@ -75,9 +76,7 @@ export default function Payments() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`/api/admin/payments/${id}/confirm`, {
-        method: "POST",
-      });
+      const res = await apiPost(`/admin/payments/${id}/confirm`, {});
 
       if (res.ok) {
         fetchPayments();
@@ -138,8 +137,11 @@ export default function Payments() {
   };
 
   const filteredPayments = payments.filter(p => 
-    (p.id ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.subscriptionId ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+    String(p.id ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(p.userName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(p.userEmail ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(p.subscriptionId ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(p.reference ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -190,8 +192,10 @@ export default function Payments() {
                   <tr key={pay.id} className="group hover:bg-primary-50/20 transition-colors">
                     <td className="px-3 md:px-6 py-3 md:py-4">
                       <div className="flex flex-col">
-                        <span className="font-black text-slate-900 text-sm md:text-base tracking-tighter uppercase">{pay.id}</span>
-                        <span className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-tight md:hidden">Ref: {pay.subscriptionId}</span>
+                        <span className="font-black text-slate-900 text-sm md:text-base tracking-tighter uppercase">{pay.userName || 'Usuário'}</span>
+                        <span className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-tight">{pay.userEmail}</span>
+                        <span className="text-[8px] md:text-[10px] text-primary-500 font-black uppercase tracking-widest mt-1">Plano: {pay.planName}</span>
+                        <span className="text-[8px] md:text-[10px] text-slate-300 font-medium">ID: {pay.id}</span>
                       </div>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4">
@@ -210,17 +214,17 @@ export default function Payments() {
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 text-center">
                       <span className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
-                        pay.status === 'completed'
+                        pay.status === 'CONFIRMADO'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                           : 'bg-amber-50 text-amber-700 border-amber-100'
                       }`}>
-                        <div className={`w-1 h-1 rounded-full ${pay.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                        {pay.status === 'completed' ? 'Validado' : 'Pendente'}
+                        <div className={`w-1 h-1 rounded-full ${pay.status === 'CONFIRMADO' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        {pay.status === 'CONFIRMADO' ? 'Validado' : 'Pendente'}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                        {pay.status === 'pending' ? (
+                        {pay.status === 'PENDENTE' ? (
                           <button
                             onClick={() => handleConfirmPayment(pay.id)}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
@@ -315,11 +319,11 @@ export default function Payments() {
                         <div>
                           <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Estado</p>
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
-                            selectedPayment.status === 'completed'
+                            selectedPayment.status === 'CONFIRMADO'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}>
-                            {selectedPayment.status === 'completed' ? 'Validado' : 'Pendente'}
+                            {selectedPayment.status === 'CONFIRMADO' ? 'Validado' : 'Pendente'}
                           </span>
                         </div>
                       </div>
@@ -425,8 +429,9 @@ export default function Payments() {
                 <tr key={pay.id} className="group hover:bg-primary-50/20 transition-colors">
                   <td className="px-4 md:px-8 py-4 md:py-5">
                     <div className="flex flex-col">
-                      <span className="font-black text-slate-900 text-sm tracking-tighter uppercase">{pay.id}</span>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Ref: {pay.subscriptionId}</span>
+                      <span className="font-black text-slate-900 text-sm tracking-tighter uppercase">{pay.userName || 'Usuário'}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{pay.userEmail}</span>
+                      <span className="text-[10px] text-slate-300 font-medium">ID: {pay.id}</span>
                     </div>
                   </td>
                   <td className="px-4 md:px-8 py-4 md:py-5">
@@ -445,17 +450,17 @@ export default function Payments() {
                    </td>
                   <td className="px-4 md:px-8 py-4 md:py-5 text-center">
                      <span className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                       pay.status === 'completed'
+                       pay.status === 'CONFIRMADO'
                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                          : 'bg-amber-50 text-amber-700 border-amber-100'
                      }`}>
-                       <div className={`w-1 h-1 rounded-full ${pay.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                       {pay.status === 'completed' ? 'Validado' : 'Pendente'}
+                       <div className={`w-1 h-1 rounded-full ${pay.status === 'CONFIRMADO' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                       {pay.status === 'CONFIRMADO' ? 'Validado' : 'Pendente'}
                      </span>
                    </td>
                   <td className="px-4 md:px-8 py-4 md:py-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                      {pay.status === 'pending' ? (
+                      {pay.status === 'PENDENTE' ? (
                         <button
                           onClick={() => handleConfirmPayment(pay.id)}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 md:p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
@@ -541,11 +546,11 @@ export default function Payments() {
                       <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado</p>
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                          selectedPayment.status === 'completed'
+                          selectedPayment.status === 'CONFIRMADO'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-amber-50 text-amber-700 border-amber-200'
                         }`}>
-                          {selectedPayment.status === 'completed' ? 'Validado' : 'Pendente'}
+                          {selectedPayment.status === 'CONFIRMADO' ? 'Validado' : 'Pendente'}
                         </span>
                       </div>
                     </div>

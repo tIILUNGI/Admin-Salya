@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { User, Mail, Shield, Camera, Save, Lock, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
+import { apiGet, apiPut } from "../lib/api";
 
 export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
@@ -16,22 +17,19 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/profile")
+    apiGet("/admin/profile")
       .then(res => res.json())
       .then(data => {
         setProfile(data);
         setFormData({ name: data.name, email: data.email });
-      });
+      })
+      .catch(() => setProfile(null));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/admin/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await apiPut("/admin/profile", formData);
       const updated = await res.json();
       setProfile(updated);
       setIsEditing(false);

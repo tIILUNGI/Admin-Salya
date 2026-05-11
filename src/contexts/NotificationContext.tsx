@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { apiGet, apiPatch, apiDelete } from "../lib/api";
 
 export interface Notification {
   id: string;
@@ -16,6 +17,7 @@ interface NotificationContextType {
   markAllAsRead: () => void;
   addNotification: (notification: Omit<Notification, "id" | "createdAt" | "read">) => void;
   clearAll: () => void;
+  refresh: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -23,58 +25,61 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Carregar notificações iniciais (mock)
-  useEffect(() => {
-    const initialNotifications: Notification[] = [
-      {
-        id: "1",
-        title: "Nova Subscrição",
-        message: "A empresa Beta Solutions assinou o plano Enterprise",
-        type: "success",
-        read: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-      },
-      {
-        id: "2",
-        title: "Pagamento Pendente",
-        message: "5 pagamentos aguardam confirmação",
-        type: "warning",
-        read: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-      },
-      {
-        id: "3",
-        title: "Alerta de Sistema",
-        message: "Backup automático concluído com sucesso",
-        type: "info",
-        read: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString()
-      },
-      {
-        id: "4",
-        title: "Erro na Integração",
-        message: "Falha ao sincronizar dados do gateway de pagamento",
-        type: "error",
-        read: true,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem("admin_token");
+    if (!token) return;
+
+    try {
+      const res = await apiGet("/notificacoes");
+      if (res.ok) {
+        const data = await res.json();
+        // Mapear campos do backend (titulo -> title, mensagem -> message, lido -> read, tipo -> type)
+        const mapped: Notification[] = data.map((n: any) => ({
+          id: n.id.toString(),
+          title: n.titulo,
+          message: n.mensagem,
+          type: n.tipo.toLowerCase(),
+          read: n.lido,
+          createdAt: n.createdAt
+        }));
+        setNotifications(mapped);
       }
-    ];
-    setNotifications(initialNotifications);
+    } catch (err) {
+      console.error("Erro ao carregar notificações:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      await apiPatch(`/notificacoes/${id}`, { lido: true });
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+    } catch (err) {
+      console.error("Erro ao marcar como lida:", err);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await apiPatch("/notificacoes/lidas", {});
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.error("Erro ao marcar todas como lidas:", err);
+    }
   };
 
   const addNotification = (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
+    // Para notificações locais se necessário, mas o ideal é vir do backend
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
@@ -85,7 +90,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   };
 
   const clearAll = () => {
-    setNotifications([]);
+    // Backend não tem "clear all" global ainda, apenas marcar como lida ou eliminar individualmente
+    // Vamos apenas marcar como lida no frontend por enquanto ou implementar delete individual
+    markAllAsRead();
   };
 
   return (
@@ -95,7 +102,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       markAsRead,
       markAllAsRead,
       addNotification,
-      clearAll
+      clearAll,
+      refresh: fetchNotifications
     }}>
       {children}
     </NotificationContext.Provider>
