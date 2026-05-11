@@ -1,22 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { TrendingUp, Building2, Clock, DollarSign, Users, CheckCircle2, AlertTriangle, RefreshCw, Activity, PieChart, BarChart3, CreditCard, History, Package } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { motion } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
-import { apiGet } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null);
-  const [isMounted, setIsMounted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Dashboard | Salya Admin";
-    setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    apiGet("/admin/dashboard")
+    fetch("/api/admin/dashboard")
       .then(res => res.json())
       .then(setData)
       .catch(err => {
@@ -33,19 +31,9 @@ export default function Dashboard() {
             pendingPayments: 0,
             companiesByPlan: { Mensal: 0, Semestral: 0, Anual: 0 }
           },
-          revenueChart: [
-            { name: 'Jan', value: 0 },
-            { name: 'Fev', value: 0 },
-            { name: 'Mar', value: 0 },
-            { name: 'Abr', value: 0 },
-            { name: 'Mai', value: 0 }
-          ],
+          revenueChart: [],
           paymentsChart: [],
-          companiesByPlanChart: [
-            { name: 'Mensal', value: 0 },
-            { name: 'Semestral', value: 0 },
-            { name: 'Anual', value: 0 }
-          ]
+          companiesByPlanChart: []
         });
       });
   }, []);
@@ -88,7 +76,7 @@ export default function Dashboard() {
       {/* Métricas Principais - Grid Responsivo */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
         {/* Receita Mensal */}
-         <div className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden">
+         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden">
            <div>
              <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Receita Mensal</p>
              <h3 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">{formatCurrency(metrics.monthlyRevenue)}</h3>
@@ -98,10 +86,10 @@ export default function Dashboard() {
              </div>
            </div>
            <DollarSign className="w-8 h-8 text-primary-200 absolute bottom-4 right-4 opacity-50" />
-         </div>
+         </motion.div>
 
         {/* Total Empresas */}
-        <div onClick={() => navigate("/companies")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} onClick={() => navigate("/companies")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Empresas</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.totalCompanies}</p>
@@ -109,10 +97,10 @@ export default function Dashboard() {
           <div className="bg-emerald-50 text-emerald-600 p-2 md:p-3 rounded-xl border border-emerald-100 group-hover:scale-110 transition-transform">
             <Building2 className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Total Usuários */}
-        <div onClick={() => navigate("/users")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} onClick={() => navigate("/users")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Usuários</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.totalUsers}</p>
@@ -120,10 +108,10 @@ export default function Dashboard() {
           <div className="bg-blue-50 text-blue-600 p-2 md:p-3 rounded-xl border border-blue-100 group-hover:scale-110 transition-transform">
             <Users className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Subscrições Ativas */}
-        <div onClick={() => navigate("/subscriptions")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} onClick={() => navigate("/subscriptions")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Ativas</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.activeSubscriptions}</p>
@@ -131,10 +119,10 @@ export default function Dashboard() {
           <div className="bg-primary-50 text-primary-600 p-2 md:p-3 rounded-xl border border-primary-100 group-hover:scale-110 transition-transform">
             <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Trials Ativos */}
-        <div onClick={() => navigate("/subscriptions")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} onClick={() => navigate("/subscriptions")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Trials</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.activeTrials}</p>
@@ -142,10 +130,10 @@ export default function Dashboard() {
           <div className="bg-amber-50 text-amber-600 p-2 md:p-3 rounded-xl border border-amber-100 group-hover:scale-110 transition-transform">
             <Clock className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Pagamentos Pendentes */}
-        <div onClick={() => navigate("/payments")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} onClick={() => navigate("/payments")} className="col-span-2 md:col-span-1 xl:col-span-1 bento-card p-4 md:p-6 flex items-center justify-between cursor-pointer group hover:bg-slate-50 transition-all">
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Pendentes</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.pendingPayments || 0}</p>
@@ -153,11 +141,11 @@ export default function Dashboard() {
           <div className="bg-rose-50 text-rose-600 p-2 md:p-3 rounded-xl border border-rose-100 group-hover:scale-110 transition-transform">
             <AlertTriangle className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Resumo Financeiro - Card Destacado */}
-      <div className="bento-card-dark p-6 md:p-8 overflow-hidden relative">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bento-card-dark p-6 md:p-8 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
@@ -226,12 +214,12 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Receita */}
-        <div className="bento-card p-6">
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="bento-card p-6">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
               <h3 className="text-base md:text-lg font-bold text-slate-900">Evolução de Receita</h3>
@@ -239,29 +227,27 @@ export default function Dashboard() {
             </div>
             <DollarSign className="w-6 h-6 text-primary-600 hidden md:block" />
           </div>
-          <div className="h-64 md:h-80">
-            {isMounted && (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueChart && revenueChart.length > 0 ? revenueChart : [{ name: 'Carregando...', value: 0 }]}>
-                  <defs>
-                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => v / 1000 + 'k'} />
-                  <Tooltip formatter={(value: number) => [formatCurrency(value), "Receita"]} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                  <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fill="url(#colorRev)" isAnimationActive={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+          <div className="h-64 md:h-80 w-full min-w-0 min-h-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <AreaChart data={revenueChart}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => v / 1000 + 'k'} />
+                <Tooltip formatter={(value: number) => [formatCurrency(value), "Receita"]} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }} />
+                <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fill="url(#colorRev)" animationDuration={2000} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Gráfico de Distribuição por Plano */}
-        <div className="bento-card p-6">
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.6 }} className="bento-card p-6">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
               <h3 className="text-base md:text-lg font-bold text-slate-900">Empresas por Plano</h3>
@@ -269,26 +255,24 @@ export default function Dashboard() {
             </div>
             <BarChart3 className="w-6 h-6 text-emerald-600 hidden md:block" />
           </div>
-          <div className="h-64 md:h-80">
-            {isMounted && (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={companiesByPlanChart && companiesByPlanChart.length > 0 ? companiesByPlanChart : [{ name: 'Carregando...', value: 0 }]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" allowDecimals={false} />
-                  <Tooltip formatter={(value: number) => [value, "Empresas"]} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                  <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fill="#10b981" fillOpacity={0.2} isAnimationActive={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+          <div className="h-64 md:h-80 w-full min-w-0 min-h-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <AreaChart data={companiesByPlanChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" allowDecimals={false} />
+                <Tooltip formatter={(value: number) => [value, "Empresas"]} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }} />
+                <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fill="#10b981" fillOpacity={0.2} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Última Linha - Atividade e Ações Rápidas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Atividade Recente */}
-        <div className="lg:col-span-2 bento-card p-6 flex flex-col">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="lg:col-span-2 bento-card p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
               <h3 className="text-base md:text-lg font-bold text-slate-900">Atividade Recente</h3>
@@ -312,10 +296,10 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Ações Rápidas */}
-        <div className="bento-card p-6 flex flex-col">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="bento-card p-6 flex flex-col">
           <h3 className="text-base md:text-lg font-bold text-slate-900 mb-4 md:mb-6">Ações Rápidas</h3>
           <div className="grid grid-cols-2 gap-2 md:gap-3 flex-1">
             {[
@@ -326,17 +310,21 @@ export default function Dashboard() {
               { icon: Package, label: "Planos", color: "rose", path: "/plans" },
               { icon: Activity, label: "Logs", color: "cyan", path: "/logs" },
             ].map((action, i) => (
-                <button
+              <motion.button
+                key={i}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate(action.path)}
                 className={`flex flex-col items-center justify-center gap-2 p-3 md:p-4 bg-${action.color}-50 hover:bg-${action.color}-100 rounded-xl transition-all group border border-${action.color}-100`}
               >
                 <div className={`w-10 h-10 md:w-12 md:h-12 bg-${action.color}-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                   <action.icon className={`w-5 h-5 md:w-6 md:h-6 text-${action.color}-600`} />
                 </div>
                 <span className={`text-[8px] md:text-xs font-bold text-${action.color}-700 text-center`}>{action.label}</span>
-                </button>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

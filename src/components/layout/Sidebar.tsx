@@ -8,7 +8,8 @@ import {
   LogOut,
   Package,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Wallet
 } from "lucide-react";
 import { useAuth } from "../../App";
 import { clsx, type ClassValue } from "clsx";
@@ -61,13 +62,13 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
         "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:static lg:z-auto"
       )}>
-        <div className="p-6 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center font-black text-white shadow-lg shadow-primary-500/30">
-            S
+        <div className="p-6 pb-4 flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+            <Wallet className="w-7 h-7 text-white" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-black text-white tracking-tighter leading-none">Salya</span>
-            <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest leading-none">Admin Panel</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-none truncate">Salya</span>
+            <span className="text-sm font-medium text-primary-200 uppercase tracking-[0.3em] leading-none">Admin Panel</span>
           </div>
         </div>
 

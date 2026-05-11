@@ -3,20 +3,8 @@ import { History, Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clo
 import { formatDate, formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
-import { apiGet, apiPost } from "../lib/api";
-import { useNavigate } from "react-router-dom";
-
-const FILTER_MODES = [
-  { id: 'ATIVA', label: 'Ativas' },
-  { id: 'PENDENTE_APROVACAO', label: 'Pendentes' },
-  { id: 'EXPIRADA', label: 'Expiradas' },
-  { id: 'ALL', label: 'Todas' }
-] as const;
-
-type FilterMode = (typeof FILTER_MODES)[number]['id'];
 
 export default function Subscriptions() {
-  const navigate = useNavigate();
   const [subs, setSubs] = useState<any[]>([]);
   const [companies, setCompanies] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<any[]>([]);
@@ -25,134 +13,35 @@ export default function Subscriptions() {
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterMode, setFilterMode] = useState<FilterMode>('ATIVA');
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
 
   useEffect(() => {
     document.title = "Subscrições | Salya Admin";
-    
-    // Verificar se o usuário está autenticado
-    const token = localStorage.getItem('admin_token');
-    console.log('Token no localStorage:', token ? 'presente' : 'ausente');
-    
-    if (!token) {
-      console.log('Nenhum token encontrado, redirecionando para login');
-      navigate('/login');
-      return;
-    }
-    
-    // Carregar dados
-    fetchSubscriptions();
-    fetchCompanies();
-    fetchPlans();
-  }, [navigate]);
+  }, []);
 
   const fetchSubscriptions = () => {
-    apiGet("/admin/subscriptions")
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
-            // Token inválido ou expirado
-            localStorage.removeItem('admin_token');
-            navigate('/login');
-            return;
-          }
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSubs(data);
-        } else {
-          console.error('Expected array from subscriptions API, got:', data);
-          setSubs([]);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch subscriptions:', error);
-        setSubs([]);
-      });
+    fetch("/api/admin/subscriptions")
+      .then(res => res.json())
+      .then(setSubs);
   };
-
-  const fetchCompanies = () => {
-    apiGet("/admin/companies")
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
-            localStorage.removeItem('admin_token');
-            navigate('/login');
-            return;
-          }
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          const mapping: Record<string, string> = {};
-          data.forEach((c: any) => mapping[c.id] = c.name);
-          setCompanies(mapping);
-        } else {
-          console.error('Expected array from companies API, got:', data);
-          setCompanies({});
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch companies:', error);
-        setCompanies({});
-      });
-  };
-
-  const fetchPlans = () => {
-    apiGet("/admin/plans")
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
-            localStorage.removeItem('admin_token');
-            navigate('/login');
-            return;
-          }
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          setPlans(data);
-        } else {
-          console.error('Expected array from plans API, got:', data);
-          setPlans([]);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch plans:', error);
-        setPlans([]);
-      });
-  };
-
-  const getPlanLabel = (sub: any) => {
-    if (sub.planName) return sub.planName;
-    const plan = plans.find((p) => String(p.id) === String(sub.planId));
-    if (plan) return plan.name;
-    if (sub.planId === 'p0') return 'Demo';
-    if (sub.planId === 'p1') return 'Básico';
-    if (sub.planId === 'p2') return 'Pro';
-    if (sub.planId === 'p3') return 'Empresarial';
-    return sub.planId;
-  };
-
-  const filteredSubs = (subs && Array.isArray(subs) ? subs : []).filter((sub) => {
-    if (filterMode === 'ATIVA') return sub.status === 'ATIVA';
-    if (filterMode === 'PENDENTE_APROVACAO') return sub.status === 'PENDENTE_APROVACAO';
-    if (filterMode === 'EXPIRADA') return sub.status === 'EXPIRADA';
-    return true;
-  });
 
   useEffect(() => {
     fetchSubscriptions();
-    fetchCompanies();
-    fetchPlans();
+
+    fetch("/api/admin/companies")
+      .then(res => res.json())
+      .then(data => {
+        const mapping: Record<string, string> = {};
+        data.forEach((c: any) => mapping[c.id] = c.name);
+        setCompanies(mapping);
+      });
+
+    fetch("/api/admin/plans")
+      .then(res => res.json())
+      .then(setPlans);
   }, []);
+
+  const filteredSubs = showActiveOnly ? subs.filter(sub => sub.status === 'active') : subs;
 
   const handleChangePlan = async (subscription: any) => {
     setSelectedSubscription(subscription);
@@ -170,7 +59,11 @@ export default function Subscriptions() {
 
     setIsLoading(true);
     try {
-      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/change-plan`, { planId: selectedPlan });
+      const res = await fetch(`/api/admin/subscriptions/${selectedSubscription.id}/change-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: selectedPlan }),
+      });
 
       if (res.ok) {
         Swal.fire({
@@ -203,7 +96,9 @@ export default function Subscriptions() {
 
     setIsLoading(true);
     try {
-      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/renew`, {});
+      const res = await fetch(`/api/admin/subscriptions/${selectedSubscription.id}/renew`, {
+        method: "POST",
+      });
 
       if (res.ok) {
         Swal.fire({
@@ -231,55 +126,9 @@ export default function Subscriptions() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    const result = await Swal.fire({
-      title: "Confirmar Aprovação",
-      text: "Deseja aprovar esta subscrição?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      confirmButtonText: "Sim, aprovar!"
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await apiPost(`/admin/subscriptions/${id}/approve`, {});
-      if (res.ok) {
-        fetchSubscriptions();
-        Swal.fire({ icon: "success", title: "Aprovada!", timer: 1500, showConfirmButton: false });
-      }
-    } catch (err) {
-      Swal.fire({ icon: "error", title: "Erro ao aprovar" });
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    const result = await Swal.fire({
-      title: "Confirmar Rejeição",
-      text: "Deseja rejeitar esta subscrição?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sim, rejeitar"
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await apiPost(`/admin/subscriptions/${id}/reject`, {});
-      if (res.ok) {
-        fetchSubscriptions();
-        Swal.fire({ icon: "success", title: "Rejeitada!", timer: 1500, showConfirmButton: false });
-      }
-    } catch (err) {
-      Swal.fire({ icon: "error", title: "Erro ao rejeitar" });
-    }
-  };
-
   const handleToggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'ATIVA' ? 'CANCELADA' : 'ATIVA';
-    const actionText = newStatus === 'ATIVA' ? 'ativar' : 'cancelar';
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    const actionText = newStatus === 'active' ? 'ativar' : 'suspender';
 
     const result = await Swal.fire({
       title: "Confirmar Ação",
@@ -295,7 +144,11 @@ export default function Subscriptions() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await apiPost(`/admin/subscriptions/${id}/status`, { status: newStatus });
+      const res = await fetch(`/api/admin/subscriptions/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
       if (res.ok) {
         fetchSubscriptions();
@@ -328,15 +181,18 @@ export default function Subscriptions() {
           <p className="text-slate-500 mt-1">Controle de ciclos, renovações e ativações globais.</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-white p-1 rounded-2xl border border-slate-200">
-          {FILTER_MODES.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setFilterMode(option.id)}
-              className={`px-5 py-2.5 text-xs font-black uppercase rounded-xl tracking-[0.1em] transition-all ${filterMode === option.id ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:text-primary-600 bg-slate-50 hover:bg-slate-100'}`}
-            >
-              {option.label}
-            </button>
-          ))}
+          <button
+            onClick={() => setShowActiveOnly(true)}
+            className={`px-6 py-2.5 text-xs font-black uppercase rounded-xl tracking-[0.1em] transition-all ${showActiveOnly ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-primary-600 bg-white'}`}
+          >
+            Ativas
+          </button>
+          <button
+            onClick={() => setShowActiveOnly(false)}
+            className={`px-6 py-2.5 text-xs font-black uppercase rounded-xl tracking-[0.1em] transition-all ${!showActiveOnly ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-primary-600 bg-white'}`}
+          >
+            Todas
+          </button>
         </div>
       </div>
 
@@ -354,20 +210,13 @@ export default function Subscriptions() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-xl font-bold text-slate-900">{sub.userName} ({sub.userEmail})</h4>
+                    <h4 className="text-xl font-bold text-slate-900">{companies[sub.companyId] || `Empresa #${sub.companyId}`}</h4>
                     {sub.isTrial && <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">Trial</span>}
                   </div>
-                  <div className="text-sm font-medium text-slate-600 mb-2">
-                    Entidade: {sub.companyName || companies[sub.companyId] || `Empresa #${sub.companyId}`}
-                  </div>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-                    <span className="bg-slate-50 px-2 py-1 rounded text-slate-500 border border-slate-100">SUB ID: {sub.id}</span>
+                    <span className="bg-slate-50 px-2 py-1 rounded text-slate-500 border border-slate-100">ID: {sub.id}</span>
                     <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Fim: {formatDate(sub.endDate)}</span>
-                    <span className="flex items-center gap-1.5 text-primary-500">
-                      <Settings className="w-3.5 h-3.5" /> {getPlanLabel(sub)} 
-                      {sub.durationDays && <span className="ml-1 text-[10px] text-slate-300">({sub.durationDays} dias)</span>}
-                    </span>
-                    {sub.price && <span className="flex items-center gap-1.5 text-emerald-500"><CreditCard className="w-3.5 h-3.5" /> {formatCurrency(sub.price)}</span>}
+                    <span className="flex items-center gap-1.5 text-primary-500"><Settings className="w-3.5 h-3.5" /> Plano {sub.planId === 'p1' ? 'Mensal' : sub.planId === 'p2' ? 'Semestral' : 'Anual'}</span>
                   </div>
                 </div>
               </div>
@@ -379,46 +228,27 @@ export default function Subscriptions() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    {sub.status === 'PENDENTE_APROVACAO' ? (
-                      <>
-                        <button
-                          onClick={() => handleApprove(sub.id)}
-                          className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
-                        </button>
-                        <button
-                          onClick={() => handleReject(sub.id)}
-                          className="px-6 py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-rose-500/30 transition-all flex items-center gap-2"
-                        >
-                          <XCircle className="w-3.5 h-3.5" /> Rejeitar
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleRenew(sub)}
-                          className="px-6 py-3.5 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm transition-all flex items-center gap-2"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" /> Renovar
-                        </button>
-                        <button
-                          onClick={() => handleChangePlan(sub)}
-                          className="px-6 py-3.5 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary-500/30 transition-all flex items-center gap-2"
-                        >
-                          <Settings className="w-3.5 h-3.5" /> Mudar Plano
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(sub.id, sub.status)}
-                          className={`p-3.5 border rounded-2xl transition-all ${
-                            sub.status === 'ATIVA' ? 'bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
-                          }`}
-                          title={sub.status === 'ATIVA' ? 'Cancelar' : 'Ativar'}
-                        >
-                          {sub.status === 'ATIVA' ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                        </button>
-                      </>
-                    )}
+                    <button
+                      onClick={() => handleRenew(sub)}
+                      className="px-6 py-3.5 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm transition-all flex items-center gap-2"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Renovar
+                    </button>
+                    <button
+                      onClick={() => handleChangePlan(sub)}
+                      className="px-6 py-3.5 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary-500/30 transition-all flex items-center gap-2"
+                    >
+                      <Settings className="w-3.5 h-3.5" /> Mudar Plano
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(sub.id, sub.status)}
+                      className={`p-3.5 border rounded-2xl transition-all ${
+                        sub.status === 'active' ? 'bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
+                      }`}
+                      title={sub.status === 'active' ? 'Suspender' : 'Ativar'}
+                    >
+                      {sub.status === 'active' ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                    </button>
                   </div>
                 </div>
             </div>
@@ -564,7 +394,7 @@ export default function Subscriptions() {
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500">Plano atual</span>
                       <span className="font-bold text-slate-900">
-                        {getPlanLabel(selectedSubscription)}
+                        {selectedSubscription.planId === 'p1' ? 'Mensal' : selectedSubscription.planId === 'p2' ? 'Semestral' : 'Anual'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm mt-3">
@@ -576,7 +406,7 @@ export default function Subscriptions() {
                       <span className="text-slate-700 font-bold">Nova data de vencimento</span>
                       <span className="font-black text-primary-600">
                         {formatDate(new Date(new Date(selectedSubscription.endDate).setDate(new Date(selectedSubscription.endDate).getDate() + 
-                          (selectedSubscription.durationDays || (selectedSubscription.planId === 'p1' ? 30 : selectedSubscription.planId === 'p2' ? 180 : 365))
+                          (selectedSubscription.planId === 'p1' ? 30 : selectedSubscription.planId === 'p2' ? 180 : 365)
                         )).toISOString())}
                       </span>
                     </div>
@@ -614,12 +444,12 @@ export default function Subscriptions() {
 
 function SubscriptionStatus({ status }: { status: string }) {
   const styles: any = {
-    ATIVA: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-    EXPIRADA: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
-    CANCELADA: { icon: AlertTriangle, label: "Cancelada", color: "text-orange-600 bg-orange-50 border-orange-100" },
-    PENDENTE_APROVACAO: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
+    active: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+    expired: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
+    suspended: { icon: AlertTriangle, label: "Suspensa", color: "text-orange-600 bg-orange-50 border-orange-100" },
+    pending: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
   };
-  const style = styles[status] || styles.PENDENTE_APROVACAO;
+  const style = styles[status] || styles.pending;
   const Icon = style.icon;
 
   return (
