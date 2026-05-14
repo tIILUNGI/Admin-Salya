@@ -3,6 +3,7 @@ import { History, Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clo
 import { formatDate, formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
+import { apiGet, apiPost } from "../lib/api";
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState<any[]>([]);
@@ -20,25 +21,29 @@ export default function Subscriptions() {
   }, []);
 
   const fetchSubscriptions = () => {
-    fetch("/api/admin/subscriptions")
+    apiGet("/admin/subscriptions")
       .then(res => res.json())
-      .then(setSubs);
+      .then(data => setSubs(Array.isArray(data) ? data : []))
+      .catch(() => setSubs([]));
   };
 
   useEffect(() => {
     fetchSubscriptions();
 
-    fetch("/api/admin/companies")
+    apiGet("/admin/companies")
       .then(res => res.json())
       .then(data => {
+        if (!Array.isArray(data)) return;
         const mapping: Record<string, string> = {};
         data.forEach((c: any) => mapping[c.id] = c.name);
         setCompanies(mapping);
-      });
+      })
+      .catch(() => {});
 
-    fetch("/api/admin/plans")
+    apiGet("/admin/plans")
       .then(res => res.json())
-      .then(setPlans);
+      .then(data => setPlans(Array.isArray(data) ? data : []))
+      .catch(() => setPlans([]));
   }, []);
 
   const filteredSubs = showActiveOnly ? subs.filter(sub => sub.status === 'active') : subs;
@@ -59,11 +64,7 @@ export default function Subscriptions() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/subscriptions/${selectedSubscription.id}/change-plan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: selectedPlan }),
-      });
+      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/change-plan`, { planId: selectedPlan });
 
       if (res.ok) {
         Swal.fire({
@@ -96,9 +97,8 @@ export default function Subscriptions() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/subscriptions/${selectedSubscription.id}/renew`, {
-        method: "POST",
-      });
+      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/renew`, {});
+
 
       if (res.ok) {
         Swal.fire({
@@ -127,8 +127,9 @@ export default function Subscriptions() {
   };
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    const actionText = newStatus === 'active' ? 'ativar' : 'suspender';
+    const isActive = currentStatus === 'active' || currentStatus === 'ATIVA';
+    const newStatus = isActive ? 'suspended' : 'active';
+    const actionText = isActive ? 'suspender' : 'ativar';
 
     const result = await Swal.fire({
       title: "Confirmar Ação",
@@ -144,11 +145,7 @@ export default function Subscriptions() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`/api/admin/subscriptions/${id}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const res = await apiPost(`/admin/subscriptions/${id}/status`, { status: newStatus });
 
       if (res.ok) {
         fetchSubscriptions();
@@ -243,11 +240,11 @@ export default function Subscriptions() {
                     <button
                       onClick={() => handleToggleStatus(sub.id, sub.status)}
                       className={`p-3.5 border rounded-2xl transition-all ${
-                        sub.status === 'active' ? 'bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
+                        (sub.status === 'active' || sub.status === 'ATIVA') ? 'bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
                       }`}
-                      title={sub.status === 'active' ? 'Suspender' : 'Ativar'}
+                      title={(sub.status === 'active' || sub.status === 'ATIVA') ? 'Suspender' : 'Ativar'}
                     >
-                      {sub.status === 'active' ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                      {(sub.status === 'active' || sub.status === 'ATIVA') ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -445,9 +442,13 @@ export default function Subscriptions() {
 function SubscriptionStatus({ status }: { status: string }) {
   const styles: any = {
     active: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+    ATIVA: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
     expired: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
+    EXPIRADA: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
     suspended: { icon: AlertTriangle, label: "Suspensa", color: "text-orange-600 bg-orange-50 border-orange-100" },
+    CANCELADA: { icon: AlertTriangle, label: "Suspensa", color: "text-orange-600 bg-orange-50 border-orange-100" },
     pending: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
+    PENDENTE_APROVACAO: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
   };
   const style = styles[status] || styles.pending;
   const Icon = style.icon;

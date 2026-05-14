@@ -104,15 +104,24 @@ export default function Users() {
     });
 
     if (!result.isConfirmed) return;
-
-    Swal.fire({
-      icon: "success",
-      title: "Email Enviado!",
-      text: "Link de redefinição enviado com sucesso",
-      confirmButtonColor: "#2563eb",
-      timer: 2000,
-      showConfirmButton: false
-    });
+    
+    try {
+      const res = await apiPost(`/admin/users/${id}/send-reset-link`, { frontendUrl: "http://localhost:8081" });
+      if (res.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Email Enviado!",
+          text: "Link de redefinição enviado com sucesso",
+          confirmButtonColor: "#2563eb",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        throw new Error("Failed to send link");
+      }
+    } catch (err) {
+      Swal.fire("Erro", "Não foi possível enviar o link de recuperação", "error");
+    }
   };
 
   const handleViewUser = (user: any) => {
@@ -190,6 +199,7 @@ export default function Users() {
       html: `
         <input id="swal-name" class="swal2-input" placeholder="Nome" value="${user.name}">
         <input id="swal-email" class="swal2-input" type="email" placeholder="Email" value="${user.email}">
+        <input id="swal-password" class="swal2-input" type="password" placeholder="Nova Senha (opcional)">
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -199,11 +209,12 @@ export default function Users() {
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
         const email = (document.getElementById('swal-email') as HTMLInputElement).value;
+        const password = (document.getElementById('swal-password') as HTMLInputElement).value;
         if (!name || !email) {
           Swal.showValidationMessage('Nome e email são obrigatórios');
           return false;
         }
-        return { name, email };
+        return { name, email, password };
       }
     }).then(async (result) => {
       if (result.isConfirmed && result.value) {
@@ -450,7 +461,7 @@ export default function Users() {
                     <td className="px-4 md:px-6 py-3 md:py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs md:text-sm">
-                          {user.name.charAt(0).toUpperCase()}
+                          {(user.name || "U").charAt(0).toUpperCase()}
                         </div>
                         <span className="font-bold text-slate-900 text-sm md:text-base">{user.name}</span>
                       </div>
@@ -468,7 +479,7 @@ export default function Users() {
                       <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
                         user.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
                       } border`}>
-                        {user.status.toUpperCase()}
+                        {(user.status || "UNKNOWN").toUpperCase()}
                       </span>
                     </td>
                      <td className="px-4 md:px-6 py-3 md:py-4">

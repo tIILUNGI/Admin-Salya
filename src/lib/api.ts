@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.salya.ilungi.digital/api';
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('admin_token');

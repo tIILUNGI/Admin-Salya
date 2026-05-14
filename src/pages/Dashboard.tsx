@@ -3,6 +3,7 @@ import { TrendingUp, Building2, Clock, DollarSign, Users, CheckCircle2, AlertTri
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
 import { formatCurrency } from "../lib/formatters";
+import { apiGet } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
@@ -14,7 +15,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/dashboard")
+    apiGet("/admin/dashboard")
       .then(res => res.json())
       .then(setData)
       .catch(err => {
@@ -54,7 +55,18 @@ export default function Dashboard() {
     </div>
   );
 
-  const { metrics, revenueChart, paymentsChart, companiesByPlanChart } = data;
+  const metrics = data?.metrics || {
+    totalCompanies: 0,
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    expiredSubscriptions: 0,
+    monthlyRevenue: 0,
+    annualRevenue: 0,
+    activeTrials: 0,
+    pendingPayments: 0
+  };
+  const revenueChart = data?.revenueChart || [];
+  const companiesByPlanChart = data?.companiesByPlanChart || [];
 
   return (
     <div className="space-y-8 pb-12">

@@ -34,14 +34,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         // Mapear campos do backend (titulo -> title, mensagem -> message, lido -> read, tipo -> type)
-        const mapped: Notification[] = data.map((n: any) => ({
-          id: n.id.toString(),
-          title: n.titulo,
-          message: n.mensagem,
-          type: n.tipo.toLowerCase(),
-          read: n.lido,
-          createdAt: n.createdAt
-        }));
+        const mapped: Notification[] = Array.isArray(data) ? data.map((n: any) => ({
+          id: n.id?.toString() || Math.random().toString(),
+          title: n.titulo || "Sem Título",
+          message: n.mensagem || "",
+          type: (n.tipo?.toLowerCase() || "info") as any,
+          read: !!n.lido,
+          createdAt: n.createdAt || new Date().toISOString()
+        })) : [];
         setNotifications(mapped);
       }
     } catch (err) {

@@ -200,7 +200,7 @@ export default function Companies() {
                   <td className="px-4 md:px-8 py-4 md:py-5">
                     <div className="flex items-center gap-3 md:gap-4">
                       <div className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-110 transition-transform">
-                        {company.name.charAt(0)}
+                        {(company.name || "E").charAt(0)}
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors text-sm md:text-base">{company.name}</p>
@@ -274,7 +274,7 @@ export default function Companies() {
 
               <div className="flex flex-col md:flex-row gap-8 items-start mb-10">
                 <div className="w-24 h-24 bg-primary-50 rounded-[2rem] flex items-center justify-center text-primary-600 text-3xl font-black shadow-lg shadow-primary-500/10">
-                  {selectedCompany.name.charAt(0)}
+                  {(selectedCompany.name || "E").charAt(0)}
                 </div>
                 <div>
                   <h3 className="text-3xl font-black text-slate-900 leading-tight">{selectedCompany.name}</h3>

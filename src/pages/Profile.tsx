@@ -66,9 +66,14 @@ export default function Profile() {
         }
         return { current, newPass };
       }
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire('Senha alterada!', 'Sua senha foi atualizada com sucesso.', 'success');
+        try {
+          await apiPut("/admin/profile", { password: result.value.newPass });
+          Swal.fire('Senha alterada!', 'Sua senha foi atualizada com sucesso.', 'success');
+        } catch (err) {
+          Swal.fire('Erro!', 'Não foi possível alterar a senha.', 'error');
+        }
       }
     });
   };
