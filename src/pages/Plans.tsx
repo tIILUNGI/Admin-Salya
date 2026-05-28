@@ -14,7 +14,7 @@ export default function Plans() {
     price: 0, 
     durationDays: 30, 
     isActive: true,
-    type: "BASIC",
+    type: "SEMESTRAL",
     category: "PAGO"
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +103,7 @@ export default function Plans() {
         price: plan.price, 
         durationDays: plan.durationDays, 
         isActive: plan.isActive,
-        type: plan.type || "BASIC",
+        type: plan.type || "SEMESTRAL",
         category: plan.category || "PAGO"
       });
     } else {
@@ -113,7 +113,7 @@ export default function Plans() {
         price: 0, 
         durationDays: 30, 
         isActive: true,
-        type: "BASIC",
+        type: "SEMESTRAL",
         category: "PAGO"
       });
     }

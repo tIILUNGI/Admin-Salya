@@ -148,9 +148,11 @@ export default function Subscriptions() {
   };
 
   const getPlanLabel = (planId: string) => {
-    if (planId === "p1") return "Mensal";
-    if (planId === "p2") return "Semestral";
-    return "Anual";
+    if (planId === "p0") return "Demo";
+    if (planId === "p1") return "Semestral";
+    if (planId === "p2") return "Anual";
+    if (planId === "p3") return "Bianual";
+    return "Outro";
   };
 
   return (
