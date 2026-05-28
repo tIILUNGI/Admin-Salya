@@ -248,6 +248,9 @@ export default function Plans() {
                           className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         >
                           <option value="DEMO">DEMO</option>
+                          <option value="SEMESTRAL">SEMESTRAL</option>
+                          <option value="ANUAL">ANUAL</option>
+                          <option value="BIANUAL">BIANUAL</option>
                           <option value="BASIC">BASIC</option>
                           <option value="PRO">PRO</option>
                           <option value="ENTERPRISE">ENTERPRISE</option>
