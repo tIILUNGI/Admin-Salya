@@ -106,7 +106,9 @@ export default function Users() {
     if (!result.isConfirmed) return;
     
     try {
-      const res = await apiPost(`/admin/users/${id}/send-reset-link`, { frontendUrl: "http://localhost:8081" });
+      const res = await apiPost(`/admin/users/${id}/send-reset-link`, {
+        frontendUrl: import.meta.env.VITE_APP_URL || 'https://app.salya.ao',
+      });
       if (res.ok) {
         Swal.fire({
           icon: "success",
