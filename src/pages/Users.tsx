@@ -107,7 +107,7 @@ export default function Users() {
     
     try {
       const res = await apiPost(`/admin/users/${id}/send-reset-link`, {
-        frontendUrl: import.meta.env.VITE_APP_URL || 'https://app.salya.ao',
+        frontendUrl: (import.meta as any).env?.VITE_APP_URL || 'https://app.salya.ao',
       });
       if (res.ok) {
         Swal.fire({

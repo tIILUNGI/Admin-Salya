@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2 } from "lucide-react";
+import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Mail, Phone, MapPin, Hash } from "lucide-react";
 import { formatDate, formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
@@ -7,7 +7,7 @@ import { apiGet, apiPost } from "../lib/api";
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState<any[]>([]);
-  const [companies, setCompanies] = useState<Record<string, { name: string; employees: number }>>({});
+  const [companies, setCompanies] = useState<Record<string, any>>({});
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
@@ -34,8 +34,13 @@ export default function Subscriptions() {
     apiGet("/admin/companies")
       .then(res => res.json())
       .then(data => {
-        const mapping: Record<string, { name: string; employees: number }> = {};
-        (Array.isArray(data) ? data : []).forEach((c: any) => (mapping[String(c.id)] = { name: c.name || `Empresa #${c.id}`, employees: c.employees || 0 }));
+        const mapping: Record<string, any> = {};
+        (Array.isArray(data) ? data : []).forEach((c: any) => {
+          mapping[String(c.id)] = c;
+          if (c.userId) {
+            mapping[String(c.userId)] = c;
+          }
+        });
         setCompanies(mapping);
       })
       .catch(() => {});
@@ -192,7 +197,7 @@ export default function Subscriptions() {
         )}
 
         {companyOrder.map(cid => {
-          const info = companies[cid] || { name: `Empresa #${cid}`, employees: 0 };
+          const info = companies[cid] || { name: companyGroups[cid]?.[0]?.companyName || `Empresa #${cid}`, employees: 0 };
           const groupSubs = companyGroups[cid];
           const isExpanded = expandedCompanies[cid] !== false; // default open
           const activeCount = groupSubs.filter(s => s.status === "active" || s.status === "ATIVA").length;
@@ -211,10 +216,10 @@ export default function Subscriptions() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-slate-900">{info.name}</h3>
-                    {latestSub?.ownerName && (
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">person</span>
-                        {latestSub.ownerName}
+                    {(latestSub?.userName || latestSub?.ownerName) && (
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                        Proprietário: <span className="font-extrabold text-slate-700">{latestSub.userName || latestSub.ownerName}</span>
                       </p>
                     )}
                     <div className="flex items-center flex-wrap gap-3 mt-2">
@@ -263,6 +268,72 @@ export default function Subscriptions() {
                     className="overflow-hidden"
                   >
                     <div className="border-t border-slate-100 divide-y divide-slate-50">
+                      {/* Detailed Company & Owner info block */}
+                      <div className="bg-slate-50/50 p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-100">
+                        {/* Company Details Column */}
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <Building2 className="w-3.5 h-3.5 text-primary-500" />
+                            Detalhes da Empresa
+                          </h4>
+                          <div className="bg-white rounded-2xl p-5 border border-slate-100 space-y-3 shadow-sm">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-slate-500 font-medium">Nome Comercial:</span>
+                              <span className="font-bold text-slate-900">{info.name}</span>
+                            </div>
+                            {info.nif && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">NIF:</span>
+                                <span className="font-mono font-bold text-slate-700">{info.nif}</span>
+                              </div>
+                            )}
+                            {(info.email || info.phone) && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Contacto Geral:</span>
+                                <span className="font-bold text-slate-700">{info.phone || info.email}</span>
+                              </div>
+                            )}
+                            {info.address && (
+                              <div className="flex justify-between items-start text-sm">
+                                <span className="text-slate-500 font-medium mr-4">Endereço:</span>
+                                <span className="font-bold text-slate-700 text-right">{info.address}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Proprietor Details Column */}
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <Users className="w-3.5 h-3.5 text-emerald-500" />
+                            Dados do Proprietário
+                          </h4>
+                          <div className="bg-white rounded-2xl p-5 border border-slate-100 space-y-3 shadow-sm">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-slate-500 font-medium">Nome do Gestor:</span>
+                              <span className="font-bold text-slate-900">{latestSub?.userName || latestSub?.ownerName || "Não informado"}</span>
+                            </div>
+                            {latestSub?.userEmail && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Email:</span>
+                                <span className="font-bold text-slate-700 select-all">{latestSub.userEmail}</span>
+                              </div>
+                            )}
+                            {latestSub?.userPhone && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Telemóvel:</span>
+                                <span className="font-bold text-slate-700">{latestSub.userPhone}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-slate-500 font-medium">Colaboradores Activos:</span>
+                              <span className="px-2.5 py-0.5 bg-slate-100 rounded-full font-bold text-slate-700 text-xs">
+                                {info.employees}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       {groupSubs.map((sub, idx) => (
                         <div
                           key={sub.id}
@@ -400,19 +471,11 @@ export default function Subscriptions() {
                                 <Package className="w-6 h-6" />
                               </div>
                               <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-lg font-black text-slate-900">{info.name}</h3>
-                      {selectedSubscription.isTrial && (
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Demo</span>
-                      )}
-                    </div>
-                    {selectedSubscription.ownerName && (
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[14px]">person</span>
-                        {selectedSubscription.ownerName}
-                      </p>
-                    )}
-                  </div>
+                                <div className="flex items-center gap-3 mb-1">
+                                  <h3 className="text-lg font-black text-slate-900">{plan.name}</h3>
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium">Duração: {plan.durationDays} dias</p>
+                              </div>
                             </div>
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                               selectedPlan === plan.id ? "border-primary-500 bg-primary-500 text-white" : "border-slate-300"
