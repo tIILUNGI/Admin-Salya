@@ -34,9 +34,8 @@ export default function Subscriptions() {
     apiGet("/admin/companies")
       .then(res => res.json())
       .then(data => {
-        if (!Array.isArray(data)) return;
         const mapping: Record<string, { name: string; employees: number }> = {};
-        data.forEach((c: any) => (mapping[String(c.id)] = { name: c.name || `Empresa #${c.id}`, employees: c.employees || 0 }));
+        (Array.isArray(data) ? data : []).forEach((c: any) => (mapping[String(c.id)] = { name: c.name || `Empresa #${c.id}`, employees: c.employees || 0 }));
         setCompanies(mapping);
       })
       .catch(() => {});
@@ -212,7 +211,13 @@ export default function Subscriptions() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-slate-900">{info.name}</h3>
-                    <div className="flex items-center flex-wrap gap-3 mt-1">
+                    {latestSub?.ownerName && (
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">person</span>
+                        {latestSub.ownerName}
+                      </p>
+                    )}
+                    <div className="flex items-center flex-wrap gap-3 mt-2">
                       {/* Employee count */}
                       <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-full">
                         <Users className="w-3 h-3" />
@@ -394,10 +399,20 @@ export default function Subscriptions() {
                               }`}>
                                 <Package className="w-6 h-6" />
                               </div>
-                              <div>
-                                <p className="font-bold text-slate-900">{plan.name}</p>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">{plan.durationDays} dias</p>
-                              </div>
+                              <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-lg font-black text-slate-900">{info.name}</h3>
+                      {selectedSubscription.isTrial && (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Demo</span>
+                      )}
+                    </div>
+                    {selectedSubscription.ownerName && (
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                        {selectedSubscription.ownerName}
+                      </p>
+                    )}
+                  </div>
                             </div>
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                               selectedPlan === plan.id ? "border-primary-500 bg-primary-500 text-white" : "border-slate-300"
