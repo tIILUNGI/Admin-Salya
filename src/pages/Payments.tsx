@@ -67,7 +67,7 @@ export default function Payments() {
       text: "Tem a certeza que deseja confirmar este pagamento?",
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
@@ -84,7 +84,7 @@ export default function Payments() {
           icon: "success",
           title: "Confirmado!",
           text: "Pagamento confirmado com sucesso",
-          confirmButtonColor: "#2563eb",
+          confirmButtonColor: "#9333ea",
           timer: 1500,
           showConfirmButton: false
         });
@@ -165,7 +165,7 @@ export default function Payments() {
             <p className="text-rose-700 mb-6">{error}</p>
             <button
               onClick={fetchPayments}
-              className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+              className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold transition-colors"
             >
               Tentar novamente
             </button>

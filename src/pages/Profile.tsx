@@ -51,7 +51,7 @@ export default function Profile() {
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Alterar Senha',
-      confirmButtonColor: '#2563eb',
+      confirmButtonColor: '#9333ea',
       preConfirm: () => {
         const current = (document.getElementById('swal-password1') as HTMLInputElement).value;
         const newPass = (document.getElementById('swal-password2') as HTMLInputElement).value;

@@ -95,7 +95,7 @@ export default function Subscriptions() {
     try {
       const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/change-plan`, { planId: selectedPlan });
       if (res.ok) {
-        Swal.fire({ icon: "success", title: "Plano Alterado!", text: "O plano foi atualizado com sucesso", confirmButtonColor: "#2563eb", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: "success", title: "Plano Alterado!", text: "O plano foi atualizado com sucesso", confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
         setShowChangePlanModal(false);
         fetchSubscriptions();
       } else throw new Error("Failed");
@@ -112,7 +112,7 @@ export default function Subscriptions() {
     try {
       const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/renew`, {});
       if (res.ok) {
-        Swal.fire({ icon: "success", title: "Subscrição Renovada!", text: "A subscrição foi renovada com sucesso", confirmButtonColor: "#2563eb", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: "success", title: "Subscrição Renovada!", text: "A subscrição foi renovada com sucesso", confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
         setShowRenewModal(false);
         fetchSubscriptions();
       } else throw new Error("Failed");
@@ -133,7 +133,7 @@ export default function Subscriptions() {
       text: `Deseja realmente ${actionText} esta subscrição?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar",
@@ -144,7 +144,7 @@ export default function Subscriptions() {
       const res = await apiPost(`/admin/subscriptions/${id}/status`, { status: newStatus });
       if (res.ok) {
         fetchSubscriptions();
-        Swal.fire({ icon: "success", title: "Sucesso!", text: `Subscrição ${actionText} com sucesso`, confirmButtonColor: "#2563eb", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: "success", title: "Sucesso!", text: `Subscrição ${actionText} com sucesso`, confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
       } else throw new Error("Failed");
     } catch {
       Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível atualizar o status", confirmButtonColor: "#ef4444" });
@@ -466,7 +466,7 @@ export default function Subscriptions() {
                             <div className="flex items-center gap-4">
                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                                 plan.id === "p1" ? "bg-emerald-100 text-emerald-600" :
-                                plan.id === "p2" ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"
+                                plan.id === "p2" ? "bg-primary-100 text-primary-600" : "bg-purple-100 text-purple-600"
                               }`}>
                                 <Package className="w-6 h-6" />
                               </div>

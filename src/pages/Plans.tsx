@@ -86,7 +86,7 @@ export default function Plans() {
       icon: "success",
       title: "Removido!",
       text: "Plano removido com sucesso",
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       timer: 1500,
       showConfirmButton: false
     });

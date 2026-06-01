@@ -117,7 +117,7 @@ export default function Dashboard() {
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Usuários</p>
             <p className="text-2xl md:text-3xl font-black text-slate-900">{metrics.totalUsers}</p>
           </div>
-          <div className="bg-blue-50 text-blue-600 p-2 md:p-3 rounded-xl border border-blue-100 group-hover:scale-110 transition-transform">
+          <div className="bg-primary-50 text-primary-600 p-2 md:p-3 rounded-xl border border-primary-100 group-hover:scale-110 transition-transform">
             <Users className="w-5 h-5 md:w-6 md:h-6" />
           </div>
         </motion.div>
@@ -221,7 +221,7 @@ export default function Dashboard() {
             <button onClick={() => navigate("/subscriptions")} className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-white border border-emerald-400/30 rounded-xl text-[8px] md:text-xs font-bold uppercase tracking-wider transition-all">
               <History className="w-3 h-3 md:w-4 md:h-4" /> Subscrições
             </button>
-            <button onClick={() => navigate("/companies")} className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-white border border-blue-400/30 rounded-xl text-[8px] md:text-xs font-bold uppercase tracking-wider transition-all">
+            <button onClick={() => navigate("/companies")} className="flex items-center gap-2 px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-white border border-primary-400/20 rounded-xl text-[8px] md:text-xs font-bold uppercase tracking-wider transition-all">
               <Building2 className="w-3 h-3 md:w-4 md:h-4" /> Empresas
             </button>
           </div>
@@ -244,15 +244,15 @@ export default function Dashboard() {
               <AreaChart data={revenueChart}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#9333ea" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
                 <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => v / 1000 + 'k'} />
                 <Tooltip formatter={(value: number) => [formatCurrency(value), "Receita"]} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fill="url(#colorRev)" animationDuration={2000} />
+                <Area type="monotone" dataKey="value" stroke="#9333ea" strokeWidth={3} fill="url(#colorRev)" animationDuration={2000} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -316,7 +316,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-2 md:gap-3 flex-1">
             {[
               { icon: Building2, label: "Nova Empresa", color: "emerald", path: "/companies" },
-              { icon: Users, label: "Novo User", color: "blue", path: "/users" },
+              { icon: Users, label: "Novo User", color: "primary", path: "/users" },
               { icon: History, label: "Subs.", color: "purple", path: "/subscriptions" },
               { icon: CreditCard, label: "Pagamento", color: "amber", path: "/payments" },
               { icon: Package, label: "Planos", color: "rose", path: "/plans" },

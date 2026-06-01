@@ -70,7 +70,7 @@ export default function Users() {
       text: `Deseja realmente ${actionLabel} este usuário?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
@@ -85,7 +85,7 @@ export default function Users() {
       icon: "success",
       title: "Sucesso!",
       text: `Usuário ${actionLabel} com sucesso`,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       timer: 1500,
       showConfirmButton: false
     });
@@ -140,7 +140,7 @@ export default function Users() {
           <p><strong>Data Cadastro:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
         </div>
       `,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       confirmButtonText: "Fechar"
     });
   };
@@ -180,9 +180,9 @@ export default function Users() {
         title: `Histórico: ${data.user.name}`,
         html: `
           <div style="text-align: left; max-height: 400px; overflow-y: auto;">
-            <h4 style="margin-top:0; color:#2563eb; border-bottom: 2px solid #2563eb; padding-bottom:4px;">Subscrições</h4>
+            <h4 style="margin-top:0; color:#9333ea; border-bottom: 2px solid #9333ea; padding-bottom:4px;">Subscrições</h4>
             ${subsHtml}
-            <h4 style="margin-top:20px; color:#2563eb; border-bottom: 2px solid #2563eb; padding-bottom:4px;">Pagamentos</h4>
+            <h4 style="margin-top:20px; color:#9333ea; border-bottom: 2px solid #9333ea; padding-bottom:4px;">Pagamentos</h4>
             ${paymentsHtml}
           </div>
         `,
@@ -225,7 +225,7 @@ export default function Users() {
       showCancelButton: true,
       confirmButtonText: 'Salvar Alterações',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#2563eb',
+      confirmButtonColor: '#9333ea',
       width: '450px',
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
@@ -310,7 +310,7 @@ export default function Users() {
       showCancelButton: true,
       confirmButtonText: 'Criar Usuário',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#2563eb',
+      confirmButtonColor: '#9333ea',
       width: '450px',
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
@@ -344,7 +344,7 @@ export default function Users() {
             icon: "success",
             title: "Usuário Criado!",
             text: "Novo usuário adicionado com sucesso",
-            confirmButtonColor: "#2563eb",
+            confirmButtonColor: "#9333ea",
             timer: 2000,
             showConfirmButton: false
           });

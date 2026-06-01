@@ -69,7 +69,7 @@ export default function Companies() {
           icon: "success",
           title: "Sucesso!",
           text: "Empresa criada com sucesso",
-          confirmButtonColor: "#2563eb"
+          confirmButtonColor: "#9333ea"
         });
       }
     } catch (err) {
@@ -90,7 +90,7 @@ export default function Companies() {
       text: `Deseja realmente ${newStatus === "active" ? "ativar" : "suspender"} esta empresa?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#9333ea",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
@@ -127,7 +127,7 @@ export default function Companies() {
       icon: "success",
       title: "Removida!",
       text: "A empresa foi removida com sucesso",
-      confirmButtonColor: "#2563eb"
+      confirmButtonColor: "#9333ea"
     });
   };
 

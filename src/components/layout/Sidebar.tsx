@@ -68,7 +68,7 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-none truncate">Salya</span>
-            <span className="text-sm font-medium text-primary-200 uppercase tracking-[0.3em] leading-none">Admin Panel</span>
+            <span className="text-sm font-medium text-primary-300 uppercase tracking-[0.3em] leading-none">Admin Panel</span>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
                         "p-1.5 rounded-lg transition-transform",
                         isActive ? "bg-white/20" : "group-hover:bg-slate-700/50"
                       )}>
-                        <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-400")} />
+                        <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-500")} />
                       </div>
                       <span className="truncate">{item.label}</span>
                     </div>
@@ -123,7 +123,7 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
             onClick={closeMobileMenu}
             className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all group border border-slate-800 hover:border-slate-700 mb-3"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-105 transition-transform">
               {admin ? admin.name?.charAt(0)?.toUpperCase() || "A" : "A"}
             </div>
             <div className="flex-1 min-w-0">
