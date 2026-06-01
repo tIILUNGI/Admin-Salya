@@ -1,5 +1,29 @@
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.salya.ilungi.digital/api';
+// Detecta se está em desenvolvimento local
+const isLocalDevelopment = (): boolean => {
+  return (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    process.env.NODE_ENV === 'development'
+  );
+};
 
+// Define a URL base da API com fallback
+const getApiBaseUrl = (): string => {
+  // 1. Se tem variável de ambiente, usa ela
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  
+  // 2. Se está em desenvolvimento local, usa localhost
+  if (isLocalDevelopment()) {
+    return 'http://localhost:8080/api';
+  }
+  
+  // 3. Caso contrário, usa produção
+  return 'https://api.salya.ao/api';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('admin_token');
 
