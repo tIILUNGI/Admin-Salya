@@ -91,7 +91,7 @@ export default function Users() {
     });
   };
 
-  const handleResetPassword = async (email: string) => {
+  const handleResetPassword = async (id: string, email: string) => {
     const result = await Swal.fire({
       title: "Enviar link de recuperação?",
       text: `Enviar link de redefinição de palavra-passe para ${email}?`,
@@ -199,24 +199,44 @@ export default function Users() {
     Swal.fire({
       title: 'Editar Usuário',
       html: `
-        <input id="swal-name" class="swal2-input" placeholder="Nome" value="${user.name}">
-        <input id="swal-email" class="swal2-input" type="email" placeholder="Email" value="${user.email}">
-        <input id="swal-password" class="swal2-input" type="password" placeholder="Nova Senha (opcional)">
+        <div style="text-align: left; display: flex; flex-direction: column; gap: 12px;">
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nome Completo</label>
+            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" placeholder="Nome" value="${user.name}">
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Email</label>
+            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="email" placeholder="Email" value="${user.email}">
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Papel / Cargo</label>
+            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px; display: flex;">
+              <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>Usuário Comum</option>
+              <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>Administrador</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nova Senha (deixe vazio para não alterar)</label>
+            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="password" placeholder="••••••••">
+          </div>
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: 'Salvar',
+      confirmButtonText: 'Salvar Alterações',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#2563eb',
+      width: '450px',
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
         const email = (document.getElementById('swal-email') as HTMLInputElement).value;
         const password = (document.getElementById('swal-password') as HTMLInputElement).value;
+        const role = (document.getElementById('swal-role') as HTMLSelectElement).value;
         if (!name || !email) {
           Swal.showValidationMessage('Nome e email são obrigatórios');
           return false;
         }
-        return { name, email, password };
+        return { name, email, password, role };
       }
     }).then(async (result) => {
       if (result.isConfirmed && result.value) {
@@ -263,21 +283,40 @@ export default function Users() {
   const handleCreateUser = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'Criar Novo Usuário',
-      html:
-        '<input id="swal-input1" class="swal2-input" placeholder="Nome">' +
-        '<input id="swal-input2" class="swal2-input" placeholder="Email">' +
-        '<input id="swal-input3" class="swal2-input" type="password" placeholder="Senha (opcional)">' +
-        '<select id="swal-input4" class="swal2-select" style="display:flex;width:100%;max-width:100%;"><option value="USER">Usuário Comum</option><option value="ADMIN">Administrador</option></select>',
+      html: `
+        <div style="text-align: left; display: flex; flex-direction: column; gap: 12px;">
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nome Completo</label>
+            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" placeholder="Nome">
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Email</label>
+            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="email" placeholder="Email">
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Papel / Cargo</label>
+            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px; display: flex;">
+              <option value="USER">Usuário Comum</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 2px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Senha (provisória)</label>
+            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="password" placeholder="••••••••">
+          </div>
+        </div>
+      `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Criar Usuário',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#2563eb',
+      width: '450px',
       preConfirm: () => {
-        const name = (document.getElementById('swal-input1') as HTMLInputElement).value;
-        const email = (document.getElementById('swal-input2') as HTMLInputElement).value;
-        const password = (document.getElementById('swal-input3') as HTMLInputElement).value;
-        const role = (document.getElementById('swal-input4') as HTMLSelectElement).value;
+        const name = (document.getElementById('swal-name') as HTMLInputElement).value;
+        const email = (document.getElementById('swal-email') as HTMLInputElement).value;
+        const password = (document.getElementById('swal-password') as HTMLInputElement).value;
+        const role = (document.getElementById('swal-role') as HTMLSelectElement).value;
         if (!name || !email) {
           Swal.showValidationMessage('Nome e email são obrigatórios');
           return false;
@@ -499,10 +538,10 @@ export default function Users() {
                         >
                           {user.status === 'active' ? <Ban className="w-3 md:w-4 h-3 md:h-4" /> : <Unlock className="w-3 md:w-4 h-3 md:h-4" />}
                         </motion.button>
-                        <motion.button
+                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleResetPassword(user.email)}
+                          onClick={() => handleResetPassword(user.id, user.email)}
                           className="p-2 md:p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-primary-600 border border-slate-200 transition-all shadow-sm"
                           title="Resetar senha"
                         >
