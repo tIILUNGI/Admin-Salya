@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Mail, Phone, MapPin, Hash } from "lucide-react";
+import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Mail, Phone, MapPin, Hash, Download } from "lucide-react";
 import { formatDate, formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
@@ -156,6 +156,75 @@ export default function Subscriptions() {
     return "Outro";
   };
 
+  const downloadWorkspaceCSV = (uid: string) => {
+    const group = userGroups[uid] || [];
+    if (group.length === 0) return;
+
+    const headers = [
+      "ID Subscrição",
+      "Plano",
+      "Status",
+      "Data Início",
+      "Data Fim",
+      "Trial",
+      "Nome Empresa",
+      "NIF",
+      "Contacto",
+      "Endereço",
+      "Proprietário",
+      "Email Proprietário",
+      "Telemóvel Proprietário",
+      "Colaboradores"
+    ];
+
+    const escapeCsv = (val: any) => {
+      const s = String(val ?? "");
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+
+    const rows = group.map(sub => {
+      const info = {
+        name: sub.companyName || companies[String(sub.companyId)]?.name || "",
+        nif: companies[String(sub.companyId)]?.nif || "",
+        contact: companies[String(sub.companyId)]?.phone || companies[String(sub.companyId)]?.email || "",
+        address: companies[String(sub.companyId)]?.address || "",
+        userName: sub.userName || sub.ownerName || "",
+        ownerEmail: sub.userEmail || "",
+        ownerPhone: sub.userPhone || "",
+        employees: Number(sub.employees ?? 0)
+      };
+
+      return [
+        sub.id,
+        getPlanLabel(sub.planId),
+        sub.status,
+        formatDate(sub.startDate || sub.createdAt),
+        formatDate(sub.endDate),
+        sub.isTrial ? "Sim" : "Não",
+        info.name,
+        info.nif,
+        info.contact,
+        info.address,
+        info.userName,
+        info.ownerEmail,
+        info.ownerPhone,
+        info.employees
+      ].map(escapeCsv).join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `subscricao_${uid}_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
@@ -163,7 +232,7 @@ export default function Subscriptions() {
         <div>
           <h1 className="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Subscrições</h1>
           <p className="text-slate-500 mt-1.5 text-sm font-medium">
-            {userOrder.length} usuário{userOrder.length !== 1 ? "s" : ""} · {sortedSubs.length} subscrição{sortedSubs.length !== 1 ? "ões" : ""}
+            {userOrder.length} usuário{userOrder.length !== 1 ? "s" : ""} · {sortedSubs.length} subscri{sortedSubs.length !== 1 ? "ções" : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 bg-white p-1 rounded-xl border border-slate-200">
@@ -262,6 +331,15 @@ export default function Subscriptions() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden border-t border-slate-100"
                   >
+                    <div className="flex justify-end p-4 bg-slate-50/50 border-b border-slate-100">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); downloadWorkspaceCSV(uid); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-extrabold uppercase tracking-widest text-slate-700 hover:bg-slate-50 hover:text-primary-600 transition-all shadow-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        Exportar CSV
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 md:p-6 bg-slate-50/50 border-b border-slate-100">
                       <div className="space-y-4">
                         <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">

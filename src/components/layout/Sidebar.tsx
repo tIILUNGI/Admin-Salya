@@ -8,8 +8,7 @@ import {
   LogOut,
   Package,
   ShieldCheck,
-  ChevronRight,
-  Wallet
+  ChevronRight
 } from "lucide-react";
 import { useAuth } from "../../App";
 import { clsx, type ClassValue } from "clsx";
@@ -59,20 +58,14 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
         />
       )}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:static lg:z-auto"
+        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300 h-screen",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:fixed lg:z-auto"
       )}>
         <div className="p-6 pb-4 flex items-center gap-4 border-b border-slate-800/60">
-          <div className="w-11 h-11 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <Wallet className="w-6 h-6 text-white" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-2xl font-extrabold text-white tracking-tight leading-none">Salya</span>
-            <span className="text-[10px] font-extrabold text-primary-300 uppercase tracking-[0.3em] mt-1">Admin Panel</span>
-          </div>
+          <img src="/logo.png" alt="Salya" className="w-11 h-11 rounded-xl object-contain" />
         </div>
 
-        <nav className="flex-1 px-3 lg:px-4 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3 lg:px-4 space-y-1 mt-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
