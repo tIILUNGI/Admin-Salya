@@ -250,7 +250,6 @@ export default function Plans() {
                           <option value="DEMO">DEMO</option>
                           <option value="SEMESTRAL">SEMESTRAL</option>
                           <option value="ANUAL">ANUAL</option>
-                          <option value="BIANUAL">BIANUAL</option>
                         </select>
                       </div>
                       <div>

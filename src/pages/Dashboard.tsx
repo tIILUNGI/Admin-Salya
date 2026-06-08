@@ -30,7 +30,7 @@ export default function Dashboard() {
             annualRevenue: 0,
             activeTrials: 0,
             pendingPayments: 0,
-            companiesByPlan: { Semestral: 0, Anual: 0, Bianual: 0 }
+            companiesByPlan: { Semestral: 0, Anual: 0 }
           },
           revenueChart: [],
           paymentsChart: [],
