@@ -62,17 +62,17 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
         "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:static lg:z-auto"
       )}>
-        <div className="p-6 pb-4 flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <Wallet className="w-7 h-7 text-white" />
+        <div className="p-6 pb-4 flex items-center gap-4 border-b border-slate-800/60">
+          <div className="w-11 h-11 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+            <Wallet className="w-6 h-6 text-white" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-none truncate">Salya</span>
-            <span className="text-sm font-medium text-primary-300 uppercase tracking-[0.3em] leading-none">Admin Panel</span>
+            <span className="text-2xl font-extrabold text-white tracking-tight leading-none">Salya</span>
+            <span className="text-[10px] font-extrabold text-primary-300 uppercase tracking-[0.3em] mt-1">Admin Panel</span>
           </div>
         </div>
 
-        <nav className="flex-1 px-0 lg:px-4 space-y-1 mt-6 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3 lg:px-4 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -82,10 +82,9 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
                   cn(
-                    "group flex items-center justify-between px-1 lg:px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 relative overflow-hidden",
-
+                    "enterprise-sidebar-item group flex items-center justify-between px-3 lg:px-4 py-3 text-[13px] font-bold rounded-xl transition-all duration-200 relative overflow-hidden",
                     isActive
-                      ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30 before:absolute before:inset-0 before:bg-white/10 before:translate-x-[-100%] before:skew-x-12 before:animate-shimmer"
+                      ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30 animate-shimmer"
                       : "text-slate-400 hover:text-white hover:bg-slate-800/70"
                   )
                 }
@@ -97,17 +96,14 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
                         "p-1.5 rounded-lg transition-transform",
                         isActive ? "bg-white/20" : "group-hover:bg-slate-700/50"
                       )}>
-                        <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-500")} />
+                        <Icon className={cn("w-[18px] h-[18px]", isActive ? "text-white" : "text-slate-400 group-hover:text-primary-400")} />
                       </div>
                       <span className="truncate">{item.label}</span>
                     </div>
                     {item.badge && isActive && (
-                      <span className="z-10 px-2 py-0.5 bg-amber-400 text-amber-900 text-[8px] font-black uppercase rounded-full shadow-sm">
+                      <span className="z-10 px-2 py-0.5 bg-amber-400 text-amber-900 text-[8px] font-extrabold uppercase rounded-full shadow-sm">
                         {item.badge}
                       </span>
-                    )}
-                    {isActive && (
-                      <div className="absolute right-2 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_white]" />
                     )}
                   </>
                 )}

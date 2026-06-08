@@ -230,13 +230,13 @@ export default function Login() {
                   Voltar ao login
                 </button>
 
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Wallet className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Escolha o seu plano</h2>
-                  <p className="text-slate-500 mt-2">Selecione o plano de inscrição antes de preencher o cadastro.</p>
-                </div>
+<div className="text-center mb-8">
+          <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Wallet className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Escolha o seu plano</h2>
+          <p className="text-slate-500 mt-2">Selecione o plano de inscrição antes de preencher o cadastro.</p>
+        </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   {plans.map((plan) => (

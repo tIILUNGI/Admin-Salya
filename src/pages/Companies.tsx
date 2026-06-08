@@ -153,8 +153,8 @@ export default function Companies() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Gestão de Empresas</h1>
-          <p className="text-slate-500 mt-1">Controle de cadastros, status e informações das empresas parceiras.</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Empresas</h1>
+          <p className="text-slate-500 mt-1.5 text-sm font-medium">Controle de cadastros, status e informações das empresas parceiras.</p>
         </div>
         <button
           onClick={handleCreate}
@@ -175,28 +175,28 @@ export default function Companies() {
               placeholder="Buscar por nome ou NIF..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
+              className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
             />
           </div>
-          <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-colors hover:border-primary-200">
+          <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors hover:border-primary-200">
             <Filter className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="bento-card overflow-hidden">
+      <div className="enterprise-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Empresa</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Plano</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider">Plano</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
+                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {filteredCompanies.map((company) => (
-                <tr key={company.id} className="hover:bg-primary-50/20 transition-colors group">
+                <tr key={company.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 md:px-8 py-4 md:py-5">
                     <div className="flex items-center gap-3 md:gap-4">
                       <div className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-110 transition-transform">

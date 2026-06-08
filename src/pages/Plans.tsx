@@ -129,8 +129,8 @@ export default function Plans() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 leading-tight">Gestão de Planos</h1>
-          <p className="text-slate-500 mt-1">Criação e manutenção de planos de subscrição.</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Planos</h1>
+          <p className="text-slate-500 mt-1.5 text-sm font-medium">Criação e manutenção de planos de subscrição.</p>
         </div>
         <button
           onClick={() => openModal()}
