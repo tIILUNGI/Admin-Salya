@@ -389,7 +389,7 @@ export default function Login() {
       >
         <div className="hidden md:flex flex-col items-center justify-center bg-[#8e34eb] text-white w-1/2 p-12 text-center lg:p-20">
           <div className="mb-0">
-            <img src="/login.png" alt="Login" className="w-48 h-48 object-contain drop-shadow-lg" />
+            <img src="/login.png" alt="Login" className="w-48 h-48 object-contain" />
           </div>
           <h1 className="text-5xl font-bold tracking-tight mb-0">SALYA ADMIN</h1>
           <p className="text-lg opacity-90 font-medium">Salya Admin - Painel Administrativo</p>
