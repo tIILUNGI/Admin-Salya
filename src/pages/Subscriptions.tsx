@@ -153,7 +153,7 @@ export default function Subscriptions() {
     if (planId === "p0") return "Demo";
     if (planId === "p1") return "Semestral";
     if (planId === "p2") return "Anual";
-    return "Outro";
+    return "Desconhecido";
   };
 
   const downloadWorkspaceCSV = (uid: string) => {
@@ -607,7 +607,7 @@ export default function Subscriptions() {
                       <span className="font-extrabold text-primary-600">
                         {formatDate(new Date(new Date(selectedSubscription.endDate).setDate(
                           new Date(selectedSubscription.endDate).getDate() +
-                          (selectedSubscription.planId === "p1" ? 180 : selectedSubscription.planId === "p2" ? 365 : 30)
+                          (selectedSubscription.planId === "p1" ? 180 : 365)
                         )).toISOString())}
                       </span>
                     </div>

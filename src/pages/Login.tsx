@@ -231,7 +231,7 @@ export default function Login() {
                 </button>
 
 <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-[#8e34eb] rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900">Escolha o seu plano</h2>
@@ -288,7 +288,7 @@ export default function Login() {
               </button>
 
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#8e34eb] rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <UserPlus className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900">Criar Conta</h2>
@@ -387,11 +387,11 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden flex min-h-[600px]"
       >
-        <div className="hidden md:flex flex-col items-center justify-center bg-primary-500 text-white w-1/2 p-12 text-center lg:p-20">
-          <div className="mb-8">
-            <Wallet className="w-20 h-20 text-white mb-6" />
+        <div className="hidden md:flex flex-col items-center justify-center bg-[#8e34eb] text-white w-1/2 p-12 text-center lg:p-20">
+          <div className="mb-0">
+            <img src="/login.png" alt="Login" className="w-48 h-48 object-contain drop-shadow-lg" />
           </div>
-          <h1 className="text-5xl font-bold tracking-tight mb-4">SALYA ADMIN</h1>
+          <h1 className="text-5xl font-bold tracking-tight mb-0">SALYA ADMIN</h1>
           <p className="text-lg opacity-90 font-medium">Salya Admin - Painel Administrativo</p>
         </div>
 
