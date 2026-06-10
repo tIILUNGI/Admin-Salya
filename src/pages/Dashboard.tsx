@@ -291,22 +291,22 @@ export default function Dashboard() {
             <h3 className="text-base font-bold text-slate-900 mb-6">Ações Rápidas</h3>
             <div className="grid grid-cols-2 gap-3 flex-1">
               {[
-                { icon: Building2, label: "Nova Empresa", color: "emerald", path: "/companies" },
-                { icon: Users, label: "Novo USer", color: "primary", path: "/users" },
-                { icon: History, label: "Subs.", color: "emerald", path: "/subscriptions" },
-                { icon: CreditCard, label: "Pagamento", color: "amber", path: "/payments" },
-                { icon: Package, label: "Planos", color: "primary", path: "/plans" },
-                { icon: Activity, label: "Logs", color: "slate", path: "/logs" },
+                { icon: Building2, label: "Nova Empresa", bgClass: "bg-emerald-50 hover:bg-emerald-100 border-emerald-100/60", iconClass: "bg-emerald-100 text-emerald-600", labelClass: "text-emerald-700", path: "/companies" },
+                { icon: Users, label: "Novo USer", bgClass: "bg-primary-50 hover:bg-primary-100 border-primary-100/60", iconClass: "bg-primary-100 text-primary-600", labelClass: "text-primary-700", path: "/users" },
+                { icon: History, label: "Subs.", bgClass: "bg-emerald-50 hover:bg-emerald-100 border-emerald-100/60", iconClass: "bg-emerald-100 text-emerald-600", labelClass: "text-emerald-700", path: "/subscriptions" },
+                { icon: CreditCard, label: "Pagamento", bgClass: "bg-amber-50 hover:bg-amber-100 border-amber-100/60", iconClass: "bg-amber-100 text-amber-600", labelClass: "text-amber-700", path: "/payments" },
+                { icon: Package, label: "Planos", bgClass: "bg-primary-50 hover:bg-primary-100 border-primary-100/60", iconClass: "bg-primary-100 text-primary-600", labelClass: "text-primary-700", path: "/plans" },
+                { icon: Activity, label: "Logs", bgClass: "bg-slate-50 hover:bg-slate-100 border-slate-100/60", iconClass: "bg-slate-100 text-slate-600", labelClass: "text-slate-700", path: "/logs" },
               ].map((action, i) => (
                 <button
                   key={i}
                   onClick={() => navigate(action.path)}
-                  className={`flex flex-col items-center justify-center gap-3 p-4 bg-${action.color}-50 hover:bg-${action.color}-100 rounded-xl transition-all group border border-${action.color}-100/60`}
+                  className={`flex flex-col items-center justify-center gap-3 p-4 ${action.bgClass} rounded-xl transition-all group border`}
                 >
-                  <div className={`w-10 h-10 bg-${action.color}-100 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform`}>
-                    <action.icon className={`w-4.5 h-4.5 text-${action.color}-600`} />
+                  <div className={`w-10 h-10 ${action.iconClass} rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                    <action.icon className="w-4.5 h-4.5" />
                   </div>
-                  <span className={`text-[9px] font-extrabold text-${action.color}-700 uppercase tracking-widest text-center leading-tight`}>{action.label}</span>
+                  <span className={`text-[9px] font-extrabold ${action.labelClass} uppercase tracking-widest text-center leading-tight`}>{action.label}</span>
                 </button>
               ))}
             </div>

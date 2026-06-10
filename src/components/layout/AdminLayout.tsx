@@ -13,7 +13,7 @@ export default function AdminLayout() {
   <div className="flex min-h-screen bg-slate-50 font-sans">
     <Sidebar isMobileOpen={isMobileMenuOpen} onCloseMobileMenu={() => setIsMobileMenuOpen(false)} />
     <div className="flex-1 flex flex-col min-h-screen min-w-0">
-      <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40">
+      <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={() => setIsMobileMenuOpen(true)}
@@ -31,8 +31,8 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <main className="flex-1 w-full px-4 lg:px-8 py-4 lg:py-8 min-w-0">
-          <div className="w-full min-w-0">
+      <main className="flex-1 w-full px-4 lg:px-8 py-4 lg:py-8 min-w-0 mt-0">
+          <div className="w-full min-w-0 max-w-7xl mx-auto">
 
             <AnimatePresence mode="wait">
               <motion.div

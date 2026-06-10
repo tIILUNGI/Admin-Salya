@@ -53,12 +53,12 @@ export default function Sidebar({ isMobileOpen, onCloseMobileMenu }: { isMobileO
     <>
       {isMobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
           onClick={onCloseMobileMenu}
         />
       )}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300 h-screen",
+        "fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-300 h-screen",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:fixed lg:z-auto"
       )}>
         <div className="p-6 pb-4 flex items-center gap-4 border-b border-slate-800/60">
