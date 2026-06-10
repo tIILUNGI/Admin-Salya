@@ -175,14 +175,14 @@ export default function Payments() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Histórico de Pagamentos</h1>
           <p className="text-slate-500 mt-1.5 text-sm font-medium">Registo financeiro de subscrições activas com plano pago</p>
         </div>
         <button
           onClick={handleExportPayments}
-          className="flex items-center gap-2 bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-700 hover:text-primary-700 px-5 py-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-sm transition-all"
+          className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-700 hover:text-primary-700 px-5 py-3 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-sm transition-all"
         >
           <Download className="w-4 h-4" />
           Exportar CSV
@@ -190,7 +190,7 @@ export default function Payments() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="enterprise-card p-5">
           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Total Pago</p>
           <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{formatCurrency(totalPaid)}</p>
@@ -376,7 +376,7 @@ export default function Payments() {
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-wide mt-0.5">#{selectedPayment.id}</p>
                       </div>
                     </div>
-                    <button onClick={() => setShowDetails(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                     <button onClick={() => setShowDetails(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Fechar">
                       <ExternalLink className="w-4 h-4 text-slate-400 rotate-45" />
                     </button>
                   </div>

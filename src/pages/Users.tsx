@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -408,15 +408,16 @@ export default function Users() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Gestão de Usuários</h1>
           <p className="text-slate-500 mt-2 text-sm font-medium">Controle total de acessos, bloqueios e criação de usuários.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3">
           <button
             onClick={handleCreateUser}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary-500/20"
+            className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary-500/20 whitespace-nowrap"
+            title="Criar Novo Usuário"
           >
             <UserPlus className="w-5 h-5" />
             Novo Usuário
@@ -424,7 +425,8 @@ export default function Users() {
           <button
             onClick={handleDetectSimilar}
             disabled={isDetectingSimilar}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:border-amber-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all shadow-sm disabled:opacity-50 whitespace-nowrap"
+            title="Detectar Duplicados"
           >
             {isDetectingSimilar ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Eye className="w-5 h-5" />}
             Detectar Duplicados
@@ -449,6 +451,7 @@ export default function Users() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all ${showFilters ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200'}`}
+              title="Filtros"
             >
               <Filter className="w-4 h-4" />
               Filtro
@@ -587,7 +590,7 @@ export default function Users() {
                         </div>
                      </td>
                    </motion.tr>
-                 ))}
+                ))}
                </AnimatePresence>
              </tbody>
           </table>
@@ -626,7 +629,7 @@ export default function Users() {
                     <p className="text-slate-500 text-sm">Usuários com nomes ou domínios semelhantes detectados.</p>
                   </div>
                   <button onClick={() => setShowSimilarModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                    <Shield className="w-6 h-6 text-slate-400 rotate-45" />
+                    <RefreshCcw className="w-6 h-6 text-slate-400" />
                   </button>
                 </div>
                 

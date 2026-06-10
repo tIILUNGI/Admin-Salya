@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { TrendingUp, Building2, Clock, DollarSign, Users, CheckCircle2, AlertTriangle, RefreshCw, Activity, BarChart3, CreditCard, History, Package, ArrowUpRight } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
@@ -102,7 +102,7 @@ export default function Dashboard() {
 
       {/* Métricas Principais */}
       {!isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           <StatCard
             title="Receita Mensal"
             value={formatCurrency(metrics.monthlyRevenue)}
@@ -169,22 +169,22 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+              <div className="bg-white/6 backdrop-blur-sm rounded-xl border border-white/10 p-5">
                 <p className="text-slate-300 text-[10px] font-extrabold uppercase tracking-widest mb-3">Receita Mensal</p>
                 <p className="text-2xl font-extrabold text-white tracking-tight">{formatCurrency(metrics.monthlyRevenue)}</p>
                 <p className="text-emerald-300 text-[10px] font-bold mt-2 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" /> +12.5%
                 </p>
               </div>
-              <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+              <div className="bg-white/6 backdrop-blur-sm rounded-xl border border-white/10 p-5">
                 <p className="text-slate-300 text-[10px] font-extrabold uppercase tracking-widest mb-3">Receita Total</p>
                 <p className="text-2xl font-extrabold text-white tracking-tight">{formatCurrency(metrics.annualRevenue)}</p>
               </div>
-              <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+              <div className="bg-white/6 backdrop-blur-sm rounded-xl border border-white/10 p-5">
                 <p className="text-slate-300 text-[10px] font-extrabold uppercase tracking-widest mb-3">Subs. Activas</p>
                 <p className="text-2xl font-extrabold text-white tracking-tight">{metrics.activeSubscriptions}</p>
               </div>
-              <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+              <div className="bg-white/6 backdrop-blur-sm rounded-xl border border-white/10 p-5">
                 <p className="text-slate-300 text-[10px] font-extrabold uppercase tracking-widest mb-3">Expiradas</p>
                 <p className="text-2xl font-extrabold text-rose-300 tracking-tight">{metrics.expiredSubscriptions}</p>
               </div>
@@ -274,7 +274,7 @@ export default function Dashboard() {
             <div className="flex-1 space-y-3">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                  <div className="w-9 h-9 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 bg-primary-50 rounded-lg flex items-center justify-center shrink-0">
                     <Activity className="w-4 h-4 text-primary-600" />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -178,73 +178,76 @@ export default function Companies() {
               className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
             />
           </div>
-          <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors hover:border-primary-200">
+          <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors hover:border-primary-200" title="Filtrar Resultados">
             <Filter className="w-5 h-5" />
           </button>
         </div>
 
-      <div className="enterprise-card overflow-hidden">
+      <div className="enterprise-card overflow-hidden shadow-xl border-slate-200/60 transition-all hover:shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider">Plano</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
-                <th className="px-4 md:px-8 py-4 md:py-6 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-right">Ações</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100">
+                <th className="px-6 md:px-10 py-5 md:py-7 text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
+                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider">Plano</th>
+                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
+                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100/50">
               {filteredCompanies.map((company) => (
-                <tr key={company.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 md:px-8 py-4 md:py-5">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-110 transition-transform">
-                        {(company.name || "E").charAt(0)}
+                <tr key={company.id} className="group hover:bg-slate-50/80 transition-all duration-200">
+                  <td className="px-6 md:px-10 py-5 md:py-7">
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-slate-100 rounded-xl md:rounded-3xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-105 group-hover:border-primary-100 transition-all duration-300">
+                        <span className="text-xl md:text-2xl">{(company.name || "E").charAt(0)}</span>
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors text-sm md:text-base">{company.name}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Desde {formatDate(company.createdAt)}</p>
+                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors text-base md:text-lg">{company.name}</p>
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                           <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                           Desde {formatDate(company.createdAt)}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 md:px-8 py-4 md:py-5">
-                    <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                  <td className="px-6 md:px-10 py-5 md:py-7">
+                    <span className={`px-3 md:px-4 py-1.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border shadow-sm transition-all ${
                       company.trial ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-primary-50 text-primary-600 border-primary-100'
                     }`}>
                       {company.plan} {company.trial && '• TRIAL'}
                     </span>
                   </td>
-                  <td className="px-4 md:px-8 py-4 md:py-5 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-600 font-bold text-sm">
-                       <Users className="w-4 h-4 text-slate-400" />
+                  <td className="px-6 md:px-10 py-5 md:py-7 text-center">
+                    <div className="flex items-center justify-center gap-2.5 text-slate-700 font-extrabold text-base md:text-lg">
+                       <Users className="w-5 h-5 text-slate-400" />
                        {company.employees || 0}
                     </div>
                   </td>
-                  <td className="px-4 md:px-8 py-4 md:py-5 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                  <td className="px-6 md:px-10 py-5 md:py-7 text-right">
+                    <div className="flex items-center justify-end gap-3 opacity-100 transition-all duration-300 transform translate-x-0">
                       <button
                         onClick={() => viewDetails(company.id)}
-                        className="p-2 md:p-2.5 bg-white border border-slate-100 hover:bg-primary-50 text-primary-600 rounded-xl shadow-sm transition-all"
+                        className="p-3 md:p-3.5 bg-white border border-slate-200 hover:bg-primary-50 hover:border-primary-200 text-primary-600 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95"
                         title="Ver Detalhes"
                       >
-                        <Eye className="w-4 md:w-4.5 h-4 md:h-4.5" />
+                        <Eye className="w-5 h-5 md:w-6 md:h-6" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(company.id, company.status)}
-                        className={`p-2 md:p-2.5 bg-white border border-slate-100 rounded-xl shadow-sm transition-all ${
-                          company.status === 'active' ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-emerald-50 text-emerald-600'
+                        className={`p-3 md:p-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95 ${
+                          company.status === 'active' ? 'hover:bg-amber-50 hover:border-amber-200 text-amber-600' : 'hover:bg-emerald-50 hover:border-emerald-200 text-emerald-600'
                         }`}
                         title={company.status === 'active' ? "Suspender" : "Ativar"}
                       >
-                        {company.status === 'active' ? <Ban className="w-4 md:w-4.5 h-4 md:h-4.5" /> : <CheckCircle2 className="w-4 md:w-4.5 h-4 md:h-4.5" />}
+                        {company.status === 'active' ? <Ban className="w-5 h-5 md:w-6 md:h-6" /> : <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6" />}
                       </button>
                       <button
                         onClick={() => handleDelete(company.id, company.name)}
-                        className="p-2 md:p-2.5 bg-white border border-slate-100 hover:bg-rose-50 text-rose-600 rounded-xl shadow-sm transition-all"
+                        className="p-3 md:p-3.5 bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-200 text-rose-600 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95"
                         title="Remover"
                       >
-                        <Trash2 className="w-4 md:w-4.5 h-4 md:h-4.5" />
+                        <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
                       </button>
                     </div>
                   </td>
@@ -263,31 +266,32 @@ export default function Companies() {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             <div 
-              className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl overflow-hidden p-6 md:p-8"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden p-8 md:p-10 border border-white/20 animate-in zoom-in-95 duration-200"
             >
               <button 
                 onClick={() => setSelectedCompany(null)}
-                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all"
+                className="absolute top-8 right-8 p-2.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-all active:scale-95"
+                title="Fechar"
               >
-                <X className="w-6 h-6" />
+                <X className="w-7 h-7" />
               </button>
 
-              <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-                <div className="w-20 h-20 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600 text-3xl font-black shadow-sm">
+              <div className="flex flex-col md:flex-row gap-8 items-start mb-10">
+                <div className="w-24 h-24 bg-primary-50 rounded-3xl flex items-center justify-center text-primary-600 text-4xl font-black shadow-inner">
                   {(selectedCompany.name || "E").charAt(0)}
                 </div>
-                <div>
-                  <h3 className="text-3xl font-black text-slate-900 leading-tight">{selectedCompany.name}</h3>
-                  <div className="mt-4 flex flex-wrap gap-4">
+                <div className="flex-1">
+                  <h3 className="text-4xl font-black text-slate-900 leading-tight tracking-tight">{selectedCompany.name}</h3>
+                  <div className="mt-5 flex flex-wrap gap-4">
                     <StatusBadge status={selectedCompany.status} />
-                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full uppercase tracking-widest border border-slate-200">
+                    <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[11px] font-black rounded-xl uppercase tracking-widest border border-slate-200 shadow-sm">
                       Plano {selectedCompany.plan}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-y border-slate-100">
                 <InfoItem icon={Mail} label="Email de Contacto" value={selectedCompany.email} />
                 <InfoItem icon={Phone} label="Telefone" value={selectedCompany.phone} />
                 <InfoItem icon={Hash} label="NIF" value={selectedCompany.nif} />
@@ -297,22 +301,22 @@ export default function Companies() {
                 </div>
               </div>
 
-              <div className="mt-8 flex gap-3">
+              <div className="mt-10 flex gap-4">
                 <button 
                    onClick={() => handleToggleStatus(selectedCompany.id, selectedCompany.status)}
-                   className={`flex-1 py-2.5 font-bold text-xs uppercase tracking-wide rounded-lg transition-all border ${
+                   className={`flex-1 py-4 font-black text-xs md:text-sm uppercase tracking-widest rounded-2xl transition-all border shadow-sm active:scale-[0.98] ${
                     selectedCompany.status === 'active' 
-                      ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' 
-                      : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                      ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100 hover:shadow-md' 
+                      : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 hover:shadow-md'
                   }`}
                 >
                   {selectedCompany.status === 'active' ? "Suspender Acesso" : "Ativar Acesso"}
                 </button>
                 <button 
                   onClick={() => handleDelete(selectedCompany.id, selectedCompany.name)}
-                  className="px-4 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg hover:bg-rose-100 transition-all"
+                  className="px-6 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl hover:bg-rose-100 transition-all shadow-sm hover:shadow-md active:scale-95"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -324,16 +328,16 @@ export default function Companies() {
 
 function StatusBadge({ status }: { status: string }) {
   const configs: Record<string, any> = {
-    active: { icon: CheckCircle2, text: "Ativa", class: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-    suspended: { icon: AlertCircle, text: "Suspensa", class: "bg-rose-50 text-rose-700 border-rose-100" },
-    inactive: { icon: Clock, text: "Inativa", class: "bg-slate-50 text-slate-700 border-slate-100" }
+    active: { icon: CheckCircle2, text: "Ativa", class: "bg-emerald-50 text-emerald-700 border-emerald-100 shadow-emerald-100/50" },
+    suspended: { icon: AlertCircle, text: "Suspensa", class: "bg-rose-50 text-rose-700 border-rose-100 shadow-rose-100/50" },
+    inactive: { icon: Clock, text: "Inativa", class: "bg-slate-50 text-slate-700 border-slate-100 shadow-slate-100/50" }
   };
   const config = configs[status] || configs.inactive;
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wide rounded-lg border ${config.class}`}>
-      <div className={`w-1.5 h-1.5 rounded-full ${status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+    <span className={`inline-flex items-center gap-2.5 px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl border shadow-sm ${config.class}`}>
+      <div className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
       {config.text}
     </span>
   );
@@ -341,13 +345,13 @@ function StatusBadge({ status }: { status: string }) {
 
 function InfoItem({ icon: Icon, label, value }: { icon: any, label: string, value: string | number }) {
   return (
-    <div className="flex gap-4">
-      <div className="p-2.5 bg-slate-50 rounded-xl text-slate-400">
-        <Icon className="w-5 h-5" />
+    <div className="flex gap-5 group/item">
+      <div className="p-3.5 bg-slate-50 rounded-2xl text-slate-400 group-hover/item:text-primary-500 group-hover/item:bg-primary-50 transition-all duration-300">
+        <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="font-bold text-slate-900">{value || "Não informado"}</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 group-hover/item:text-primary-400 transition-colors">{label}</p>
+        <p className="font-bold text-slate-900 text-sm md:text-base">{value || "Não informado"}</p>
       </div>
     </div>
   );

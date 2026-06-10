@@ -127,14 +127,15 @@ export default function Plans() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Gestão de Planos</h1>
           <p className="text-slate-500 mt-2 text-sm font-medium">Criação e manutenção de planos de subscrição.</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary-500/20"
+          className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary-500/20 whitespace-nowrap"
+          title="Novo Plano"
         >
           <Plus className="w-5 h-5" />
           Novo Plano
@@ -162,12 +163,14 @@ export default function Plans() {
                   <button 
                     onClick={() => openModal(plan)}
                     className="p-2.5 bg-slate-50 hover:bg-primary-50 rounded-lg text-slate-400 hover:text-primary-600 transition-all"
+                    title="Editar Plano"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDelete(plan.id)}
                     className="p-2.5 bg-slate-50 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-all"
+                    title="Excluir Plano"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -202,26 +205,20 @@ export default function Plans() {
       {/* Plan Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeModal}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            />
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-60" />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden shadow-emerald-900/10"
+              className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden shadow-emerald-900/10 z-61"
             >
               <div className="p-6 md:p-8 italic-none">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold text-slate-900">
                     {editingPlan ? "Actualizar Plano" : "Criar Novo Plano"}
                   </h2>
-                  <button onClick={closeModal} className="p-2.5 hover:bg-slate-100 rounded-lg transition-all">
+                  <button onClick={closeModal} className="p-2.5 hover:bg-slate-100 rounded-lg transition-all" title="Fechar">
                     <X className="w-5 h-5 text-slate-400" />
                   </button>
                 </div>
@@ -246,6 +243,7 @@ export default function Plans() {
                           value={formData.type}
                           onChange={e => setFormData({ ...formData, type: e.target.value })}
                           className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          title="Tipo de Plano"
                         >
                           <option value="DEMO">DEMO</option>
                           <option value="SEMESTRAL">SEMESTRAL</option>
@@ -258,6 +256,7 @@ export default function Plans() {
                           value={formData.category}
                           onChange={e => setFormData({ ...formData, category: e.target.value })}
                           className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          title="Categoria de Plano"
                         >
                           <option value="PAGO">PAGO</option>
                           <option value="GRATUITO">GRATUITO</option>
@@ -273,6 +272,8 @@ export default function Plans() {
                           required
                           value={formData.price}
                           onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                          title="Preço"
+                          placeholder="0"
                           className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         />
                       </div>
@@ -283,12 +284,14 @@ export default function Plans() {
                           required
                           value={formData.durationDays}
                           onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
+                          title="Duração em dias"
+                          placeholder="30"
                           className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         />
                       </div>
                     </div>
 
-                  <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex items-center justify-between">
+                  <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
                     <div>
                        <p className="text-xs font-bold text-slate-700">Estado de Venda</p>
                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ativo / Inativo</p>
@@ -299,6 +302,8 @@ export default function Plans() {
                         checked={formData.isActive}
                         onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                         className="sr-only peer"
+                        title="Ativar ou Desativar Plano"
+                        placeholder="Ativo"
                       />
                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                     </label>
