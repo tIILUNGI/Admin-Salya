@@ -126,11 +126,11 @@ export default function Plans() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Planos</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">Criação e manutenção de planos de subscrição.</p>
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Planos</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Criação e manutenção de planos de subscrição.</p>
         </div>
         <button
           onClick={() => openModal()}
@@ -146,7 +146,7 @@ export default function Plans() {
             <div key={plan.id} className="relative group">
               <div className="absolute inset-0 bg-primary-500 rounded-[3rem] rotate-1 scale-95 opacity-0 group-hover:opacity-5 group-hover:rotate-2 transition-all duration-500" />
 
-            <div className={`relative bg-white border-2 border-slate-100 p-10 rounded-[2.5rem] flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
+            <div className={`relative bg-white border-2 border-slate-100 p-10 rounded-lg flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
               
               {idx === 1 && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">
@@ -155,19 +155,19 @@ export default function Plans() {
               )}
 
               <div className="flex items-center justify-between mb-8">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${idx === 1 ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-600'}`}>
+                <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${idx === 1 ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-600'}`}>
                   <Package className="w-7 h-7" />
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => openModal(plan)}
-                    className="p-2.5 bg-slate-50 hover:bg-primary-50 rounded-xl text-slate-400 hover:text-primary-600 transition-all"
+                    className="p-2.5 bg-slate-50 hover:bg-primary-50 rounded-lg text-slate-400 hover:text-primary-600 transition-all"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDelete(plan.id)}
-                    className="p-2.5 bg-slate-50 hover:bg-rose-50 rounded-xl text-slate-400 hover:text-rose-600 transition-all"
+                    className="p-2.5 bg-slate-50 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -214,14 +214,14 @@ export default function Plans() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden shadow-emerald-900/10"
+              className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden shadow-emerald-900/10"
             >
-              <div className="p-8 md:p-10 italic-none">
+              <div className="p-6 md:p-8 italic-none">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                  <h2 className="text-2xl font-bold text-slate-900">
                     {editingPlan ? "Actualizar Plano" : "Criar Novo Plano"}
                   </h2>
-                  <button onClick={closeModal} className="p-2.5 hover:bg-slate-100 rounded-2xl transition-all">
+                  <button onClick={closeModal} className="p-2.5 hover:bg-slate-100 rounded-lg transition-all">
                     <X className="w-5 h-5 text-slate-400" />
                   </button>
                 </div>
@@ -235,7 +235,7 @@ export default function Plans() {
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Ex: Prime Corporate"
-                      className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm placeholder:text-slate-300"
+                      className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm placeholder:text-slate-300"
                     />
                   </div>
 
@@ -245,7 +245,7 @@ export default function Plans() {
                         <select 
                           value={formData.type}
                           onChange={e => setFormData({ ...formData, type: e.target.value })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         >
                           <option value="DEMO">DEMO</option>
                           <option value="SEMESTRAL">SEMESTRAL</option>
@@ -257,7 +257,7 @@ export default function Plans() {
                         <select 
                           value={formData.category}
                           onChange={e => setFormData({ ...formData, category: e.target.value })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         >
                           <option value="PAGO">PAGO</option>
                           <option value="GRATUITO">GRATUITO</option>
@@ -273,7 +273,7 @@ export default function Plans() {
                           required
                           value={formData.price}
                           onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         />
                       </div>
                       <div>
@@ -283,7 +283,7 @@ export default function Plans() {
                           required
                           value={formData.durationDays}
                           onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
                         />
                       </div>
                     </div>
@@ -307,7 +307,7 @@ export default function Plans() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-500/30 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] mt-4"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 rounded-lg shadow-xl shadow-primary-500/30 transition-all flex items-center justify-center gap-3 uppercase tracking-wide text-xs mt-4"
                   >
                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <SaveIcon className="w-4 h-4" />}
                     Guardar Configuração

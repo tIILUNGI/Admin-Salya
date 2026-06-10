@@ -31,11 +31,11 @@ export default function Logs() {
   });
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Logs de Auditoria</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">Registo histórico de acções críticas no sistema.</p>
+          <h1 className="text-3xl font-bold text-slate-900">Logs de Auditoria</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Registo histórico de acções críticas no sistema.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -45,10 +45,10 @@ export default function Logs() {
               placeholder="Buscar em logs..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 w-full md:w-64 text-sm font-medium transition-all"
+              className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full md:w-64 text-sm font-medium transition-all"
             />
           </div>
-          <button className="p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
+          <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
             <Download className="w-5 h-5" />
           </button>
         </div>

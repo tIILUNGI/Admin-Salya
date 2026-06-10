@@ -407,11 +407,11 @@ export default function Users() {
   }, [searchTerm, searchParams, setSearchParams]);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Usuários</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">Controle total de acessos, bloqueios e criação de usuários.</p>
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Usuários</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Controle total de acessos, bloqueios e criação de usuários.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -441,14 +441,14 @@ export default function Users() {
               placeholder="Buscar por nome ou email..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-primary-500 focus:bg-white transition-all text-sm font-medium"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-primary-500 focus:bg-white transition-all text-sm font-medium"
             />
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${showFilters ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200'}`}
+              className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all ${showFilters ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200'}`}
             >
               <Filter className="w-4 h-4" />
               Filtro
@@ -468,7 +468,7 @@ export default function Users() {
                 <button
                   key={role}
                   onClick={() => setFilterRole(role)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterRole === role ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterRole === role ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
                 >
                   {role}
                 </button>
@@ -557,7 +557,7 @@ export default function Users() {
                           </button>
 
                           {openMenuId === user.id && (
-                            <div ref={menuRef} className="absolute right-0 top-full mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                            <div ref={menuRef} className="absolute right-0 top-full mt-2 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden">
                               <button
                                 onClick={() => { handleViewUser(user); setOpenMenuId(null); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
@@ -619,13 +619,13 @@ export default function Users() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed inset-0 z-[101] flex items-center justify-center p-4"
             >
-              <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+              <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
                 <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Possíveis Duplicados</h2>
                     <p className="text-slate-500 text-sm">Usuários com nomes ou domínios semelhantes detectados.</p>
                   </div>
-                  <button onClick={() => setShowSimilarModal(false)} className="p-2 hover:bg-slate-100 rounded-xl">
+                  <button onClick={() => setShowSimilarModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
                     <Shield className="w-6 h-6 text-slate-400 rotate-45" />
                   </button>
                 </div>
@@ -637,7 +637,7 @@ export default function Users() {
                     </div>
                   ) : (
                     similarUsers.map((pair, i) => (
-                      <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                      <div key={i} className="p-6 rounded-lg bg-slate-50 border border-slate-200">
                         <div className="flex items-center justify-between mb-4">
                           <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full tracking-widest">
                             {pair.reason}
@@ -662,7 +662,7 @@ export default function Users() {
                 <div className="p-8 border-t border-slate-100 bg-slate-50">
                   <button 
                     onClick={() => setShowSimilarModal(false)}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-lg"
+                    className="w-full py-2.5 bg-slate-900 text-white rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-lg"
                   >
                     Entendido
                   </button>

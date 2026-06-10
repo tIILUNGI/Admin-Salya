@@ -150,24 +150,24 @@ export default function Companies() {
   );
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-6 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Empresas</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">Controle de cadastros, status e informações das empresas parceiras.</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Gestão de Empresas</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Controle de cadastros, status e informações das empresas parceiras.</p>
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary-500/20"
+          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide shadow-sm transition-all"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
           Nova Empresa
         </button>
        </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -263,17 +263,17 @@ export default function Companies() {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             <div 
-              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-10"
+              className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl overflow-hidden p-6 md:p-8"
             >
               <button 
                 onClick={() => setSelectedCompany(null)}
-                className="absolute top-8 right-8 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-all"
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all"
               >
                 <X className="w-6 h-6" />
               </button>
 
-              <div className="flex flex-col md:flex-row gap-8 items-start mb-10">
-                <div className="w-24 h-24 bg-primary-50 rounded-[2rem] flex items-center justify-center text-primary-600 text-3xl font-black shadow-lg shadow-primary-500/10">
+              <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
+                <div className="w-20 h-20 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600 text-3xl font-black shadow-sm">
                   {(selectedCompany.name || "E").charAt(0)}
                 </div>
                 <div>
@@ -287,7 +287,7 @@ export default function Companies() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-y border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-slate-100">
                 <InfoItem icon={Mail} label="Email de Contacto" value={selectedCompany.email} />
                 <InfoItem icon={Phone} label="Telefone" value={selectedCompany.phone} />
                 <InfoItem icon={Hash} label="NIF" value={selectedCompany.nif} />
@@ -297,10 +297,10 @@ export default function Companies() {
                 </div>
               </div>
 
-              <div className="mt-10 flex gap-4">
+              <div className="mt-8 flex gap-3">
                 <button 
                    onClick={() => handleToggleStatus(selectedCompany.id, selectedCompany.status)}
-                   className={`flex-1 py-4 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl transition-all border ${
+                   className={`flex-1 py-2.5 font-bold text-xs uppercase tracking-wide rounded-lg transition-all border ${
                     selectedCompany.status === 'active' 
                       ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' 
                       : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
@@ -310,7 +310,7 @@ export default function Companies() {
                 </button>
                 <button 
                   onClick={() => handleDelete(selectedCompany.id, selectedCompany.name)}
-                  className="px-6 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl hover:bg-rose-100 transition-all"
+                  className="px-4 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg hover:bg-rose-100 transition-all"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -332,7 +332,7 @@ function StatusBadge({ status }: { status: string }) {
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest rounded-full border ${config.class}`}>
+    <span className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wide rounded-lg border ${config.class}`}>
       <div className={`w-1.5 h-1.5 rounded-full ${status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
       {config.text}
     </span>

@@ -226,16 +226,16 @@ export default function Subscriptions() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 tracking-tight uppercase">Gestão de Subscrições</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Subscrições</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">
             {userOrder.length} usuário{userOrder.length !== 1 ? "s" : ""} · {sortedSubs.length} subscri{sortedSubs.length !== 1 ? "ções" : ""}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 bg-white p-1 rounded-xl border border-slate-200">
+        <div className="flex flex-wrap gap-2 bg-white p-1 rounded-lg border border-slate-200">
           <button
             onClick={() => setShowActiveOnly(true)}
             className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
@@ -490,11 +490,11 @@ export default function Subscriptions() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+              <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden">
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h3 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">Mudar Plano</h3>
+                      <h3 className="text-xl font-bold text-slate-900">Mudar Plano</h3>
                       <p className="text-slate-500 text-sm mt-1.5">
                         {companies[String(selectedSubscription.companyId)]?.name || "Empresa"}
                       </p>
@@ -511,7 +511,7 @@ export default function Subscriptions() {
                         <button
                           key={plan.id}
                           onClick={() => setSelectedPlan(plan.id)}
-                          className={`p-4 rounded-xl border-2 transition-all text-left ${
+                          className={`p-4 rounded-lg border-2 transition-all text-left ${
                             selectedPlan === plan.id
                               ? "border-primary-500 bg-primary-50 shadow-sm"
                               : "border-slate-200 hover:border-primary-200 hover:bg-slate-50"
@@ -519,7 +519,7 @@ export default function Subscriptions() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                                 plan.id === "p1" ? "bg-emerald-100 text-emerald-600" :
                                 plan.id === "p2" ? "bg-primary-100 text-primary-600" : "bg-slate-100 text-slate-600"
                               }`}>
@@ -552,7 +552,7 @@ export default function Subscriptions() {
                     <button
                       onClick={confirmChangePlan}
                       disabled={isLoading || selectedPlan === selectedSubscription.planId}
-                      className="flex-1 px-6 py-3.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2"
                     >
                       {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                       Confirmar
@@ -580,19 +580,19 @@ export default function Subscriptions() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+              <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
                 <div className="p-8">
                   <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <RefreshCw className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <h3 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">Renovar Subscrição</h3>
+                    <h3 className="text-xl font-bold text-slate-900">Renovar Subscrição</h3>
                     <p className="text-slate-500 mt-2">
                       Renovar subscrição de <span className="font-bold text-slate-700">{companies[String(selectedSubscription.companyId)]?.name || "Empresa"}</span>?
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6">
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-6">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500">Plano atual</span>
                       <span className="font-bold text-slate-900">{getPlanLabel(selectedSubscription.planId)}</span>
@@ -623,7 +623,7 @@ export default function Subscriptions() {
                     <button
                       onClick={confirmRenewal}
                       disabled={isLoading}
-                      className="flex-1 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2"
                     >
                       {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                       Confirmar
