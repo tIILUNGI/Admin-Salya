@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
@@ -46,31 +47,33 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      <NotificationProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="companies" element={<Companies />} />
-              <Route path="users" element={<Users />} />
-              <Route path="subscriptions" element={<Subscriptions />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="plans" element={<Plans />} />
-              <Route path="logs" element={<Logs />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </BrowserRouter>
-      </NotificationProvider>
+      <ErrorBoundary>
+        <NotificationProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="companies" element={<Companies />} />
+                <Route path="users" element={<Users />} />
+                <Route path="subscriptions" element={<Subscriptions />} />
+                <Route path="payments" element={<Payments />} />
+                <Route path="plans" element={<Plans />} />
+                <Route path="logs" element={<Logs />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </BrowserRouter>
+        </NotificationProvider>
+      </ErrorBoundary>
     </AuthContext.Provider>
   );
 }

@@ -36,20 +36,37 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     },
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-  if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth')) {
-    // Token expired or invalid for protected endpoints
-    localStorage.removeItem('admin_token');
-    
-    // Only redirect if not already on login page to avoid loops
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login';
+    if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth')) {
+      // Token expired or invalid for protected endpoints
+      localStorage.removeItem('admin_token');
+      
+      // Only redirect if not already on login page to avoid loops
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      throw new Error('Authentication required');
     }
-    throw new Error('Authentication required');
-  }
 
-  return response;
+    if (!response.ok) {
+      console.error(`API Error: ${response.status} ${response.statusText}`, {
+        endpoint,
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+
+    return response;
+  } catch (error) {
+    console.error('API Request Error:', {
+      endpoint,
+      error: error instanceof Error ? error.message : String(error),
+      apiUrl: API_BASE_URL
+    });
+    throw error;
+  }
 };
 
 export const apiGet = (endpoint: string) => apiRequest(endpoint);
