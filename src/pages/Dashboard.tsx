@@ -58,18 +58,18 @@ export default function Dashboard() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className={`enterprise-card p-5 md:p-6 cursor-pointer group ${onClick ? 'hover:border-slate-300' : ''}`}
+      className={`bg-white rounded-xl p-4 md:p-5 border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group ${onClick ? 'hover:scale-105' : ''}`}
     >
-      <div className="flex items-center justify-between mb-5">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</span>
-        <div className={`p-2.5 rounded-xl ${colorClass} transition-transform duration-200 group-hover:scale-105`}>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">{title}</span>
+        <div className={`p-2 rounded-lg ${colorClass} transition-transform duration-200 group-hover:scale-110`}>
           {icon}
         </div>
       </div>
-      <h3 className="text-2xl md:text-[1.75rem] font-extrabold text-slate-900 tracking-tight leading-none">{value}</h3>
+      <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
       {trend && (
-        <p className="text-xs font-semibold text-emerald-600 mt-3 flex items-center gap-1.5">
-          <ArrowUpRight className="w-3.5 h-3.5" />
+        <p className="text-xs font-semibold text-emerald-600 mt-2 flex items-center gap-1">
+          <ArrowUpRight className="w-3 h-3" />
           {trend}
         </p>
       )}
@@ -77,18 +77,18 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 tracking-tight uppercase">Centro de Comando</h1>
-          <p className="text-slate-500 mt-1.5 text-sm font-medium">Visão completa do ecossistema Salya</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Centro de Comando</h1>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Visão completa do ecossistema Salya</p>
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-700 hover:text-primary-700 px-5 py-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-sm transition-all flex items-center gap-2 self-start"
+          className="bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-700 hover:text-primary-700 px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto whitespace-nowrap"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className="w-4 h-4" />
           Actualizar
         </button>
       </div>
