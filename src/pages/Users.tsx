@@ -511,7 +511,7 @@ export default function Users() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-mono text-xs">{user.email}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-medium text-xs">{user.companyId || '—'}</td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-medium text-xs">{user.companyName || user.companyId || '—'}</td>
                     <td className="px-4 md:px-6 py-3 md:py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
                         user.role === 'ADMIN' ? 'bg-primary-50 text-primary-700 border-primary-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
