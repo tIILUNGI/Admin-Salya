@@ -184,15 +184,16 @@ export default function Subscriptions() {
     };
 
     const rows = group.map(sub => {
+      const companyData = companies[String(sub.companyId)];
       const info = {
-        name: sub.companyName || companies[String(sub.companyId)]?.name || "",
-        nif: companies[String(sub.companyId)]?.nif || "",
-        contact: companies[String(sub.companyId)]?.phone || companies[String(sub.companyId)]?.email || "",
-        address: companies[String(sub.companyId)]?.address || "",
+        name: sub.companyName || companyData?.name || "",
+        nif: companyData?.nif || "",
+        contact: companyData?.phone || companyData?.email || "",
+        address: companyData?.address || "",
         userName: sub.userName || sub.ownerName || "",
         ownerEmail: sub.userEmail || "",
         ownerPhone: sub.userPhone || "",
-        employees: Number(sub.employees ?? 0)
+        employees: Number(companyData?.employees ?? 0)
       };
 
       return [
@@ -267,9 +268,12 @@ export default function Subscriptions() {
           const latestSub = groupSubs[0];
           const isExpanded = expandedUsers[uid] !== false;
 
+          // CORREÇÃO AQUI: Buscar os dados da empresa pelo companyId
+          const companyData = companies[String(latestSub?.companyId)];
+          
           const info = {
-            name: latestSub?.companyName || companies[String(latestSub?.companyId)]?.name || `Empresa do Utilizador #${uid}`,
-            employees: Number(latestSub?.employees ?? 0),
+            name: latestSub?.companyName || companyData?.name || `Empresa do Utilizador #${uid}`,
+            employees: Number(companyData?.employees ?? 0), // CORREÇÃO: Buscar da empresa, não da subscrição
             companyId: latestSub?.companyId
           };
 
@@ -351,22 +355,22 @@ export default function Subscriptions() {
                             <span className="text-slate-500 font-medium">Nome Comercial:</span>
                             <span className="font-bold text-slate-900">{info.name}</span>
                           </div>
-                          {companies[String(info.companyId)]?.nif && (
+                          {companyData?.nif && (
                             <div className="flex justify-between items-center text-sm">
                               <span className="text-slate-500 font-medium">NIF:</span>
-                              <span className="font-mono font-bold text-slate-700">{companies[String(info.companyId)].nif}</span>
+                              <span className="font-mono font-bold text-slate-700">{companyData.nif}</span>
                             </div>
                           )}
-                          {(companies[String(info.companyId)]?.phone || companies[String(info.companyId)]?.email) && (
+                          {(companyData?.phone || companyData?.email) && (
                             <div className="flex justify-between items-center text-sm">
                               <span className="text-slate-500 font-medium">Contacto:</span>
-                              <span className="font-bold text-slate-700">{companies[String(info.companyId)]?.phone || companies[String(info.companyId)]?.email}</span>
+                              <span className="font-bold text-slate-700">{companyData?.phone || companyData?.email}</span>
                             </div>
                           )}
-                          {companies[String(info.companyId)]?.address && (
+                          {companyData?.address && (
                             <div className="flex justify-between items-start text-sm">
                               <span className="text-slate-500 font-medium mr-4">Endereço:</span>
-                              <span className="font-bold text-slate-700 text-right">{companies[String(info.companyId)].address}</span>
+                              <span className="font-bold text-slate-700 text-right">{companyData.address}</span>
                             </div>
                           )}
                         </div>

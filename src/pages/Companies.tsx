@@ -19,7 +19,14 @@ export default function Companies() {
   const fetchCompanies = () => {
     apiGet("/admin/companies")
       .then(res => res.json())
-      .then(setCompanies)
+      .then(data => {
+        // Garantir que o número de colaboradores é um número
+        const formattedData = (Array.isArray(data) ? data : []).map(company => ({
+          ...company,
+          employees: Number(company.employees ?? company.numberOfEmployees ?? company.employeeCount ?? 0)
+        }));
+        setCompanies(formattedData);
+      })
       .catch(() => setCompanies([]));
   };
 
@@ -59,12 +66,13 @@ export default function Companies() {
         email: "contact@" + name.toLowerCase().replace(/\s/g, '') + ".com",
         telefone: "",
         nif: "NIF-" + Math.floor(Math.random() * 1000000000),
-        endereco: ""
+        endereco: "",
+        employees: 0
       });
       
       if (res.ok) {
         const newCompany = await res.json();
-        setCompanies([...companies, newCompany]);
+        setCompanies([...companies, { ...newCompany, employees: Number(newCompany.employees ?? 0) }]);
         Swal.fire({
           icon: "success",
           title: "Sucesso!",
@@ -136,7 +144,12 @@ export default function Companies() {
     try {
       const res = await apiGet(`/admin/companies/${id}`);
       const data = await res.json();
-      setSelectedCompany(data);
+      // Garantir que os colaboradores são um número
+      const formattedData = {
+        ...data,
+        employees: Number(data.employees ?? data.numberOfEmployees ?? data.employeeCount ?? 0)
+      };
+      setSelectedCompany(formattedData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -146,7 +159,8 @@ export default function Companies() {
 
   const filteredCompanies = (companies || []).filter(c => 
     (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (c.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.nif || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -172,7 +186,7 @@ export default function Companies() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar por nome ou NIF..."
+              placeholder="Buscar por nome, NIF ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
@@ -208,6 +222,11 @@ export default function Companies() {
                            <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
                            Desde {formatDate(company.createdAt)}
                         </p>
+                        {company.nif && (
+                          <p className="text-[10px] text-slate-400 font-mono mt-1">
+                            NIF: {company.nif}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -215,13 +234,13 @@ export default function Companies() {
                     <span className={`px-3 md:px-4 py-1.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border shadow-sm transition-all ${
                       company.trial ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-primary-50 text-primary-600 border-primary-100'
                     }`}>
-                      {company.plan} {company.trial && '• TRIAL'}
+                      {company.plan || 'Básico'} {company.trial && '• TRIAL'}
                     </span>
                   </td>
                   <td className="px-6 md:px-10 py-5 md:py-7 text-center">
                     <div className="flex items-center justify-center gap-2.5 text-slate-700 font-extrabold text-base md:text-lg">
                        <Users className="w-5 h-5 text-slate-400" />
-                       {company.employees || 0}
+                       {Number(company.employees ?? company.numberOfEmployees ?? company.employeeCount ?? 0)}
                     </div>
                   </td>
                   <td className="px-6 md:px-10 py-5 md:py-7 text-right">
@@ -250,11 +269,27 @@ export default function Companies() {
                         <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
                       </button>
                     </div>
+                   </td>
+                 </tr>
+              ))}
+              {filteredCompanies.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Building2 className="w-12 h-12 text-slate-300" />
+                      <p className="text-slate-500 font-medium">Nenhuma empresa encontrada</p>
+                      <button
+                        onClick={handleCreate}
+                        className="mt-2 text-primary-600 hover:text-primary-700 text-sm font-bold"
+                      >
+                        Criar primeira empresa
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
-          </table>
+           </table>
         </div>
       </div>
 
@@ -285,7 +320,7 @@ export default function Companies() {
                   <div className="mt-5 flex flex-wrap gap-4">
                     <StatusBadge status={selectedCompany.status} />
                     <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[11px] font-black rounded-xl uppercase tracking-widest border border-slate-200 shadow-sm">
-                      Plano {selectedCompany.plan}
+                      Plano {selectedCompany.plan || 'Básico'}
                     </span>
                   </div>
                 </div>
@@ -295,7 +330,7 @@ export default function Companies() {
                 <InfoItem icon={Mail} label="Email de Contacto" value={selectedCompany.email} />
                 <InfoItem icon={Phone} label="Telefone" value={selectedCompany.phone} />
                 <InfoItem icon={Hash} label="NIF" value={selectedCompany.nif} />
-                <InfoItem icon={Users} label="Total Colaboradores" value={selectedCompany.employees} />
+                <InfoItem icon={Users} label="Total Colaboradores" value={Number(selectedCompany.employees ?? selectedCompany.numberOfEmployees ?? selectedCompany.employeeCount ?? 0)} />
                 <div className="md:col-span-2">
                   <InfoItem icon={MapPin} label="Endereço" value={selectedCompany.address} />
                 </div>
