@@ -458,27 +458,6 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-slate-200 space-y-4">
-            <div className="text-center">
-              <button
-                onClick={() => setIsRegistering(true)}
-                className="text-primary-600 hover:text-primary-700 font-bold flex items-center justify-center gap-2 mx-auto transition-colors"
-              >
-                <UserPlus className="w-4 h-4" />
-                Não tem conta? Criar conta
-              </button>
-            </div>
-
-            <div className="text-center">
-              <button
-                onClick={handleForgotPassword}
-                className="text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-2 mx-auto transition-colors"
-              >
-                <Lock className="w-4 h-4" />
-                Esqueceu a palavra-passe?
-              </button>
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>
