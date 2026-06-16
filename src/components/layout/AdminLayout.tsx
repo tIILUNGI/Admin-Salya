@@ -4,15 +4,30 @@ import Sidebar from "./Sidebar";
 import NotificationDropdown from "../NotificationDropdown";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
-      <Sidebar isMobileOpen={isMobileMenuOpen} onCloseMobileMenu={() => setIsMobileMenuOpen(false)} />
-      <div className="flex-1 flex flex-col min-h-screen min-w-0 lg:pl-64">
+      <Sidebar 
+        isMobileOpen={isMobileMenuOpen} 
+        onCloseMobileMenu={() => setIsMobileMenuOpen(false)} 
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+      />
+      <div className={cn(
+        "flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300",
+        isSidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
+      )}>
         <header className="h-14 lg:h-16 bg-white border-b border-slate-200/60 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all duration-300">
           <div className="flex items-center gap-3">
             <button
