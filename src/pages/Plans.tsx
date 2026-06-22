@@ -13,9 +13,11 @@ export default function Plans() {
     name: "", 
     price: 0, 
     durationDays: 30, 
-    isActive: true,
+    active: true,
     type: "SEMESTRAL",
-    category: "PAGO"
+    category: "PAGO",
+    maxEntidades: 1,
+    maxUtilizadores: 1
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -102,9 +104,11 @@ export default function Plans() {
         name: plan.name, 
         price: plan.price, 
         durationDays: plan.durationDays, 
-        isActive: plan.isActive,
+        active: plan.active,
         type: plan.type || "SEMESTRAL",
-        category: plan.category || "PAGO"
+        category: plan.category || "PAGO",
+        maxEntidades: plan.maxEntidades || 1,
+        maxUtilizadores: plan.maxUtilizadores || 1
       });
     } else {
       setEditingPlan(null);
@@ -112,9 +116,11 @@ export default function Plans() {
         name: "", 
         price: 0, 
         durationDays: 30, 
-        isActive: true,
+        active: true,
         type: "SEMESTRAL",
-        category: "PAGO"
+        category: "PAGO",
+        maxEntidades: 1,
+        maxUtilizadores: 1
       });
     }
     setIsModalOpen(true);
@@ -189,11 +195,13 @@ export default function Plans() {
                 <FeatureItem text="Acesso total à API" />
                 <FeatureItem text="Suporte Prioritário" />
                 <FeatureItem text={`Validade de ${plan.durationDays} dias`} />
+                <FeatureItem text={`${plan.maxEntidades || 1} Entidade(s)`} />
+                <FeatureItem text={`${plan.maxUtilizadores >= 999 ? 'Utilizadores Ilimitados' : (plan.maxUtilizadores || 1) + ' Utilizador(es)'}`} />
               </div>
 
               <div className="mt-auto pt-6 flex items-center justify-between">
-                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed ${plan.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
-                   {plan.isActive ? 'Disponível' : 'Indisponível'}
+                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed ${plan.active ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                   {plan.active ? 'Disponível' : 'Indisponível'}
                 </span>
                 <div className="text-[10px] font-bold uppercase text-slate-300 tracking-tighter">REF: {plan.id}</div>
               </div>
@@ -291,6 +299,32 @@ export default function Plans() {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Máx. Entidades</label>
+                        <input 
+                          type="number" 
+                          required
+                          value={formData.maxEntidades}
+                          onChange={e => setFormData({ ...formData, maxEntidades: Number(e.target.value) })}
+                          title="Máximo de Entidades"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Máx. Usuários</label>
+                        <input 
+                          type="number" 
+                          required
+                          value={formData.maxUtilizadores}
+                          onChange={e => setFormData({ ...formData, maxUtilizadores: Number(e.target.value) })}
+                          title="Máximo de Usuários"
+                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
+                        />
+                        <p className="text-[8px] text-slate-400 mt-1 uppercase font-bold tracking-tighter">* Use 999 para ilimitados</p>
+                      </div>
+                    </div>
+
                   <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
                     <div>
                        <p className="text-xs font-bold text-slate-700">Estado de Venda</p>
@@ -299,8 +333,8 @@ export default function Plans() {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={formData.isActive}
-                        onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                        checked={formData.active}
+                        onChange={e => setFormData({ ...formData, active: e.target.checked })}
                         className="sr-only peer"
                         title="Ativar ou Desativar Plano"
                         placeholder="Ativo"

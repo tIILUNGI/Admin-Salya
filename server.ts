@@ -65,9 +65,9 @@ async function startServer() {
   ];
 
   let plans = [
-    { id: "p1", name: "Mensal", price: 10000, durationDays: 30, isActive: true },
-    { id: "p2", name: "Semestral", price: 55000, durationDays: 180, isActive: true },
-    { id: "p3", name: "Anual", price: 100000, durationDays: 365, isActive: true },
+    { id: "p1", name: "Mensal", price: 10000, durationDays: 30, active: true, type: "DEMO", category: "GRATUITO", maxEntidades: 1, maxUtilizadores: 2 },
+    { id: "p2", name: "Semestral", price: 55000, durationDays: 180, active: true, type: "SEMESTRAL", category: "PAGO", maxEntidades: 2, maxUtilizadores: 5 },
+    { id: "p3", name: "Anual", price: 100000, durationDays: 365, active: true, type: "ANUAL", category: "PAGO", maxEntidades: 5, maxUtilizadores: 999 },
   ];
 
   let subscriptions = [
