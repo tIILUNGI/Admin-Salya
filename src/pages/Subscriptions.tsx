@@ -149,81 +149,92 @@ export default function Subscriptions() {
     }
   };
 
-  const getPlanLabel = (planId: string) => {
-    if (planId === "p0") return "Demo";
-    if (planId === "p1") return "Semestral";
-    if (planId === "p2") return "Anual";
+  const getPlanLabel = (planId: string, customName?: string) => {
+    if (customName && customName.trim()) return customName;
+    if (planId === "p0" || planId === "DEMO") return "Demo";
+    if (planId === "p1" || planId === "SEMESTRAL") return "Doméstico";
+    if (planId === "p2" || planId === "ANUAL") return "Profissional";
+    if (planId === "p3" || planId === "CORPORATIVO") return "Corporativo";
     return "Desconhecido";
   };
 
-  const downloadWorkspaceCSV = (uid: string) => {
-    const group = userGroups[uid] || [];
-    if (group.length === 0) return;
+  const exportCSV = (subsToExport: any[], filenamePrefix: string) => {
+    if (!subsToExport || subsToExport.length === 0) {
+      Swal.fire({ icon: "info", title: "Aviso", text: "Nenhuma subscrição disponível para exportar", confirmButtonColor: "#9333ea" });
+      return;
+    }
 
     const headers = [
       "ID Subscrição",
-      "Plano",
-      "Status",
-      "Data Início",
-      "Data Fim",
-      "Trial",
-      "Nome Empresa",
-      "NIF",
-      "Contacto",
-      "Endereço",
+      "ID Utilizador",
       "Proprietário",
       "Email Proprietário",
       "Telemóvel Proprietário",
-      "Colaboradores"
+      "ID Empresa",
+      "Nome Empresa",
+      "NIF Empresa",
+      "Contacto Empresa",
+      "Endereço Empresa",
+      "Plano",
+      "Status",
+      "Trial",
+      "Data Início",
+      "Data Fim",
+      "Total Colaboradores"
     ];
 
     const escapeCsv = (val: any) => {
-      const s = String(val ?? "");
-      if (s.includes(",") || s.includes('"') || s.includes("\n")) return '"' + s.replace(/"/g, '""') + '"';
+      const s = String(val ?? "").trim();
+      if (s.includes(";") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
       return s;
     };
 
-    const rows = group.map(sub => {
-      const companyData = companies[String(sub.companyId)];
-      const info = {
-        name: sub.companyName || companyData?.name || "",
-        nif: companyData?.nif || "",
-        contact: companyData?.phone || companyData?.email || "",
-        address: companyData?.address || "",
-        userName: sub.userName || sub.ownerName || "",
-        ownerEmail: sub.userEmail || "",
-        ownerPhone: sub.userPhone || "",
-        employees: Number(companyData?.employees ?? 0)
-      };
+    const rows = subsToExport.map(sub => {
+      const companyData = companies[String(sub.companyId)] || {};
+      const planName = getPlanLabel(sub.planId, sub.planName);
+      const employees = Number(sub.employees ?? companyData?.employees ?? 0);
 
       return [
         sub.id,
-        getPlanLabel(sub.planId),
-        sub.status,
+        sub.userId || sub.user?.id || "",
+        sub.userName || sub.ownerName || "",
+        sub.userEmail || "",
+        sub.userPhone || "",
+        sub.companyId || "",
+        sub.companyName || companyData?.name || "",
+        companyData?.nif || "",
+        companyData?.phone || companyData?.email || "",
+        companyData?.address || "",
+        planName,
+        sub.status || "",
+        sub.isTrial ? "Sim" : "Não",
         formatDate(sub.startDate || sub.createdAt),
         formatDate(sub.endDate),
-        sub.isTrial ? "Sim" : "Não",
-        info.name,
-        info.nif,
-        info.contact,
-        info.address,
-        info.userName,
-        info.ownerEmail,
-        info.ownerPhone,
-        info.employees
-      ].map(escapeCsv).join(",");
+        employees
+      ].map(escapeCsv).join(";");
     });
 
-    const csvContent = [headers.join(","), ...rows].join("\n");
+    const csvContent = [headers.map(escapeCsv).join(";"), ...rows].join("\r\n");
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `subscricao_${uid}_${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `${filenamePrefix}_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const downloadWorkspaceCSV = (uid: string) => {
+    const group = userGroups[uid] || [];
+    exportCSV(group, `subscricao_utilizador_${uid}`);
+  };
+
+  const downloadAllSubscriptionsCSV = () => {
+    exportCSV(sortedSubs, `todas_subscricoes_salya`);
   };
 
   return (
@@ -236,19 +247,30 @@ export default function Subscriptions() {
             {userOrder.length} usuário{userOrder.length !== 1 ? "s" : ""} · {sortedSubs.length} subscri{sortedSubs.length !== 1 ? "ções" : ""}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 bg-white p-1 rounded-lg border border-slate-200 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setShowActiveOnly(true)}
-            className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
+            onClick={downloadAllSubscriptionsCSV}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
+            title="Exportar todas as subscrições num único ficheiro CSV"
           >
-            Ativas
+            <Download className="w-4 h-4" />
+            Baixar Todos em CSV
           </button>
-          <button
-            onClick={() => setShowActiveOnly(false)}
-            className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${!showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
-          >
-            Todas
-          </button>
+
+          <div className="flex bg-white p-1 rounded-lg border border-slate-200">
+            <button
+              onClick={() => setShowActiveOnly(true)}
+              className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
+            >
+              Ativas
+            </button>
+            <button
+              onClick={() => setShowActiveOnly(false)}
+              className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${!showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
+            >
+              Todas
+            </button>
+          </div>
         </div>
       </div>
 

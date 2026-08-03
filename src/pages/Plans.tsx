@@ -10,7 +10,7 @@ export default function Plans() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [formData, setFormData] = useState({ 
-    name: "", 
+    name: "Plano Doméstico", 
     price: 0, 
     durationDays: 30, 
     active: true,
@@ -256,6 +256,7 @@ export default function Plans() {
                           <option value="DEMO">DEMO</option>
                           <option value="SEMESTRAL">SEMESTRAL</option>
                           <option value="ANUAL">ANUAL</option>
+                          <option value="CORPORATIVO">CORPORATIVO</option>
                         </select>
                       </div>
                       <div>
