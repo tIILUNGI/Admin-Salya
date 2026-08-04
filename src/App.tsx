@@ -10,6 +10,7 @@ import Payments from "./pages/Payments";
 import Plans from "./pages/Plans";
 import Logs from "./pages/Logs";
 import Profile from "./pages/Profile";
+import Leads from "./pages/Leads";
 import Login from "./pages/Login";
 import { NotificationProvider } from "./contexts/NotificationContext";
 
@@ -67,6 +68,7 @@ export default function App() {
                 <Route path="payments" element={<Payments />} />
                 <Route path="plans" element={<Plans />} />
                 <Route path="logs" element={<Logs />} />
+                <Route path="leads" element={<Leads />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
               <Route path="*" element={<Navigate to="/" />} />

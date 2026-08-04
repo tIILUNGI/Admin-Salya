@@ -8,7 +8,8 @@ import {
   LogOut,
   Package,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Mail
 } from "lucide-react";
 import { useAuth } from "../../App";
 import { clsx, type ClassValue } from "clsx";
@@ -27,6 +28,7 @@ const navItems = [
   { path: "/subscriptions", label: "Subscrições", icon: History, badge: "Novo" },
   { path: "/payments", label: "Pagamentos", icon: CreditCard, badge: null },
   { path: "/plans", label: "Planos", icon: Package, badge: null },
+  { path: "/leads", label: "Leads Folha Angola", icon: Mail, badge: null },
   { path: "/logs", label: "Logs", icon: ShieldCheck, badge: null },
 ];
 
