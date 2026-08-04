@@ -12,6 +12,9 @@ export default function Subscriptions() {
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
   const [showRenewModal, setShowRenewModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [selectedApproveSubscription, setSelectedApproveSubscription] = useState<any>(null);
+  const [approveEndDate, setApproveEndDate] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showActiveOnly, setShowActiveOnly] = useState(false);
@@ -116,6 +119,38 @@ export default function Subscriptions() {
       } else throw new Error("Failed");
     } catch {
       Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível renovar a subscrição", confirmButtonColor: "#ef4444" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApprove = (subscription: any) => {
+    setSelectedApproveSubscription(subscription);
+    // Pré-preenche com a data de hoje + duração do plano como sugestão
+    const suggestedDays = subscription.durationDays || 365;
+    const suggestedEnd = new Date();
+    suggestedEnd.setDate(suggestedEnd.getDate() + suggestedDays);
+    setApproveEndDate(suggestedEnd.toISOString().split("T")[0]);
+    setShowApproveModal(true);
+  };
+
+  const confirmApproval = async () => {
+    if (!selectedApproveSubscription || !approveEndDate) return;
+    setIsLoading(true);
+    try {
+      // Formata a data como LocalDateTime ISO sem conversão de fuso horário
+      const endDateISO = `${approveEndDate}T00:00:00`;
+      const res = await apiPost(`/admin/subscriptions/${selectedApproveSubscription.id}/approve`, { endDate: endDateISO });
+      if (res.ok) {
+        Swal.fire({ icon: "success", title: "Plano Aprovado!", text: "A subscrição foi aprovada com sucesso", confirmButtonColor: "#9333ea", timer: 2000, showConfirmButton: false });
+        setShowApproveModal(false);
+        fetchSubscriptions();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed");
+      }
+    } catch (e: any) {
+      Swal.fire({ icon: "error", title: "Erro", text: e.message || "Não foi possível aprovar a subscrição", confirmButtonColor: "#ef4444" });
     } finally {
       setIsLoading(false);
     }
@@ -463,6 +498,15 @@ export default function Subscriptions() {
                             </div>
                             <SubscriptionStatus status={sub.status} />
                             <div className="flex items-center gap-2 justify-end sm:justify-start">
+                              {(sub.status === "PENDENTE_APROVACAO" || sub.status === "pending") && (
+                                <button
+                                  onClick={() => handleApprove(sub)}
+                                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+                                  title="Aprovar Subscrição"
+                                >
+                                  <CheckCircle2 className="w-3 h-3" /> Aprovar
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleRenew(sub)}
                                 className="px-4 py-2.5 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.15em] shadow-sm transition-all flex items-center gap-1.5"
@@ -503,9 +547,100 @@ export default function Subscriptions() {
         })}
       </div>
 
+      {/* Approve Modal */}
+      <AnimatePresence>
+        {showApproveModal && selectedApproveSubscription && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowApproveModal(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-extrabold">Aprovar Subscrição</h3>
+                        <p className="text-emerald-100 text-xs font-medium mt-0.5">Defina a data de término do plano</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowApproveModal(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors" title="Fechar">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-5">
+                  {/* Info do plano */}
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Utilizador</span>
+                      <span className="font-bold text-slate-900">{selectedApproveSubscription.userName || selectedApproveSubscription.ownerName || "—"}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Plano</span>
+                      <span className="font-bold text-slate-900">{getPlanLabel(selectedApproveSubscription.planId, selectedApproveSubscription.planName)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Data de Submissão</span>
+                      <span className="font-bold text-slate-700">{formatDate(selectedApproveSubscription.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Picker de data de fim */}
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">
+                      Data de Término do Plano <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={approveEndDate}
+                      onChange={e => setApproveEndDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none font-bold text-slate-800 transition-all"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
+                      Valor sugerido baseado na duração do plano ({selectedApproveSubscription.durationDays || 365} dias a partir de hoje)
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setShowApproveModal(false)}
+                      className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={confirmApproval}
+                      disabled={isLoading || !approveEndDate}
+                      className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      Confirmar Aprovação
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Change Plan Modal */}
       <AnimatePresence>
         {showChangePlanModal && selectedSubscription && (
+
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
