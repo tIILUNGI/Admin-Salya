@@ -153,7 +153,7 @@ export default function Login() {
       if (res.ok) {
         const plan = plans.find((plan) => String(plan.id) === selectedPlanId);
         const message = plan?.type === "DEMO"
-          ? "Conta criada! Seu plano Demo está ativo por 24 horas."
+          ? "Conta criada! Seu plano Demo está ativo por 30 dias."
           : "Conta criada! Aguarde a autorização do admin para acessar o sistema.";
 
         Swal.fire({
@@ -257,7 +257,7 @@ export default function Login() {
                       <p className="text-sm text-slate-500">{plan.durationDays} dia{plan.durationDays === 1 ? "" : "s"} de validade</p>
                       <div className="mt-6 rounded-2xl bg-white p-3 border border-slate-200 text-sm text-slate-700">
                         {plan.type === "DEMO"
-                          ? "Demo ativo imediatamente por 24h."
+                          ? "Demo ativo imediatamente por 30 dias."
                           : "Necessita autorização do admin após o cadastro."}
                       </div>
                     </button>
