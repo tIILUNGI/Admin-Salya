@@ -19,9 +19,19 @@
 }
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overflow-x: hidden;
+    min-width: 320px;
   }
 
   main {
@@ -68,4 +78,10 @@
 
 .enterprise-sidebar-item {
   @apply relative overflow-hidden;
+}
+
+/* Responsive table utility */
+.table-responsive {
+  @apply w-full overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
 }

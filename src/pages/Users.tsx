@@ -471,8 +471,8 @@ export default function Users() {
         </div>
       </div>
 
-      <div className="enterprise-card overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="enterprise-card overflow-hidden min-w-0">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -517,8 +517,8 @@ export default function Users() {
           </motion.div>
         )}
 
-        <div className="overflow-x-auto -mx-4 md:mx-0">
-          <table className="w-full min-w-[700px]">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-slate-50/50">
               <tr>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Usuário</th>

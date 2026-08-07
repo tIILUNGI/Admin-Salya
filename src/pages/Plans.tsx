@@ -148,12 +148,12 @@ export default function Plans() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 italic-none">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
           {plans.map((plan, idx) => (
             <div key={plan.id} className="relative group">
               <div className="absolute inset-0 bg-primary-500 rounded-[3rem] rotate-1 scale-95 opacity-0 group-hover:opacity-5 group-hover:rotate-2 transition-all duration-500" />
 
-            <div className={`relative bg-white border-2 border-slate-100 p-10 rounded-lg flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
+            <div className={`relative bg-white border-2 border-slate-100 p-6 lg:p-8 xl:p-10 rounded-lg flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
               
               {idx === 1 && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">

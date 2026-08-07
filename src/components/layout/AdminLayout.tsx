@@ -17,7 +17,7 @@ export default function AdminLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans">
+    <div className="flex min-h-screen bg-slate-50 font-sans overflow-x-hidden">
       <Sidebar 
         isMobileOpen={isMobileMenuOpen} 
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)} 
@@ -45,8 +45,8 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 w-full px-3 sm:px-6 lg:px-8 py-5 lg:py-8 min-w-0 overflow-y-auto bg-slate-50/50">
-          <div className="w-full min-w-0 max-w-[1440px] mx-auto">
+        <main className="flex-1 w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 lg:py-6 xl:py-8 min-w-0 overflow-y-auto overflow-x-hidden bg-slate-50/50">
+          <div className="w-full min-w-0 max-w-none">
             <AnimatePresence mode="wait">
               <motion.div
                 key={window.location.pathname + window.location.search}
@@ -54,6 +54,7 @@ export default function AdminLayout() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
+                className="min-w-0"
               >
                 <Outlet />
               </motion.div>
