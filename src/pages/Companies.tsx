@@ -7,10 +7,10 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 
 export default function Companies() {
   const [companies, setCompanies] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     document.title = "Empresas | Salya Admin";
@@ -34,25 +34,25 @@ export default function Companies() {
     fetchCompanies();
   }, []);
 
-  // Sincronizar search term com query param (evita loop)
+  // Sincronizar search term com query param (sem loop)
   useEffect(() => {
     const querySearch = searchParams.get("search") || "";
-    if (querySearch !== searchTerm) {
+    if (querySearch !== searchTerm && querySearch !== searchTerm.trim()) {
       setSearchTerm(querySearch);
     }
-  }, [searchParams, searchTerm]);
+  }, [searchParams]);
 
-  // Atualizar query param quando search term mudar (evita loop)
   useEffect(() => {
     const currentQuery = searchParams.get("search") || "";
-    if (searchTerm !== currentQuery) {
-      if (searchTerm.trim()) {
-        setSearchParams({ search: searchTerm.trim() });
+    const trimmed = searchTerm.trim();
+    if (trimmed !== currentQuery) {
+      if (trimmed) {
+        setSearchParams({ search: trimmed }, { replace: true });
       } else {
-        setSearchParams({});
+        setSearchParams({}, { replace: true });
       }
     }
-  }, [searchTerm, searchParams, setSearchParams]);
+  }, [searchTerm]);
 
   const handleCreate = async () => {
     const name = prompt("Nome da empresa:");

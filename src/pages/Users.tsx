@@ -8,7 +8,8 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
   const [companies, setCompanies] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [filterRole, setFilterRole] = useState("ALL");
   const [showFilters, setShowFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -16,7 +17,6 @@ export default function Users() {
   const [showSimilarModal, setShowSimilarModal] = useState(false);
   const [isDetectingSimilar, setIsDetectingSimilar] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     document.title = "Usuários | Salya Admin";
@@ -56,11 +56,6 @@ export default function Users() {
     fetchUsers();
   }, []);
 
-  // Sincronizar search com query param
-  useEffect(() => {
-    const querySearch = searchParams.get("search") || "";
-    setSearchTerm(querySearch);
-  }, [searchParams]);
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -423,25 +418,25 @@ export default function Users() {
     return matchesSearch && matchesRole;
   });
 
-  // Sincronizar search term com query param (evita loop)
+  // Sincronizar search term com query param (sem loop)
   useEffect(() => {
     const querySearch = searchParams.get("search") || "";
-    if (querySearch !== searchTerm) {
+    if (querySearch !== searchTerm && querySearch !== searchTerm.trim()) {
       setSearchTerm(querySearch);
     }
-  }, [searchParams, searchTerm]);
+  }, [searchParams]);
 
-  // Atualizar query param quando search term mudar (evita loop)
   useEffect(() => {
     const currentQuery = searchParams.get("search") || "";
-    if (searchTerm !== currentQuery) {
-      if (searchTerm.trim()) {
-        setSearchParams({ search: searchTerm.trim() });
+    const trimmed = searchTerm.trim();
+    if (trimmed !== currentQuery) {
+      if (trimmed) {
+        setSearchParams({ search: trimmed }, { replace: true });
       } else {
-        setSearchParams({});
+        setSearchParams({}, { replace: true });
       }
     }
-  }, [searchTerm, searchParams, setSearchParams]);
+  }, [searchTerm]);
 
   return (
     <div className="space-y-6 pb-12">

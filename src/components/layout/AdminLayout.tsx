@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import NotificationDropdown from "../NotificationDropdown";
 import { motion, AnimatePresence } from "motion/react";
@@ -13,6 +13,7 @@ function cn(...inputs: ClassValue[]) {
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -49,7 +50,7 @@ export default function AdminLayout() {
           <div className="w-full min-w-0 max-w-none">
             <AnimatePresence mode="wait">
               <motion.div
-                key={window.location.pathname + window.location.search}
+                key={location.pathname}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}

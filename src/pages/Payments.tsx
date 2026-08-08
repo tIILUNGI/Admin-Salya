@@ -8,10 +8,10 @@ import { apiGet, apiPost } from "../lib/api";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,18 +41,25 @@ export default function Payments() {
     fetchPayments();
   }, []);
 
+  // Sincronizar search term com query param (sem loop)
   useEffect(() => {
     const querySearch = searchParams.get("search") || "";
-    if (querySearch !== searchTerm) setSearchTerm(querySearch);
-  }, [searchParams, searchTerm]);
+    if (querySearch !== searchTerm && querySearch !== searchTerm.trim()) {
+      setSearchTerm(querySearch);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const currentQuery = searchParams.get("search") || "";
-    if (searchTerm !== currentQuery) {
-      if (searchTerm.trim()) setSearchParams({ search: searchTerm.trim() });
-      else setSearchParams({});
+    const trimmed = searchTerm.trim();
+    if (trimmed !== currentQuery) {
+      if (trimmed) {
+        setSearchParams({ search: trimmed }, { replace: true });
+      } else {
+        setSearchParams({}, { replace: true });
+      }
     }
-  }, [searchTerm, searchParams, setSearchParams]);
+  }, [searchTerm]);
 
   const handleConfirmPayment = async (reference: string) => {
     const result = await Swal.fire({
