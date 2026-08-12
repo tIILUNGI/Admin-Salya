@@ -216,8 +216,8 @@ export default function Dashboard() {
               </div>
               <DollarSign className="w-5 h-5 text-primary-500" />
             </div>
-            <div className="h-60 w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <div className="w-full min-w-0">
+              <ResponsiveContainer width="100%" height={240} minWidth={0}>
                 <AreaChart data={revenueChart}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -243,8 +243,8 @@ export default function Dashboard() {
               </div>
               <BarChart3 className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="h-60 w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <div className="w-full min-w-0">
+              <ResponsiveContainer width="100%" height={240} minWidth={0}>
                 <AreaChart data={companiesByPlanChart}>
                   <CartesianGrid strokeDasharray="2 4" stroke="#e2e8f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} stroke="#e2e8f0" />
