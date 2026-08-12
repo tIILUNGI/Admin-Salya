@@ -42,6 +42,14 @@ export default function App() {
   };
 
   const logout = () => {
+    const token = localStorage.getItem("admin_token");
+    if (token) {
+      // Revoga o token no servidor (fire-and-forget)
+      fetch("https://api.salya.ao/api/auth/logout", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      }).catch(() => {});
+    }
     localStorage.removeItem("admin_token");
     setIsAuthenticated(false);
   };
