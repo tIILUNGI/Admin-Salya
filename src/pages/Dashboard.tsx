@@ -216,8 +216,8 @@ export default function Dashboard() {
               </div>
               <DollarSign className="w-5 h-5 text-primary-500" />
             </div>
-            <div className="h-60 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-60 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart data={revenueChart}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -235,7 +235,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="enterprise-card p-6 md:p-8">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="enterprise-card p-6 md:p-8 min-w-0">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Empresas por Plano</h3>
@@ -243,8 +243,8 @@ export default function Dashboard() {
               </div>
               <BarChart3 className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="h-60 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-60 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart data={companiesByPlanChart}>
                   <CartesianGrid strokeDasharray="2 4" stroke="#e2e8f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} stroke="#e2e8f0" />

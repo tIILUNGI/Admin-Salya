@@ -33,6 +33,8 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+import { apiPost } from "./lib/api";
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("admin_token"));
 
@@ -44,11 +46,8 @@ export default function App() {
   const logout = () => {
     const token = localStorage.getItem("admin_token");
     if (token) {
-      // Revoga o token no servidor (fire-and-forget)
-      fetch("https://api.salya.ao/api/auth/logout", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
-      }).catch(() => {});
+      // Revoga o token no servidor usando a URL dinâmica do ambiente (fire-and-forget)
+      apiPost("/auth/logout", {}).catch(() => {});
     }
     localStorage.removeItem("admin_token");
     setIsAuthenticated(false);
