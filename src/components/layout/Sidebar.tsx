@@ -25,7 +25,7 @@ const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard, badge: null },
   { path: "/companies", label: "Empresas", icon: Building2, badge: null },
   { path: "/users", label: "Usuários", icon: Users, badge: null },
-  { path: "/subscriptions", label: "Subscrições", icon: History, badge: "Novo" },
+  { path: "/subscriptions", label: "Subscrições", icon: History, badge: null },
   { path: "/payments", label: "Pagamentos", icon: CreditCard, badge: null },
   { path: "/plans", label: "Planos", icon: Package, badge: null },
   { path: "/leads", label: "Leads Folha Angola", icon: Mail, badge: null },

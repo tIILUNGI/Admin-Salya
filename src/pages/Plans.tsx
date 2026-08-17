@@ -10,7 +10,7 @@ export default function Plans() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [formData, setFormData] = useState({ 
-    name: "Plano Doméstico", 
+    name: "Micro Empresa", 
     price: 0, 
     durationDays: 30, 
     active: true,
@@ -186,8 +186,45 @@ export default function Plans() {
               <div className="mb-8">
                 <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{plan.name}</h3>
                 <div className="flex flex-col gap-1 mt-6">
-                  <span className="text-4xl font-black text-slate-900 leading-none">{formatCurrency(plan.price)}</span>
-                  <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Recorrência: {plan.durationDays} Dias</span>
+                  {plan.type === 'DEMO' ? (
+                    <>
+                      <span className="text-3xl font-black text-emerald-600 leading-none">GRATUITO</span>
+                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">7 Dias de acesso total</span>
+                    </>
+                  ) : plan.type === 'SEMESTRAL' ? (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-slate-900 leading-none">5.700 Kz</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ mês</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-primary-600 leading-none">68.400 Kz</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ ano</span>
+                        </div>
+                      </div>
+                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Mensal ou Anual</span>
+                    </>
+                  ) : plan.type === 'ANUAL' ? (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-slate-900 leading-none">10.830 Kz</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ mês</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-primary-600 leading-none">129.960 Kz</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ ano</span>
+                        </div>
+                      </div>
+                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Mensal ou Anual</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-black text-slate-900 leading-none">{formatCurrency(plan.price)}</span>
+                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Recorrência: {plan.durationDays} Dias</span>
+                    </>
+                  )}
                 </div>
               </div>
 

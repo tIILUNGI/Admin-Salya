@@ -187,7 +187,7 @@ export default function Subscriptions() {
   const getPlanLabel = (planId: string, customName?: string) => {
     if (customName && customName.trim()) return customName;
     if (planId === "p0" || planId === "DEMO") return "Demo";
-    if (planId === "p1" || planId === "SEMESTRAL") return "Doméstico";
+    if (planId === "p1" || planId === "SEMESTRAL") return "Micro Empresa";
     if (planId === "p2" || planId === "ANUAL") return "Profissional";
     if (planId === "p3" || planId === "CORPORATIVO") return "Corporativo";
     return "Desconhecido";
@@ -477,12 +477,17 @@ export default function Subscriptions() {
                             </div>
                             <div>
                               <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-sm font-bold text-slate-800">Plano {getPlanLabel(sub.planId)}</span>
+                                <span className="text-sm font-bold text-slate-800">Plano {getPlanLabel(sub.planId, sub.planName)}</span>
+                                {sub.billingCycle && (
+                                  <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">
+                                    {sub.billingCycle === "ANUAL" ? "Anual" : "Mensal"}
+                                  </span>
+                                )}
                                 {idx === 0 && (
                                   <span className="bg-primary-100 text-primary-700 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">Recent</span>
                                 )}
                                 {sub.isTrial && (
-                                  <span className="bg-amber-100 text-amber-700 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">Trial</span>
+                                  <span className="bg-amber-100 text-amber-700 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">Trial (7 dias)</span>
                                 )}
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                                   ID: {sub.id}
@@ -591,6 +596,18 @@ export default function Subscriptions() {
                       <span className="text-slate-500 font-medium">Plano</span>
                       <span className="font-bold text-slate-900">{getPlanLabel(selectedApproveSubscription.planId, selectedApproveSubscription.planName)}</span>
                     </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Modalidade</span>
+                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-xs">
+                        {selectedApproveSubscription.billingCycle === "ANUAL" ? "Anual (12 Meses)" : "Mensal (30 Dias)"}
+                      </span>
+                    </div>
+                    {selectedApproveSubscription.price !== undefined && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500 font-medium">Valor</span>
+                        <span className="font-extrabold text-slate-900">{formatCurrency(selectedApproveSubscription.price)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Data de Submissão</span>
                       <span className="font-bold text-slate-700">{formatDate(selectedApproveSubscription.createdAt)}</span>
