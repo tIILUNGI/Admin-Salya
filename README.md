@@ -1,82 +1,129 @@
-<div align="center">
-<img width="1200" height="475" alt="Salya Admin Banner" src="https://github.com/user-attachments/assets/aa6c5f23-a291-4b2b-b2d2-a5e91461d5c2" />
-</div>
+# ELMASICO CONNECT — Plataforma Inteligente de Serviços Digitais
 
-# Salya Admin - Painel Administrativo Completo
+> **“Conectando você aos serviços.”**
 
-**Salya Admin** é um sistema MVP totalmente funcional de administração empresarial com dashboard, gestão de usuários, empresas, subscrições, pagamentos, planos e logs de auditoria. 100% responsivo, com SweetAlert2 para alertas.
+ELMASICO CONNECT é uma plataforma web empresarial completa para assistência e gestão de serviços públicos e privados em Angola (AGT, SME, GUE, Viação e Trânsito, SILAC, Educação, SEPE e Serviços Consulares).
 
-## 🚀 Funcionalidades Implementadas (MVP Completo)
+---
 
-### 📊 **Dashboard**
-- Métricas em tempo real (empresas, usuários, receitas)
-- Gráficos interativos (Recharts)
-- Cards Bento responsivos
+## 🚀 Arquitetura & Stack Técnica
 
-### 🏢 **Empresas** - CRUD Completo
-- Listagem, criação, edição, exclusão
-- Gestão de status (ativo/suspenso)
-- Detalhes completos (NIF, telefone, endereço)
+### **Frontend**
+- **React 19** + **TypeScript**
+- **Vite**
+- **Tailwind CSS** (design responsivo, mobile-first, paleta corporativa: azul escuro `#0f172a`, azul `#2563eb`, destaques em laranja `#ea580c` e cinzas neutros)
+- **React Router v7**
+- **Lucide React** & **Recharts**
+- **SweetAlert2** (módulos de notificação e confirmação)
 
-### 👥 **Usuários** - CRUD Completo
-- Criação via modal (nome, email, role)
-- Bloqueio/desbloqueio com confirmação Swal
-- Reset senha (mock funcional)
+### **Backend & Banco de Dados**
+- **Supabase** & **PostgreSQL**
+- **Supabase Auth** (Role Level Access: `CLIENT`, `OPERATOR`, `SUPERVISOR`, `ADMIN`)
+- **Row Level Security (RLS)** ativo em 100% das tabelas
+- **Supabase Storage** (buckets privados com URLs temporárias/assinadas)
+- **Supabase Edge Functions**:
+  - `ai-assistant`: Integração com Provedor de IA
+  - `notifications`: Notificações do sistema
+  - `payment`: Processamento de pagamentos
+  - `integrations`: Conectores externos
+  - `whatsapp`: Webhook para WhatsApp Business Cloud API
 
-### 💳 **Pagamentos & Subscrições**
-- Histórico completo
-- Confirmação de pagamentos
-- Status trial/ativo/expirado
+---
 
-### 🎫 **Planos** - CRUD Completo
-- Mensal, Semestral, Anual
-- Criação/editação/exclusão
-
-### 📋 **Logs de Auditoria**
-- Histórico automático de todas ações
-- Login, CRUD, status changes
-
-### 🔐 **Autenticação Completa**
-- Login: `admin@salya.com` / `admin123`
-- JWT mock, rotas protegidas
-- Register toggle no login
-- "Esqueceu senha?" com Swal
-
-## ✅ **Melhorias Implementadas**
-- **100% Responsivo** mobile/tablet/desktop
-- **SweetAlert2** todos alertas/confirmações
-- **npm run dev** → Backend (azul) + Frontend (verde)
-- Branding "Salya Admin" completo
-- Sem ícones notificação extras dashboard
-- Favicon e títulos atualizados
-
-## 🛠️ Stack Técnica
+## 📦 Estrutura do Projeto
 
 ```
-Frontend: React 19 + TypeScript + TailwindCSS + Vite
-Backend: Node.js + Express + TSX (mock API)
-UI: Framer Motion + Lucide React + Recharts + SweetAlert2
+src/
+├── assets/
+├── components/
+│   ├── layout/       # ClientLayout, StaffLayout, AdminLayout, ProtectedRoutes
+│   ├── ui/
+│   ├── forms/
+│   ├── documents/
+│   ├── processes/
+│   ├── payments/
+│   ├── notifications/
+│   └── charts/
+├── pages/
+│   ├── public/       # LandingPage, ServicesCatalogPage, ServiceDetailPage
+│   ├── auth/         # LoginPage, RegisterPage, ForgotPasswordPage
+│   ├── client/       # ClientDashboard, AIChat, ProcessDetail, Notifications, Profile
+│   ├── operator/     # OperatorDashboard
+│   ├── supervisor/   # SupervisorDashboard
+│   └── admin/        # AdminDashboard, Users, Services, Integrations, Reports, AuditLogs, Settings
+├── contexts/         # AuthContext
+├── services/         # mockDataService, integrationProviders
+├── lib/              # supabase.ts
+├── types/            # database.ts
+└── App.tsx
+
+supabase/
+├── migrations/
+│   ├── 20260101000000_schema.sql
+│   └── 20260101000001_rls.sql
+├── functions/
+│   ├── ai-assistant/
+│   ├── notifications/
+│   ├── payment/
+│   ├── integrations/
+│   └── whatsapp/
+└── seed.sql
 ```
 
-## 🎯 Como Usar
+---
 
+## 🔐 Segurança & Auditoria
+
+1. **Separação de Chaves**: Nenhuma Service Role Key exposta no frontend.
+2. **Geração de Número de Processo**: Sequência transacional segura no banco de dados gerando o formato `EC-2026-000001`.
+3. **Validação de Documentos**: Verificação de extensões (`.pdf`, `.jpg`, `.jpeg`, `.png`), tamanho máximo (10MB) e estados (`PENDING_REVIEW`, `ACCEPTED`, `REJECTED`, `MISSING`).
+4. **Modo de Assistência Manual**: Quando uma entidade governamental não disponibiliza API pública oficial, o sistema funciona em modo de assistência manual por operador técnico qualificado.
+5. **Audit Logs**: Registo de todas as ações administrativas e sensíveis.
+
+---
+
+## 🛠️ Como Executar
+
+### **1. Instalação de Dependências**
 ```bash
 npm install
+```
+
+### **2. Configuração de Variáveis de Ambiente**
+Copie o ficheiro `.env.example` para `.env`:
+```bash
+cp .env.example .env
+```
+
+Preencha com as credenciais do Supabase:
+```env
+VITE_SUPABASE_URL=https://sua-instancia.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-anon-key
+```
+
+### **3. Executar o Servidor de Desenvolvimento**
+```bash
 npm run dev
 ```
 
-**Frontend:** http://localhost:5173  
-**Backend:** http://localhost:3001
+### **4. Verificação de Tipos e Build de Produção**
+```bash
+npm run lint
+npm run build
+```
 
-**Login:** `admin@salya.com` / `admin123`
+---
 
-## 📱 Responsividade Testada
-- Mobile: Stack vertical, menus colapsados
-- Tablet: Grid 2-colunas  
-- Desktop: Bento grid completa
+## 🔑 Credenciais para Demonstração
 
-## 🎉 Status: MVP 100% FUNCIONAL
+No ecrã de login, utilize os botões de **Acesso Rápido para Demonstração** ou as seguintes contas:
 
-**Sistema rodando perfeitamente!** Teste todos CRUD - dados persistem na sessão.
+- **Cliente:** `cliente@elmasico.co.ao`
+- **Operador:** `operador@elmasico.co.ao`
+- **Supervisor:** `supervisor@elmasico.co.ao`
+- **Administrador:** `admin@elmasico.co.ao`
 
+---
 
+## 📄 Licença & Propriedade
+© 2026 **ELMASICO CONNECT** — Todos os direitos reservados.
