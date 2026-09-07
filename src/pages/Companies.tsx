@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash } from "lucide-react";
+import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { formatDate } from "../lib/formatters";
 import Swal from "sweetalert2";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
@@ -11,6 +12,10 @@ export default function Companies() {
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     document.title = "Empresas | Salya Admin";
@@ -157,11 +162,64 @@ export default function Companies() {
     }
   };
 
-  const filteredCompanies = (companies || []).filter(c => 
-    (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.nif || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDatePreset = (preset: 'today' | '7days' | '30days' | 'month' | 'clear') => {
+    const today = new Date();
+    const toStr = today.toISOString().split('T')[0];
+
+    if (preset === 'clear') {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    if (preset === 'today') {
+      setStartDate(toStr);
+      setEndDate(toStr);
+      return;
+    }
+
+    let from = new Date();
+    if (preset === '7days') {
+      from.setDate(today.getDate() - 7);
+    } else if (preset === '30days') {
+      from.setDate(today.getDate() - 30);
+    } else if (preset === 'month') {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+    setStartDate(from.toISOString().split('T')[0]);
+    setEndDate(toStr);
+  };
+
+  const isFilterActive = statusFilter !== "ALL" || Boolean(startDate) || Boolean(endDate);
+
+  const filteredCompanies = (companies || []).filter(c => {
+    const matchesSearch = (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.nif || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === "ALL" || c.status === statusFilter;
+
+    let matchesDate = true;
+    if (startDate || endDate) {
+      if (c.createdAt) {
+        const companyDate = new Date(c.createdAt);
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (companyDate < start) matchesDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (companyDate > end) matchesDate = false;
+        }
+      } else {
+        matchesDate = false;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
+  });
 
   return (
     <div className="space-y-6 pb-12">
@@ -192,10 +250,98 @@ export default function Companies() {
               className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
             />
           </div>
-          <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors hover:border-primary-200" title="Filtrar Resultados">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2.5 rounded-lg text-sm font-bold transition-all border flex items-center gap-2 ${
+              showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
+            }`}
+            title="Filtrar Resultados"
+          >
             <Filter className="w-5 h-5" />
+            Filtros
+            {isFilterActive && <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />}
           </button>
         </div>
+
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="enterprise-card p-4 bg-slate-50/70 border border-slate-200/80 space-y-4 overflow-hidden"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Estado da Empresa</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'ALL', label: 'Todas' },
+                    { id: 'active', label: 'Ativas' },
+                    { id: 'suspended', label: 'Suspensas' }
+                  ].map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => setStatusFilter(s.id)}
+                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === s.id ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Filters */}
+              <div className="flex-1 max-w-xl">
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-primary-500" />
+                  Data de Criação (Cadastro)
+                </label>
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Presets and Reset */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
+                <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
+                <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
+                <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
+                <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
+              </div>
+
+              {isFilterActive && (
+                <button
+                  onClick={() => { setStatusFilter('ALL'); setStartDate(''); setEndDate(''); }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Limpar Filtros
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
 
       <div className="enterprise-card overflow-hidden shadow-xl border-slate-200/60 transition-all hover:shadow-2xl">
         <div className="overflow-x-auto">
@@ -331,6 +477,7 @@ export default function Companies() {
                 <InfoItem icon={Phone} label="Telefone" value={selectedCompany.phone} />
                 <InfoItem icon={Hash} label="NIF" value={selectedCompany.nif} />
                 <InfoItem icon={Users} label="Total Colaboradores" value={Number(selectedCompany.employees ?? selectedCompany.numberOfEmployees ?? selectedCompany.employeeCount ?? 0)} />
+                <InfoItem icon={Calendar} label="Data de Criação" value={selectedCompany.createdAt ? formatDate(selectedCompany.createdAt) : "—"} />
                 <div className="md:col-span-2">
                   <InfoItem icon={MapPin} label="Endereço" value={selectedCompany.address} />
                 </div>

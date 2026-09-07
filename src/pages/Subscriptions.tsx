@@ -1,9 +1,18 @@
 import { useState, useEffect } from "react";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Download } from "lucide-react";
+import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Download, Search, Filter } from "lucide-react";
 import { formatDate, formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
 import { apiGet, apiPost } from "../lib/api";
+
+const getPlanLabel = (planId: string, customName?: string) => {
+  if (customName && customName.trim()) return customName;
+  if (planId === "p0" || planId === "DEMO") return "Demo";
+  if (planId === "p1" || planId === "SEMESTRAL") return "Micro Empresa";
+  if (planId === "p2" || planId === "ANUAL") return "Profissional";
+  if (planId === "p3" || planId === "CORPORATIVO") return "Corporativo";
+  return "Desconhecido";
+};
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState<any[]>([]);
@@ -18,6 +27,10 @@ export default function Subscriptions() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -54,9 +67,70 @@ export default function Subscriptions() {
       .catch(() => setPlans([]));
   }, []);
 
-  const filteredSubs = showActiveOnly
-    ? subs.filter(sub => sub.status === "active" || sub.status === "ATIVA")
-    : subs;
+  const handleDatePreset = (preset: 'today' | '7days' | '30days' | 'month' | 'clear') => {
+    const today = new Date();
+    const toStr = today.toISOString().split('T')[0];
+
+    if (preset === 'clear') {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    if (preset === 'today') {
+      setStartDate(toStr);
+      setEndDate(toStr);
+      return;
+    }
+
+    let from = new Date();
+    if (preset === '7days') {
+      from.setDate(today.getDate() - 7);
+    } else if (preset === '30days') {
+      from.setDate(today.getDate() - 30);
+    } else if (preset === 'month') {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+    setStartDate(from.toISOString().split('T')[0]);
+    setEndDate(toStr);
+  };
+
+  const isFilterActive = showActiveOnly || Boolean(searchTerm.trim()) || Boolean(startDate) || Boolean(endDate);
+
+  const filteredSubs = subs.filter(sub => {
+    const matchesStatus = !showActiveOnly || (sub.status === "active" || sub.status === "ATIVA");
+
+    const companyData = companies[String(sub.companyId)] || {};
+    const cName = (sub.companyName || companyData.name || "").toLowerCase();
+    const uName = (sub.userName || sub.ownerName || "").toLowerCase();
+    const uEmail = (sub.userEmail || "").toLowerCase();
+    const pName = getPlanLabel(sub.planId, sub.planName).toLowerCase();
+    const term = searchTerm.toLowerCase().trim();
+
+    const matchesSearch = !term || cName.includes(term) || uName.includes(term) || uEmail.includes(term) || pName.includes(term);
+
+    let matchesDate = true;
+    const creationDateStr = sub.createdAt || sub.startDate;
+    if (startDate || endDate) {
+      if (creationDateStr) {
+        const subDate = new Date(creationDateStr);
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (subDate < start) matchesDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (subDate > end) matchesDate = false;
+        }
+      } else {
+        matchesDate = false;
+      }
+    }
+
+    return matchesStatus && matchesSearch && matchesDate;
+  });
 
   const sortedSubs = [...filteredSubs].sort((a, b) => {
     const dateA = new Date(a.startDate || a.createdAt || 0).getTime();
@@ -184,15 +258,6 @@ export default function Subscriptions() {
     }
   };
 
-  const getPlanLabel = (planId: string, customName?: string) => {
-    if (customName && customName.trim()) return customName;
-    if (planId === "p0" || planId === "DEMO") return "Demo";
-    if (planId === "p1" || planId === "SEMESTRAL") return "Micro Empresa";
-    if (planId === "p2" || planId === "ANUAL") return "Profissional";
-    if (planId === "p3" || planId === "CORPORATIVO") return "Corporativo";
-    return "Desconhecido";
-  };
-
   const exportCSV = (subsToExport: any[], filenamePrefix: string) => {
     if (!subsToExport || subsToExport.length === 0) {
       Swal.fire({ icon: "info", title: "Aviso", text: "Nenhuma subscrição disponível para exportar", confirmButtonColor: "#9333ea" });
@@ -291,23 +356,130 @@ export default function Subscriptions() {
             <Download className="w-4 h-4" />
             Baixar Todos em CSV
           </button>
+        </div>
+      </div>
+
+      {/* Control Bar: Search & Filter toggle */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar por empresa, gestor, email ou plano..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2.5 rounded-lg text-sm font-bold transition-all border flex items-center gap-2 ${
+              showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
+            }`}
+            title="Filtrar Resultados"
+          >
+            <Filter className="w-5 h-5" />
+            Filtros
+            {isFilterActive && <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />}
+          </button>
 
           <div className="flex bg-white p-1 rounded-lg border border-slate-200">
             <button
               onClick={() => setShowActiveOnly(true)}
-              className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
+              className={`px-4 py-2 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
             >
               Ativas
             </button>
             <button
               onClick={() => setShowActiveOnly(false)}
-              className={`px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${!showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
+              className={`px-4 py-2 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${!showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
             >
               Todas
             </button>
           </div>
         </div>
       </div>
+
+      {/* Date Filter Panel */}
+      {showFilters && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="enterprise-card p-4 bg-slate-50/70 border border-slate-200/80 space-y-4 overflow-hidden"
+        >
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Filtro de Estado</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowActiveOnly(false)}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${!showActiveOnly ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={() => setShowActiveOnly(true)}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${showActiveOnly ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+                >
+                  Apenas Ativas
+                </button>
+              </div>
+            </div>
+
+            {/* Date Filters */}
+            <div className="flex-1 max-w-xl">
+              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary-500" />
+                Data de Criação (Início da Subscrição)
+              </label>
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Presets and Reset */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
+              <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
+              <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
+              <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
+              <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
+            </div>
+
+            {isFilterActive && (
+              <button
+                onClick={() => { setShowActiveOnly(false); setSearchTerm(''); setStartDate(''); setEndDate(''); }}
+                className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
+              >
+                <X className="w-3.5 h-3.5" />
+                Limpar Filtros
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* User Groups */}
       <div className="space-y-4">
@@ -497,9 +669,15 @@ export default function Subscriptions() {
                           </div>
 
                           <div className="flex flex-col sm:flex-row sm:items-center gap-3 ml-auto lg:ml-0 w-full sm:w-auto">
-                            <div className="flex items-center gap-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                              <Calendar className="w-3.5 h-3.5" />
-                              Fim: {formatDate(sub.endDate)}
+                            <div className="flex flex-col gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-primary-500" />
+                                Criada: <span className="text-slate-700">{formatDate(sub.createdAt || sub.startDate)}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                Validade: <span className="text-slate-700">{formatDate(sub.endDate)}</span>
+                              </div>
                             </div>
                             <SubscriptionStatus status={sub.status} />
                             <div className="flex items-center gap-2 justify-end sm:justify-start">

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2, FileText, Building2 } from "lucide-react";
+import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2, FileText, Building2, Calendar, X, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
+import { formatDate } from "../lib/formatters";
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
@@ -11,6 +12,8 @@ export default function Users() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [filterRole, setFilterRole] = useState("ALL");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [similarUsers, setSimilarUsers] = useState<any[]>([]);
@@ -406,6 +409,36 @@ export default function Users() {
     }
   };
 
+  const handleDatePreset = (preset: 'today' | '7days' | '30days' | 'month' | 'clear') => {
+    const today = new Date();
+    const toStr = today.toISOString().split('T')[0];
+
+    if (preset === 'clear') {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    if (preset === 'today') {
+      setStartDate(toStr);
+      setEndDate(toStr);
+      return;
+    }
+
+    let from = new Date();
+    if (preset === '7days') {
+      from.setDate(today.getDate() - 7);
+    } else if (preset === '30days') {
+      from.setDate(today.getDate() - 30);
+    } else if (preset === 'month') {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+    setStartDate(from.toISOString().split('T')[0]);
+    setEndDate(toStr);
+  };
+
+  const isFilterActive = filterRole !== "ALL" || Boolean(startDate) || Boolean(endDate);
+
   const filteredUsers = users.filter(u => {
     const name = u.name?.toLowerCase() || "";
     const email = u.email?.toLowerCase() || "";
@@ -415,7 +448,27 @@ export default function Users() {
                          email.includes(searchTerm.toLowerCase()) ||
                          company.includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === "ALL" || u.role === filterRole;
-    return matchesSearch && matchesRole;
+
+    let matchesDate = true;
+    if (startDate || endDate) {
+      if (u.createdAt) {
+        const userDate = new Date(u.createdAt);
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (userDate < start) matchesDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (userDate > end) matchesDate = false;
+        }
+      } else {
+        matchesDate = false;
+      }
+    }
+
+    return matchesSearch && matchesRole && matchesDate;
   });
 
   // Sincronizar search term com query param (sem loop)
@@ -482,11 +535,16 @@ export default function Users() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all ${showFilters ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200'}`}
+              className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all ${
+                showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border border-primary-200 shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'
+              }`}
               title="Filtros"
             >
               <Filter className="w-4 h-4" />
               Filtro
+              {isFilterActive && (
+                <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
+              )}
             </button>
           </div>
         </div>
@@ -496,18 +554,73 @@ export default function Users() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 border-b border-slate-100 bg-slate-50/50"
+            className="px-4 py-4 border-b border-slate-100 bg-slate-50/70 space-y-4"
           >
-            <div className="flex flex-wrap gap-2">
-              {['ALL', 'ADMIN', 'USER'].map(role => (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Role Filters */}
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Papel / Cargo</label>
+                <div className="flex flex-wrap gap-2">
+                  {['ALL', 'ADMIN', 'USER'].map(role => (
+                    <button
+                      key={role}
+                      onClick={() => setFilterRole(role)}
+                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${filterRole === role ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+                    >
+                      {role === 'ALL' ? 'TODOS' : role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Filters */}
+              <div className="flex-1 max-w-xl">
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-primary-500" />
+                  Data de Criação
+                </label>
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Presets and Reset */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
+                <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
+                <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
+                <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
+                <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
+              </div>
+
+              {isFilterActive && (
                 <button
-                  key={role}
-                  onClick={() => setFilterRole(role)}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterRole === role ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
+                  onClick={() => { setFilterRole('ALL'); setStartDate(''); setEndDate(''); }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
                 >
-                  {role === 'ALL' ? 'TODOS' : role}
+                  <X className="w-3.5 h-3.5" />
+                  Limpar Filtros
                 </button>
-              ))}
+              )}
             </div>
           </motion.div>
         )}
@@ -519,6 +632,7 @@ export default function Users() {
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Usuário</th>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Email</th>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
+                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Data Cadastro</th>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Papel</th>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-right">Ações</th>
@@ -552,6 +666,9 @@ export default function Users() {
                       ) : (
                         <span className="text-slate-400 text-xs">—</span>
                       )}
+                    </td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-medium text-xs whitespace-nowrap">
+                      {user.createdAt ? formatDate(user.createdAt) : "—"}
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
@@ -717,15 +834,5 @@ export default function Users() {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-// Componente X para o modal (já existe no seu código, mas adicionei por precaução)
-function X({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
   );
 }
