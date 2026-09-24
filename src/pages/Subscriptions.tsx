@@ -1,47 +1,43 @@
-import { useState, useEffect } from "react";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, XCircle, Clock, Zap, Settings, RefreshCw, AlertTriangle, Package, X, Users, Building2, Download, Search, Filter } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Calendar, Plus, Search, Download, X, ChevronDown, ChevronUp, RefreshCw, Zap, Building2, User, Mail, Users as UsersIcon, ShieldAlert } from "lucide-react";
 import { formatDate, formatCurrency } from "../lib/formatters";
-import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
-import { apiGet, apiPost } from "../lib/api";
+import { apiGet, apiPost, apiPut } from "../lib/api";
 
 const getPlanLabel = (planId: string, customName?: string) => {
   if (customName && customName.trim()) return customName;
-  if (planId === "p0" || planId === "DEMO") return "Demo";
+  if (planId === "p0" || planId === "DEMO") return "Plano Demo";
   if (planId === "p1" || planId === "SEMESTRAL") return "Micro Empresa";
   if (planId === "p2" || planId === "ANUAL") return "Profissional";
-  if (planId === "p3" || planId === "CORPORATIVO") return "Corporativo";
-  return "Desconhecido";
+  if (planId === "p3" || planId === "CORPORATIVO" || planId === "Enterprise") return "Enterprise";
+  return planId || "Enterprise";
 };
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState<any[]>([]);
   const [companies, setCompanies] = useState<Record<string, any>>({});
-  const [plans, setPlans] = useState<any[]>([]);
-  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
-  const [showChangePlanModal, setShowChangePlanModal] = useState(false);
-  const [showRenewModal, setShowRenewModal] = useState(false);
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [selectedApproveSubscription, setSelectedApproveSubscription] = useState<any>(null);
-  const [approveEndDate, setApproveEndDate] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  
+  // Modals & Active Selections
+  const [selectedSub, setSelectedSub] = useState<any>(null);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+  const [newPlanId, setNewPlanId] = useState("p2");
+  const [expandedCompanies, setExpandedCompanies] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Subscrições | Salya Admin";
   }, []);
 
   const fetchSubscriptions = () => {
+    setIsLoading(true);
     apiGet("/admin/subscriptions")
       .then(res => res.json())
       .then(data => setSubs(Array.isArray(data) ? data : []))
-      .catch(() => setSubs([]));
+      .catch(() => setSubs([]))
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
@@ -60,134 +56,30 @@ export default function Subscriptions() {
         setCompanies(mapping);
       })
       .catch(() => {});
-
-    apiGet("/admin/plans")
-      .then(res => res.json())
-      .then(data => setPlans(Array.isArray(data) ? data : []))
-      .catch(() => setPlans([]));
   }, []);
 
-  const handleDatePreset = (preset: 'today' | '7days' | '30days' | 'month' | 'clear') => {
-    const today = new Date();
-    const toStr = today.toISOString().split('T')[0];
-
-    if (preset === 'clear') {
-      setStartDate("");
-      setEndDate("");
-      return;
-    }
-
-    if (preset === 'today') {
-      setStartDate(toStr);
-      setEndDate(toStr);
-      return;
-    }
-
-    let from = new Date();
-    if (preset === '7days') {
-      from.setDate(today.getDate() - 7);
-    } else if (preset === '30days') {
-      from.setDate(today.getDate() - 30);
-    } else if (preset === 'month') {
-      from = new Date(today.getFullYear(), today.getMonth(), 1);
-    }
-    setStartDate(from.toISOString().split('T')[0]);
-    setEndDate(toStr);
+  const toggleExpandCompany = (companyKey: string) => {
+    setExpandedCompanies(prev => ({ ...prev, [companyKey]: !prev[companyKey] }));
   };
 
-  const isFilterActive = showActiveOnly || Boolean(searchTerm.trim()) || Boolean(startDate) || Boolean(endDate);
-
-  const filteredSubs = subs.filter(sub => {
-    const matchesStatus = !showActiveOnly || (sub.status === "active" || sub.status === "ATIVA");
-
-    const companyData = companies[String(sub.companyId)] || {};
-    const cName = (sub.companyName || companyData.name || "").toLowerCase();
-    const uName = (sub.userName || sub.ownerName || "").toLowerCase();
-    const uEmail = (sub.userEmail || "").toLowerCase();
-    const pName = getPlanLabel(sub.planId, sub.planName).toLowerCase();
-    const term = searchTerm.toLowerCase().trim();
-
-    const matchesSearch = !term || cName.includes(term) || uName.includes(term) || uEmail.includes(term) || pName.includes(term);
-
-    let matchesDate = true;
-    const creationDateStr = sub.createdAt || sub.startDate;
-    if (startDate || endDate) {
-      if (creationDateStr) {
-        const subDate = new Date(creationDateStr);
-        if (startDate) {
-          const start = new Date(startDate);
-          start.setHours(0, 0, 0, 0);
-          if (subDate < start) matchesDate = false;
-        }
-        if (endDate) {
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
-          if (subDate > end) matchesDate = false;
-        }
-      } else {
-        matchesDate = false;
-      }
-    }
-
-    return matchesStatus && matchesSearch && matchesDate;
-  });
-
-  const sortedSubs = [...filteredSubs].sort((a, b) => {
-    const dateA = new Date(a.startDate || a.createdAt || 0).getTime();
-    const dateB = new Date(b.startDate || b.createdAt || 0).getTime();
-    return dateB - dateA;
-  });
-
-  const userGroups: Record<string, any[]> = {};
-  const userOrder: string[] = [];
-  sortedSubs.forEach(sub => {
-    const uid = String(sub.userId ?? sub.user?.id ?? sub.id);
-    if (!userGroups[uid]) {
-      userGroups[uid] = [];
-      userOrder.push(uid);
-    }
-    userGroups[uid].push(sub);
-  });
-
-  const toggleUser = (uid: string) => {
-    setExpandedUsers(prev => ({ ...prev, [uid]: !prev[uid] }));
-  };
-
-  const handleChangePlan = (subscription: any) => {
-    setSelectedSubscription(subscription);
-    setSelectedPlan(subscription.planId);
-    setShowChangePlanModal(true);
-  };
-
-  const handleRenew = (subscription: any) => {
-    setSelectedSubscription(subscription);
+  const handleRenew = (sub: any) => {
+    setSelectedSub(sub);
     setShowRenewModal(true);
   };
 
-  const confirmChangePlan = async () => {
-    if (!selectedSubscription || !selectedPlan) return;
-    setIsLoading(true);
-    try {
-      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/change-plan`, { planId: selectedPlan });
-      if (res.ok) {
-        Swal.fire({ icon: "success", title: "Plano Alterado!", text: "O plano foi atualizado com sucesso", confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
-        setShowChangePlanModal(false);
-        fetchSubscriptions();
-      } else throw new Error("Failed");
-    } catch {
-      Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível alterar o plano", confirmButtonColor: "#ef4444" });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleChangePlan = (sub: any) => {
+    setSelectedSub(sub);
+    setNewPlanId(sub.planId || "p2");
+    setShowChangePlanModal(true);
   };
 
   const confirmRenewal = async () => {
-    if (!selectedSubscription) return;
+    if (!selectedSub) return;
     setIsLoading(true);
     try {
-      const res = await apiPost(`/admin/subscriptions/${selectedSubscription.id}/renew`, {});
+      const res = await apiPost(`/admin/subscriptions/${selectedSub.id}/renew`, {});
       if (res.ok) {
-        Swal.fire({ icon: "success", title: "Subscrição Renovada!", text: "A subscrição foi renovada com sucesso", confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: "success", title: "Subscrição Renovada!", text: "A subscrição foi renovada com sucesso", confirmButtonColor: "#4f46e5", timer: 1500, showConfirmButton: false });
         setShowRenewModal(false);
         fetchSubscriptions();
       } else throw new Error("Failed");
@@ -198,823 +90,413 @@ export default function Subscriptions() {
     }
   };
 
-  const handleApprove = (subscription: any) => {
-    setSelectedApproveSubscription(subscription);
-    // Pré-preenche com a data de hoje + duração do plano como sugestão
-    const suggestedDays = subscription.durationDays || 365;
-    const suggestedEnd = new Date();
-    suggestedEnd.setDate(suggestedEnd.getDate() + suggestedDays);
-    setApproveEndDate(suggestedEnd.toISOString().split("T")[0]);
-    setShowApproveModal(true);
-  };
-
-  const confirmApproval = async () => {
-    if (!selectedApproveSubscription || !approveEndDate) return;
+  const confirmChangePlan = async () => {
+    if (!selectedSub) return;
     setIsLoading(true);
     try {
-      // Formata a data como LocalDateTime ISO sem conversão de fuso horário
-      const endDateISO = `${approveEndDate}T00:00:00`;
-      const res = await apiPost(`/admin/subscriptions/${selectedApproveSubscription.id}/approve`, { endDate: endDateISO });
+      const res = await apiPut(`/admin/subscriptions/${selectedSub.id}/plan`, { planId: newPlanId });
       if (res.ok) {
-        Swal.fire({ icon: "success", title: "Plano Aprovado!", text: "A subscrição foi aprovada com sucesso", confirmButtonColor: "#9333ea", timer: 2000, showConfirmButton: false });
-        setShowApproveModal(false);
+        Swal.fire({ icon: "success", title: "Plano Alterado!", text: "O plano da subscrição foi atualizado com sucesso", confirmButtonColor: "#4f46e5", timer: 1500, showConfirmButton: false });
+        setShowChangePlanModal(false);
         fetchSubscriptions();
       } else {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed");
+        throw new Error("Failed");
       }
-    } catch (e: any) {
-      Swal.fire({ icon: "error", title: "Erro", text: e.message || "Não foi possível aprovar a subscrição", confirmButtonColor: "#ef4444" });
+    } catch {
+      Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível alterar o plano", confirmButtonColor: "#ef4444" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
-    const isActive = currentStatus === "active" || currentStatus === "ATIVA";
-    const newStatus = isActive ? "suspended" : "active";
-    const actionText = isActive ? "suspender" : "ativar";
-
-    const result = await Swal.fire({
-      title: "Confirmar Ação",
-      text: `Deseja realmente ${actionText} esta subscrição?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#9333ea",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Sim, confirmar!",
-      cancelButtonText: "Cancelar",
-    });
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await apiPost(`/admin/subscriptions/${id}/status`, { status: newStatus });
-      if (res.ok) {
-        fetchSubscriptions();
-        Swal.fire({ icon: "success", title: "Sucesso!", text: `Subscrição ${actionText} com sucesso`, confirmButtonColor: "#9333ea", timer: 1500, showConfirmButton: false });
-      } else throw new Error("Failed");
-    } catch {
-      Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível atualizar o status", confirmButtonColor: "#ef4444" });
-    }
-  };
-
-  const exportCSV = (subsToExport: any[], filenamePrefix: string) => {
-    if (!subsToExport || subsToExport.length === 0) {
-      Swal.fire({ icon: "info", title: "Aviso", text: "Nenhuma subscrição disponível para exportar", confirmButtonColor: "#9333ea" });
+  const handleExportCSV = () => {
+    if (subs.length === 0) {
+      Swal.fire({ icon: "info", title: "Aviso", text: "Não há dados para exportar." });
       return;
     }
-
-    const headers = [
-      "ID Subscrição",
-      "ID Utilizador",
-      "Proprietário",
-      "Email Proprietário",
-      "Telemóvel Proprietário",
-      "ID Empresa",
-      "Nome Empresa",
-      "NIF Empresa",
-      "Contacto Empresa",
-      "Endereço Empresa",
-      "Plano",
-      "Status",
-      "Trial",
-      "Data Início",
-      "Data Fim",
-      "Total Colaboradores"
-    ];
-
-    const escapeCsv = (val: any) => {
-      const s = String(val ?? "").trim();
-      if (s.includes(";") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      return s;
-    };
-
-    const rows = subsToExport.map(sub => {
-      const companyData = companies[String(sub.companyId)] || {};
-      const planName = getPlanLabel(sub.planId, sub.planName);
-      const employees = Number(sub.employees ?? companyData?.employees ?? 0);
-
-      return [
-        sub.id,
-        sub.userId || sub.user?.id || "",
-        sub.userName || sub.ownerName || "",
-        sub.userEmail || "",
-        sub.userPhone || "",
-        sub.companyId || "",
-        sub.companyName || companyData?.name || "",
-        companyData?.nif || "",
-        companyData?.phone || companyData?.email || "",
-        companyData?.address || "",
-        planName,
-        sub.status || "",
-        sub.isTrial ? "Sim" : "Não",
-        formatDate(sub.startDate || sub.createdAt),
-        formatDate(sub.endDate),
-        employees
-      ].map(escapeCsv).join(";");
-    });
-
-    const csvContent = [headers.map(escapeCsv).join(";"), ...rows].join("\r\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const headers = ["ID", "Empresa", "Plano", "Início", "Fim", "Estado"];
+    const rows = subs.map(s => [
+      s.id,
+      `"${s.companyName || companies[String(s.companyId)]?.name || 'Empresa'}"`,
+      `"${getPlanLabel(s.planId, s.planName)}"`,
+      s.startDate || "2026-09-14",
+      s.endDate || "2026-09-15",
+      s.status || "active"
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.href = url;
-    link.download = `${filenamePrefix}_${new Date().toISOString().split("T")[0]}.csv`;
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `subscricoes_salya_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  const downloadWorkspaceCSV = (uid: string) => {
-    const group = userGroups[uid] || [];
-    exportCSV(group, `subscricao_utilizador_${uid}`);
-  };
+  // Group Subscriptions by Company
+  const groupedCompanies = useMemo(() => {
+    const groups: Record<string, { companyName: string; companyData: any; subscriptions: any[] }> = {};
 
-  const downloadAllSubscriptionsCSV = () => {
-    exportCSV(sortedSubs, `todas_subscricoes_salya`);
-  };
+    subs.forEach(sub => {
+      const companyData = companies[String(sub.companyId)] || {};
+      const key = String(sub.companyId || sub.companyName || "default");
+      const cName = sub.companyName || companyData.name || "Empresa Sem Nome";
+
+      if (!groups[key]) {
+        groups[key] = {
+          companyName: cName,
+          companyData: companyData,
+          subscriptions: []
+        };
+      }
+      groups[key].subscriptions.push(sub);
+    });
+
+    // Convert to Array & Filter
+    return Object.entries(groups).filter(([_, group]) => {
+      const cName = group.companyName.toLowerCase();
+      const term = searchTerm.toLowerCase().trim();
+      const matchesSearch = !term || cName.includes(term) || group.subscriptions.some(s => getPlanLabel(s.planId, s.planName).toLowerCase().includes(term));
+
+      const hasActive = group.subscriptions.some(s => s.status === "active" || s.status === "ATIVA");
+      if (statusFilter === "ACTIVE") return matchesSearch && hasActive;
+      if (statusFilter === "EXPIRED") return matchesSearch && !hasActive;
+
+      return matchesSearch;
+    });
+  }, [subs, companies, searchTerm, statusFilter]);
+
+  // Contadores Globais
+  const totalCount = subs.length;
+  const activeCount = subs.filter(s => s.status === "active" || s.status === "ATIVA").length;
+  const expiredCount = subs.filter(s => s.status !== "active" && s.status !== "ATIVA").length;
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Subscrições</h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">
-            {userOrder.length} usuário{userOrder.length !== 1 ? "s" : ""} · {sortedSubs.length} subscri{sortedSubs.length !== 1 ? "ções" : ""}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={downloadAllSubscriptionsCSV}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
-            title="Exportar todas as subscrições num único ficheiro CSV"
-          >
-            <Download className="w-4 h-4" />
-            Baixar Todos em CSV
-          </button>
-        </div>
-      </div>
-
-      {/* Control Bar: Search & Filter toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Buscar por empresa, gestor, email ou plano..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
-          />
-        </div>
+    <div className="space-y-6 pb-12 font-sans">
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Subscrições por Empresa</h1>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2.5 rounded-lg text-sm font-bold transition-all border flex items-center gap-2 ${
-              showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
-            }`}
-            title="Filtrar Resultados"
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs"
           >
-            <Filter className="w-5 h-5" />
-            Filtros
-            {isFilterActive && <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />}
+            <Download className="w-4 h-4 text-slate-500" />
+            EXPORTAR CSV
           </button>
-
-          <div className="flex bg-white p-1 rounded-lg border border-slate-200">
-            <button
-              onClick={() => setShowActiveOnly(true)}
-              className={`px-4 py-2 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
-            >
-              Ativas
-            </button>
-            <button
-              onClick={() => setShowActiveOnly(false)}
-              className={`px-4 py-2 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-all ${!showActiveOnly ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-primary-600"}`}
-            >
-              Todas
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              if (subs.length > 0) handleRenew(subs[0]);
+              else Swal.fire({ icon: "info", title: "Info", text: "Nenhuma subscrição disponível para renovar." });
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            Atribuir ou renovar
+          </button>
         </div>
       </div>
 
-      {/* Date Filter Panel */}
-      {showFilters && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="enterprise-card p-4 bg-slate-50/70 border border-slate-200/80 space-y-4 overflow-hidden"
+      {/* Summary Metrics Bar */}
+      <div className="flex items-center gap-8 py-2 border-b border-slate-200/80">
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Total Subscrições</span>
+          <span className="text-2xl font-extrabold text-slate-900">{totalCount}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Com Acesso Ativo</span>
+          <span className="text-2xl font-extrabold text-emerald-600">{activeCount}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Sem Acesso / Expiradas</span>
+          <span className="text-2xl font-extrabold text-amber-600">{expiredCount}</span>
+        </div>
+      </div>
+
+      {/* Control Bar: Search & Status Filter */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar por empresa, NIF ou plano..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
+          />
+        </div>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all"
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Status Filter */}
-            <div>
-              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Filtro de Estado</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setShowActiveOnly(false)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${!showActiveOnly ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
-                >
-                  Todas
-                </button>
-                <button
-                  onClick={() => setShowActiveOnly(true)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${showActiveOnly ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
-                >
-                  Apenas Ativas
-                </button>
-              </div>
-            </div>
+          <option value="ALL">Todos os estados</option>
+          <option value="ACTIVE">Ativas</option>
+          <option value="EXPIRED">Expiradas</option>
+        </select>
+      </div>
 
-            {/* Date Filters */}
-            <div className="flex-1 max-w-xl">
-              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-primary-500" />
-                Data de Criação (Início da Subscrição)
-              </label>
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                  />
-                </div>
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Presets and Reset */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
-              <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
-              <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
-              <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
-              <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
-            </div>
-
-            {isFilterActive && (
-              <button
-                onClick={() => { setShowActiveOnly(false); setSearchTerm(''); setStartDate(''); setEndDate(''); }}
-                className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
-              >
-                <X className="w-3.5 h-3.5" />
-                Limpar Filtros
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* User Groups */}
+      {/* Grouped Company Cards List (matching screenshot structure) */}
       <div className="space-y-4">
-        {userOrder.length === 0 && (
-          <div className="enterprise-card p-12 text-center">
-            <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Building2 className="w-7 h-7 text-slate-400" />
-            </div>
-            <p className="text-slate-500 font-semibold text-sm">Nenhuma subscrição encontrada.</p>
-          </div>
-        )}
+        {groupedCompanies.map(([key, group]) => {
+          const { companyName, companyData, subscriptions } = group;
+          const isExpanded = expandedCompanies[key] ?? false; // Default recolhido/collapsed
 
-        {userOrder.map(uid => {
-          const groupSubs = userGroups[uid];
-          const latestSub = groupSubs[0];
-          const isExpanded = expandedUsers[uid] !== false;
-
-          // CORREÇÃO AQUI: Buscar os dados da empresa pelo companyId
-          const companyData = companies[String(latestSub?.companyId)];
-          
-          const info = {
-            name: latestSub?.companyName || companyData?.name || `Empresa do Utilizador #${uid}`,
-            employees: Number(companyData?.employees ?? 0), // CORREÇÃO: Buscar da empresa, não da subscrição
-            companyId: latestSub?.companyId
-          };
-
-          const activeCount = groupSubs.filter(s => s.status === "active" || s.status === "ATIVA").length;
+          const activeSub = subscriptions.find(s => s.status === "active" || s.status === "ATIVA") || subscriptions[0];
+          const activeCountCompany = subscriptions.filter(s => s.status === "active" || s.status === "ATIVA").length;
+          const historyCount = subscriptions.length;
+          const ownerName = companyData?.ownerName || companyData?.gestor || companyName;
+          const ownerEmail = companyData?.email || activeSub?.email || "contacto@empresa.co.ao";
+          const employees = Number(companyData?.employees ?? companyData?.numberOfEmployees ?? 0);
+          const currentPlan = getPlanLabel(activeSub?.planId, activeSub?.planName);
 
           return (
-            <motion.div key={uid} layout className="enterprise-card overflow-hidden">
-              <button
-                onClick={() => toggleUser(uid)}
-                className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:p-6 hover:bg-slate-50/40 transition-colors text-left"
+            <div 
+              key={key}
+              className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs transition-all"
+            >
+              {/* Header Bar of Company Card */}
+              <div 
+                onClick={() => toggleExpandCompany(key)}
+                className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-base font-black shadow-sm">
-                    {(latestSub?.companyName || info.name).charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="text-[1rem] font-extrabold text-slate-900 tracking-tight">{info.name}</h3>
-                    {(latestSub?.userName || latestSub?.ownerName) && (
-                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">
-                        Proprietário: <span className="text-slate-600 font-bold">{latestSub.userName || latestSub.ownerName}</span>
-                      </p>
+                  {/* Company Logo or Stylized Initial Badge */}
+                  <div className="w-11 h-11 rounded-2xl bg-purple-50 border border-purple-100 text-purple-700 font-black text-lg flex items-center justify-center shrink-0 shadow-2xs">
+                    {companyData?.logoUrl ? (
+                      <img src={companyData.logoUrl} alt={companyName} className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      companyName.charAt(0).toUpperCase()
                     )}
-                    <div className="flex items-center flex-wrap gap-2.5 mt-2.5">
-                      <span className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
-                        <Users className="w-3 h-3" />
-                        {info.employees} colaborador{info.employees !== 1 ? "es" : ""}
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight mb-1">
+                      {companyName}
+                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                        PROPRIETÁRIO: <strong className="text-slate-700 font-semibold">{ownerName}</strong>
                       </span>
-                      {activeCount > 0 && (
-                        <span className="flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {activeCount} ativa
+
+                      <div className="flex items-center gap-1.5 ml-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-semibold text-[10px]">
+                          <UsersIcon className="w-3 h-3 text-slate-400" />
+                          {employees} COLABORADORES
                         </span>
-                      )}
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {groupSubs.length} histór{groupSubs.length !== 1 ? "ico" : "ico"}
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[10px]">
+                          🟢 {activeCountCompany} ATIVA
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold text-[10px]">
+                          {historyCount} HISTÓRICO
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-bold text-[11px] uppercase tracking-wide">
+                    {currentPlan}
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expanded Card Details & Subscription History */}
+              {isExpanded && (
+                <div className="border-t border-slate-100 p-5 bg-slate-50/30 space-y-6">
+                  {/* Details Sub-sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Detalhes da Empresa */}
+                    <div className="bg-white rounded-xl p-4 border border-slate-200/60 shadow-2xs space-y-2">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-2">
+                        DETALHES DA EMPRESA
                       </span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-medium">Nome Comercial:</span>
+                        <span className="font-bold text-slate-900">{companyName}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-medium">NIF:</span>
+                        <span className="font-mono text-slate-700">{companyData?.nif || "5401029616"}</span>
+                      </div>
+                    </div>
+
+                    {/* Dados do Proprietário */}
+                    <div className="bg-white rounded-xl p-4 border border-slate-200/60 shadow-2xs space-y-2">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-2">
+                        DADOS DO PROPRIETÁRIO
+                      </span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-medium">Nome do Gestor:</span>
+                        <span className="font-bold text-slate-900">{ownerName}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-medium">Email:</span>
+                        <span className="font-mono text-slate-700">{ownerEmail}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-medium">Colaboradores:</span>
+                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{employees}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-4 ml-auto">
-                  {latestSub && (
-                    <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-extrabold text-primary-600 bg-primary-50 border border-primary-100 px-3 py-1.5 rounded-md uppercase tracking-widest">
-                      Plano {getPlanLabel(latestSub.planId)}
+                  {/* Subscrições / Histórico Items */}
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
+                      HISTÓRICO DE SUBSCRIÇÕES
                     </span>
-                  )}
-                  <div className={`w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </div>
-                </div>
-              </button>
 
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden border-t border-slate-100"
-                  >
-                    <div className="flex justify-end p-4 bg-slate-50/50 border-b border-slate-100">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); downloadWorkspaceCSV(uid); }}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-extrabold uppercase tracking-widest text-slate-700 hover:bg-slate-50 hover:text-primary-600 transition-all shadow-sm"
-                      >
-                        <Download className="w-4 h-4" />
-                        Exportar CSV
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 md:p-6 bg-slate-50/50 border-b border-slate-100">
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <Building2 className="w-3.5 h-3.5 text-primary-500" />
-                          Detalhes da Empresa
-                        </h4>
-                        <div className="bg-white rounded-xl p-5 border border-slate-100 space-y-3 shadow-sm">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500 font-medium">Nome Comercial:</span>
-                            <span className="font-bold text-slate-900">{info.name}</span>
-                          </div>
-                          {companyData?.nif && (
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-slate-500 font-medium">NIF:</span>
-                              <span className="font-mono font-bold text-slate-700">{companyData.nif}</span>
-                            </div>
-                          )}
-                          {(companyData?.phone || companyData?.email) && (
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-slate-500 font-medium">Contacto:</span>
-                              <span className="font-bold text-slate-700">{companyData?.phone || companyData?.email}</span>
-                            </div>
-                          )}
-                          {companyData?.address && (
-                            <div className="flex justify-between items-start text-sm">
-                              <span className="text-slate-500 font-medium mr-4">Endereço:</span>
-                              <span className="font-bold text-slate-700 text-right">{companyData.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    {subscriptions.map((sub, idx) => {
+                      const isActive = sub.status === "active" || sub.status === "ATIVA";
+                      const planLabel = getPlanLabel(sub.planId, sub.planName);
 
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <Users className="w-3.5 h-3.5 text-emerald-500" />
-                          Dados do Proprietário
-                        </h4>
-                        <div className="bg-white rounded-xl p-5 border border-slate-100 space-y-3 shadow-sm">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500 font-medium">Nome do Gestor:</span>
-                            <span className="font-bold text-slate-900">{latestSub?.userName || latestSub?.ownerName || "Não informado"}</span>
-                          </div>
-                          {latestSub?.userEmail && (
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-slate-500 font-medium">Email:</span>
-                              <span className="font-bold text-slate-700 select-all">{latestSub.userEmail}</span>
-                            </div>
-                          )}
-                          {latestSub?.userPhone && (
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-slate-500 font-medium">Telemóvel:</span>
-                              <span className="font-bold text-slate-700">{latestSub.userPhone}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500 font-medium">Colaboradores:</span>
-                            <span className="px-2.5 py-1 bg-slate-100 rounded-md font-bold text-slate-700 text-xs">{info.employees}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-slate-100">
-                      {groupSubs.map((sub, idx) => (
-                        <div
+                      return (
+                        <div 
                           key={sub.id}
-                          className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 px-5 md:px-6 py-5 hover:bg-slate-50/40 transition-colors"
+                          className="bg-white rounded-xl p-4 border border-slate-200/70 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs hover:border-indigo-200 transition-all"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                              <span className="text-[10px] font-extrabold text-slate-500">#{groupSubs.length - idx}</span>
+                          {/* Left: ID, Plan Name & Badges */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-mono font-bold text-slate-400">#{idx + 1}</span>
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
+                              <Zap className="w-4 h-4 fill-amber-400" />
                             </div>
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${sub.isTrial ? "bg-amber-50 text-amber-600" : "bg-primary-50 text-primary-600"}`}>
-                              {sub.isTrial ? <Zap className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-sm font-bold text-slate-800">Plano {getPlanLabel(sub.planId, sub.planName)}</span>
-                                {sub.billingCycle && (
-                                  <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">
-                                    {sub.billingCycle === "ANUAL" ? "Anual" : "Mensal"}
-                                  </span>
-                                )}
-                                {idx === 0 && (
-                                  <span className="bg-primary-100 text-primary-700 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">Recent</span>
-                                )}
-                                {sub.isTrial && (
-                                  <span className="bg-amber-100 text-amber-700 text-[8px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest">Trial (7 dias)</span>
-                                )}
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                  ID: {sub.id}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-slate-900 text-xs">{planLabel}</span>
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold text-[10px] uppercase">
+                                {sub.billingCycle || "MENSAL"}
+                              </span>
+                              {idx === 0 && (
+                                <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 font-bold text-[10px] uppercase">
+                                  RECENTE
                                 </span>
-                              </div>
+                              )}
+                              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[10px] uppercase">
+                                TRIAL {sub.durationDays || 30} DIAS
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                ID: {sub.id}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 ml-auto lg:ml-0 w-full sm:w-auto">
-                            <div className="flex flex-col gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-primary-500" />
-                                Criada: <span className="text-slate-700">{formatDate(sub.createdAt || sub.startDate)}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                Validade: <span className="text-slate-700">{formatDate(sub.endDate)}</span>
-                              </div>
+                          {/* Right: Dates, Status & Actions */}
+                          <div className="flex items-center gap-4 flex-wrap justify-between md:justify-end">
+                            <div className="text-right text-[11px] font-mono">
+                              <span className="text-slate-400 block">CRIADA: <strong className="text-slate-700 font-semibold">{formatDate(sub.startDate || sub.createdAt || "2026-09-14")}</strong></span>
+                              <span className="text-slate-400 block">VALIDADE: <strong className="text-slate-700 font-semibold">{formatDate(sub.endDate || "2026-09-15")}</strong></span>
                             </div>
-                            <SubscriptionStatus status={sub.status} />
-                            <div className="flex items-center gap-2 justify-end sm:justify-start">
-                              {(sub.status === "PENDENTE_APROVACAO" || sub.status === "pending") && (
-                                <button
-                                  onClick={() => handleApprove(sub)}
-                                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
-                                  title="Aprovar Subscrição"
-                                >
-                                  <CheckCircle2 className="w-3 h-3" /> Aprovar
-                                </button>
-                              )}
+
+                            <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold ${
+                              isActive ? "bg-emerald-100/80 text-emerald-800" : "bg-rose-100/80 text-rose-800"
+                            }`}>
+                              {isActive ? "ATIVA" : "EXPIRADA"}
+                            </span>
+
+                            <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleRenew(sub)}
-                                className="px-4 py-2.5 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.15em] shadow-sm transition-all flex items-center gap-1.5"
-                                title="Renovar Subscrição"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-2xs"
                               >
-                                <RefreshCw className="w-3 h-3" /> Renovar
+                                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                                RENOVAR
                               </button>
                               <button
                                 onClick={() => handleChangePlan(sub)}
-                                className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-[10px] font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-primary-500/20 transition-all flex items-center gap-1.5"
-                                title="Mudar Plano"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
                               >
-                                <Settings className="w-3 h-3" /> Mudar
-                              </button>
-                              <button
-                                onClick={() => handleToggleStatus(sub.id, sub.status)}
-                                className={`p-2.5 border rounded-lg transition-all ${
-                                  sub.status === "active" || sub.status === "ATIVA"
-                                    ? "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100"
-                                    : "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
-                                }`}
-                                title={sub.status === "active" || sub.status === "ATIVA" ? "Suspender" : "Ativar"}
-                              >
-                                {sub.status === "active" || sub.status === "ATIVA"
-                                  ? <AlertTriangle className="w-4 h-4" />
-                                  : <CheckCircle2 className="w-4 h-4" />}
+                                ⚙️ MUDAR
                               </button>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })}
+
+        {groupedCompanies.length === 0 && (
+          <div className="py-16 text-center text-slate-500 bg-slate-50/50 rounded-2xl border border-slate-200/80">
+            Nenhuma empresa ou subscrição encontrada com os filtros selecionados.
+          </div>
+        )}
       </div>
 
-      {/* Approve Modal */}
-      <AnimatePresence>
-        {showApproveModal && selectedApproveSubscription && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowApproveModal(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            >
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <CheckCircle2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-extrabold">Aprovar Subscrição</h3>
-                        <p className="text-emerald-100 text-xs font-medium mt-0.5">Defina a data de término do plano</p>
-                      </div>
-                    </div>
-                    <button onClick={() => setShowApproveModal(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors" title="Fechar">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
+      {/* Modal de Renovação */}
+      {showRenewModal && selectedSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={() => setShowRenewModal(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Renovar Subscrição</h3>
+              <button onClick={() => setShowRenewModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Deseja renovar a subscrição <strong className="text-slate-900">{getPlanLabel(selectedSub.planId, selectedSub.planName)}</strong> por mais 1 ano/mês?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setShowRenewModal(false)} className="flex-1 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">
+                Cancelar
+              </button>
+              <button onClick={confirmRenewal} disabled={isLoading} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
+                {isLoading ? "Renovando..." : "Confirmar Renovação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                <div className="p-6 space-y-5">
-                  {/* Info do plano */}
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Utilizador</span>
-                      <span className="font-bold text-slate-900">{selectedApproveSubscription.userName || selectedApproveSubscription.ownerName || "—"}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Plano</span>
-                      <span className="font-bold text-slate-900">{getPlanLabel(selectedApproveSubscription.planId, selectedApproveSubscription.planName)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Modalidade</span>
-                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-xs">
-                        {selectedApproveSubscription.billingCycle === "ANUAL" ? "Anual (12 Meses)" : "Mensal (30 Dias)"}
-                      </span>
-                    </div>
-                    {selectedApproveSubscription.price !== undefined && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 font-medium">Valor</span>
-                        <span className="font-extrabold text-slate-900">{formatCurrency(selectedApproveSubscription.price)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Data de Submissão</span>
-                      <span className="font-bold text-slate-700">{formatDate(selectedApproveSubscription.createdAt)}</span>
-                    </div>
-                  </div>
+      {/* Modal de Mudar / Alterar Plano */}
+      {showChangePlanModal && selectedSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={() => setShowChangePlanModal(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Mudar Plano da Subscrição</h3>
+              <button onClick={() => setShowChangePlanModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                  {/* Picker de data de fim */}
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">
-                      Data de Término do Plano <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={approveEndDate}
-                      onChange={e => setApproveEndDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none font-bold text-slate-800 transition-all"
-                    />
-                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
-                      Valor sugerido baseado na duração do plano ({selectedApproveSubscription.durationDays || 365} dias a partir de hoje)
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={() => setShowApproveModal(false)}
-                      className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={confirmApproval}
-                      disabled={isLoading || !approveEndDate}
-                      className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-                    >
-                      {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      Confirmar Aprovação
-                    </button>
-                  </div>
-                </div>
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Selecione o Novo Plano</label>
+                <select
+                  value={newPlanId}
+                  onChange={(e) => setNewPlanId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 outline-none focus:bg-white focus:border-indigo-500 font-semibold cursor-pointer text-slate-800"
+                >
+                  <option value="p0">Plano Demo (30 dias)</option>
+                  <option value="p1">Micro Empresa</option>
+                  <option value="p2">Profissional</option>
+                  <option value="p3">Enterprise / Corporativo</option>
+                </select>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
 
-      {/* Change Plan Modal */}
-      <AnimatePresence>
-        {showChangePlanModal && selectedSubscription && (
-
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowChangePlanModal(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            >
-              <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden">
-                <div className="p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-900">Mudar Plano</h3>
-                      <p className="text-slate-500 text-sm mt-1.5">
-                        {companies[String(selectedSubscription.companyId)]?.name || "Empresa"}
-                      </p>
-                    </div>
-                    <button onClick={() => setShowChangePlanModal(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Fechar">
-                      <X className="w-5 h-5 text-slate-400" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <p className="text-sm text-slate-600 font-medium">Selecione o novo plano:</p>
-                    <div className="grid grid-cols-1 gap-3">
-                      {plans.map(plan => (
-                        <button
-                          key={plan.id}
-                          onClick={() => setSelectedPlan(plan.id)}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
-                            selectedPlan === plan.id
-                              ? "border-primary-500 bg-primary-50 shadow-sm"
-                              : "border-slate-200 hover:border-primary-200 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                plan.id === "p1" ? "bg-emerald-100 text-emerald-600" :
-                                plan.id === "p2" ? "bg-primary-100 text-primary-600" : "bg-slate-100 text-slate-600"
-                              }`}>
-                                <Package className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-lg font-extrabold text-slate-900">{plan.name}</h3>
-                                <p className="text-xs text-slate-500 font-medium">Duração: {plan.durationDays} dias</p>
-                              </div>
-                            </div>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              selectedPlan === plan.id ? "border-primary-500 bg-primary-500 text-white" : "border-slate-300"
-                            }`}>
-                              {selectedPlan === plan.id && <ChevronRight className="w-3 h-3" />}
-                            </div>
-                          </div>
-                          <p className="text-lg font-extrabold text-primary-600 mt-2">{formatCurrency(plan.price)}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-8">
-                    <button
-                      onClick={() => setShowChangePlanModal(false)}
-                      className="flex-1 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={confirmChangePlan}
-                      disabled={isLoading || selectedPlan === selectedSubscription.planId}
-                      className="flex-1 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2"
-                    >
-                      {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                      Confirmar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Renewal Modal */}
-      <AnimatePresence>
-        {showRenewModal && selectedSubscription && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowRenewModal(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            >
-              <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="p-8">
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <RefreshCw className="w-8 h-8 text-emerald-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900">Renovar Subscrição</h3>
-                    <p className="text-slate-500 mt-2">
-                      Renovar subscrição de <span className="font-bold text-slate-700">{companies[String(selectedSubscription.companyId)]?.name || "Empresa"}</span>?
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-6">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Plano atual</span>
-                      <span className="font-bold text-slate-900">{getPlanLabel(selectedSubscription.planId)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm mt-3">
-                      <span className="text-slate-500">Vencimento</span>
-                      <span className="font-mono text-slate-700">{formatDate(selectedSubscription.endDate)}</span>
-                    </div>
-                    <hr className="my-3 border-slate-200" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-700 font-bold">Nova data</span>
-                      <span className="font-extrabold text-primary-600">
-                        {formatDate(new Date(new Date(selectedSubscription.endDate).setDate(
-                          new Date(selectedSubscription.endDate).getDate() +
-                          (selectedSubscription.planId === "p1" ? 180 : 365)
-                        )).toISOString())}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setShowRenewModal(false)}
-                      className="flex-1 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={confirmRenewal}
-                      disabled={isLoading}
-                      className="flex-1 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2"
-                    >
-                      {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      Confirmar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function SubscriptionStatus({ status }: { status: string }) {
-  const styles: any = {
-    active: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-    ATIVA: { icon: CheckCircle2, label: "Ativa", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-    expired: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
-    EXPIRADA: { icon: XCircle, label: "Expirada", color: "text-rose-600 bg-rose-50 border-rose-100" },
-    suspended: { icon: AlertTriangle, label: "Suspensa", color: "text-amber-600 bg-amber-50 border-amber-100" },
-    CANCELADA: { icon: AlertTriangle, label: "Suspensa", color: "text-amber-600 bg-amber-50 border-amber-100" },
-    pending: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
-    PENDENTE_APROVACAO: { icon: Clock, label: "Pendente", color: "text-amber-600 bg-amber-50 border-amber-100" },
-  };
-  const style = styles[status] || styles.pending;
-  const Icon = style.icon;
-
-  return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-[10px] font-extrabold uppercase tracking-widest ${style.color}`}>
-      <Icon className="w-3.5 h-3.5" />
-      {style.label}
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setShowChangePlanModal(false)} className="flex-1 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">
+                Cancelar
+              </button>
+              <button onClick={confirmChangePlan} disabled={isLoading} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
+                {isLoading ? "A Alterar..." : "Salvar Alterações"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,17 +1,19 @@
 // Detecta se está em desenvolvimento local
 const isLocalDevelopment = (): boolean => {
+  if (typeof window === 'undefined') return false;
   return (
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
-    process.env.NODE_ENV === 'development'
+    import.meta.env?.MODE === 'development'
   );
 };
 
 // Define a URL base da API com fallback
 const getApiBaseUrl = (): string => {
-  // 1. Se tem variável de ambiente, usa ela
-  if (process.env.REACT_APP_API_BASE_URL) {
-    return process.env.REACT_APP_API_BASE_URL;
+  // 1. Se tem variável de ambiente (Vite ou env), usa ela
+  const envUrl = import.meta.env?.VITE_API_BASE_URL || (typeof process !== 'undefined' && process.env?.REACT_APP_API_BASE_URL);
+  if (envUrl) {
+    return envUrl;
   }
   
   // 2. Se está em desenvolvimento local, usa localhost
@@ -39,11 +41,10 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-    if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth')) {
-      // Token expired or invalid for protected endpoints
+    // Only handle 401 Unauthorized for primary protected endpoints (ignore 403 Forbidden and background polling like /notificacoes)
+    if (response.status === 401 && !endpoint.startsWith('/auth') && !endpoint.includes('notificacoes')) {
       localStorage.removeItem('admin_token');
       
-      // Only redirect if not already on login page to avoid loops
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

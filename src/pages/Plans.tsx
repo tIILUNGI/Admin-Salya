@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Package, Edit2, CheckCircle, Trash2, X, Loader2, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { Plus, Package, Edit2, CheckCircle, Trash2, X, Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { formatCurrency } from "../lib/formatters";
 import Swal from "sweetalert2";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
@@ -28,7 +27,7 @@ export default function Plans() {
   const fetchPlans = () => {
     apiGet("/admin/plans")
       .then(res => res.json())
-      .then(setPlans)
+      .then(data => setPlans(Array.isArray(data) ? data : []))
       .catch(() => setPlans([]));
   };
 
@@ -88,14 +87,11 @@ export default function Plans() {
       icon: "success",
       title: "Removido!",
       text: "Plano removido com sucesso",
-      confirmButtonColor: "#9333ea",
+      confirmButtonColor: "#4f46e5",
       timer: 1500,
       showConfirmButton: false
     });
   };
-
-// handleSubmit duplicado removido
-
 
   const openModal = (plan?: any) => {
     if (plan) {
@@ -133,285 +129,226 @@ export default function Plans() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Planos</h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">Criação e manutenção de planos de subscrição.</p>
-        </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Planos de Subscrição</h1>
         <button
           onClick={() => openModal()}
-          className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary-500/20 whitespace-nowrap"
-          title="Novo Plano"
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Novo Plano
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
-          {plans.map((plan, idx) => (
-            <div key={plan.id} className="relative group">
-              <div className="absolute inset-0 bg-primary-500 rounded-[3rem] rotate-1 scale-95 opacity-0 group-hover:opacity-5 group-hover:rotate-2 transition-all duration-500" />
-
-            <div className={`relative bg-white border-2 border-slate-100 p-6 lg:p-8 xl:p-10 rounded-lg flex flex-col h-full hover:border-primary-100 transition-all ${idx === 1 ? 'ring-2 ring-primary-500/20' : ''}`}>
-              
-              {idx === 1 && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">
-                  <Sparkles className="w-3 h-3" /> Recomendado
+      {/* Grid of Plans */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {plans.map((plan, idx) => (
+          <div 
+            key={plan.id}
+            className={`bg-white rounded-2xl border p-6 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all relative overflow-hidden ${
+              plan.type === 'DEMO' ? 'border-emerald-200/80' : 
+              plan.type === 'CORPORATIVO' ? 'border-purple-200/80' : 'border-slate-200/80'
+            }`}
+          >
+            {/* Top Row */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  plan.type === 'DEMO' ? 'bg-emerald-50 border border-emerald-100 text-emerald-600' :
+                  plan.type === 'CORPORATIVO' ? 'bg-purple-50 border border-purple-100 text-purple-600' :
+                  'bg-indigo-50 border border-indigo-100 text-indigo-600'
+                }`}>
+                  <Package className="w-5 h-5" />
                 </div>
-              )}
-
-              <div className="flex items-center justify-between mb-8">
-                <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${idx === 1 ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-600'}`}>
-                  <Package className="w-7 h-7" />
-                </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1">
                   <button 
                     onClick={() => openModal(plan)}
-                    className="p-2.5 bg-slate-50 hover:bg-primary-50 rounded-lg text-slate-400 hover:text-primary-600 transition-all"
+                    className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
                     title="Editar Plano"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={() => handleDelete(plan.id)}
-                    className="p-2.5 bg-slate-50 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-all"
+                    className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-500 transition-colors"
                     title="Excluir Plano"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              <div className="mb-8">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{plan.name}</h3>
-                <div className="flex flex-col gap-1 mt-6">
-                  {plan.type === 'DEMO' ? (
-                    <>
-                      <span className="text-3xl font-black text-emerald-600 leading-none">GRATUITO</span>
-                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">7 Dias de acesso total</span>
-                    </>
-                  ) : plan.type === 'SEMESTRAL' ? (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black text-slate-900 leading-none">5.700 Kz</span>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ mês</span>
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black text-primary-600 leading-none">68.400 Kz</span>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ ano</span>
-                        </div>
+              <div className="mb-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide mb-2 ${
+                  plan.type === 'DEMO' ? 'bg-emerald-100/70 text-emerald-700' :
+                  plan.type === 'CORPORATIVO' ? 'bg-purple-100/70 text-purple-700' :
+                  plan.type === 'ANUAL' ? 'bg-blue-100/70 text-blue-700' :
+                  'bg-indigo-100/70 text-indigo-700'
+                }`}>{plan.type}</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-3">{plan.name}</h3>
+              
+              {/* Pricing Block */}
+              <div className="mb-5 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                {plan.type === 'DEMO' ? (
+                  <div>
+                    <span className="text-2xl font-black text-emerald-600">Gratuito</span>
+                    <span className="text-xs text-slate-400 font-medium block mt-0.5">Período de avaliação</span>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <span className="text-2xl font-black text-slate-900">{formatCurrency(plan.price)}</span>
+                      <span className="text-xs text-slate-400 font-medium">/ {plan.durationDays} dias</span>
+                    </div>
+                    {/* Monthly & Annual breakdown */}
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-200/50 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block font-medium">Mensal est.</span>
+                        <span className="font-bold text-indigo-600">{formatCurrency(Math.round(plan.price / (plan.durationDays / 30)))}</span>
                       </div>
-                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Mensal ou Anual</span>
-                    </>
-                  ) : plan.type === 'ANUAL' ? (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black text-slate-900 leading-none">10.830 Kz</span>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ mês</span>
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black text-primary-600 leading-none">129.960 Kz</span>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">/ ano</span>
-                        </div>
+                      <div className="w-px h-6 bg-slate-200" />
+                      <div>
+                        <span className="text-slate-400 block font-medium">Anual est.</span>
+                        <span className="font-bold text-slate-700">{formatCurrency(Math.round(plan.price / (plan.durationDays / 30) * 12))}</span>
                       </div>
-                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Mensal ou Anual</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-black text-slate-900 leading-none">{formatCurrency(plan.price)}</span>
-                      <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 px-2 py-1 bg-slate-50 rounded-lg inline-block w-fit">Recorrência: {plan.durationDays} Dias</span>
-                    </>
-                  )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>{plan.maxEntidades || 1} Entidade(s)</span>
                 </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>{plan.maxUtilizadores >= 999 ? 'Utilizadores Ilimitados' : `${plan.maxUtilizadores || 1} Utilizador(es)`}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Validade de {plan.durationDays} dias</span>
+                </div>
+                {(plan.maxFuncionarios || plan.maxColaboradores) && (
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Até {plan.maxFuncionarios || plan.maxColaboradores} Colaboradores</span>
+                  </div>
+                )}
               </div>
+            </div>
 
-              <div className="space-y-4 mb-10 border-t border-slate-50 pt-8">
-                <FeatureItem text="Acesso total à API" />
-                <FeatureItem text="Suporte Prioritário" />
-                <FeatureItem text={`Validade de ${plan.durationDays} dias`} />
-                <FeatureItem text={`${plan.maxEntidades || 1} Entidade(s)`} />
-                <FeatureItem text={`${plan.maxUtilizadores >= 999 ? 'Utilizadores Ilimitados' : (plan.maxUtilizadores || 1) + ' Utilizador(es)'}`} />
-              </div>
-
-              <div className="mt-auto pt-6 flex items-center justify-between">
-                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed ${plan.active ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
-                   {plan.active ? 'Disponível' : 'Indisponível'}
-                </span>
-                <div className="text-[10px] font-bold uppercase text-slate-300 tracking-tighter">REF: {plan.id}</div>
-              </div>
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                plan.active ? "bg-emerald-100/70 text-emerald-800" : "bg-slate-200/70 text-slate-700"
+              }`}>
+                {plan.active ? "Disponível" : "Indisponível"}
+              </span>
+              <span className="text-slate-400 font-mono text-[10px]">ID: {plan.id}</span>
             </div>
           </div>
         ))}
       </div>
 
       {/* Plan Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-60" />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden shadow-emerald-900/10 z-61"
-            >
-              <div className="p-6 md:p-8 italic-none">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900">
-                    {editingPlan ? "Actualizar Plano" : "Criar Novo Plano"}
-                  </h2>
-                  <button onClick={closeModal} className="p-2.5 hover:bg-slate-100 rounded-lg transition-all" title="Fechar">
-                    <X className="w-5 h-5 text-slate-400" />
-                  </button>
-                </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={closeModal} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">
+                {editingPlan ? "Atualizar Plano" : "Criar Novo Plano"}
+              </h3>
+              <button onClick={closeModal} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Designação Comercial</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={formData.name}
-                      onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Ex: Prime Corporate"
-                      className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm placeholder:text-slate-300"
-                    />
-                  </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tipo de Plano</label>
-                        <select 
-                          value={formData.type}
-                          onChange={e => setFormData({ ...formData, type: e.target.value })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                          title="Tipo de Plano"
-                        >
-                          <option value="DEMO">DEMO</option>
-                          <option value="SEMESTRAL">SEMESTRAL</option>
-                          <option value="ANUAL">ANUAL</option>
-                          <option value="CORPORATIVO">CORPORATIVO</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Categoria</label>
-                        <select 
-                          value={formData.category}
-                          onChange={e => setFormData({ ...formData, category: e.target.value })}
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                          title="Categoria de Plano"
-                        >
-                          <option value="PAGO">PAGO</option>
-                          <option value="GRATUITO">GRATUITO</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Preço (Kz)</label>
-                        <input 
-                          type="number" 
-                          required
-                          value={formData.price}
-                          onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                          title="Preço"
-                          placeholder="0"
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ciclo (Dias)</label>
-                        <input 
-                          type="number" 
-                          required
-                          value={formData.durationDays}
-                          onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
-                          title="Duração em dias"
-                          placeholder="30"
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Máx. Entidades</label>
-                        <input 
-                          type="number" 
-                          required
-                          value={formData.maxEntidades}
-                          onChange={e => setFormData({ ...formData, maxEntidades: Number(e.target.value) })}
-                          title="Máximo de Entidades"
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Máx. Usuários</label>
-                        <input 
-                          type="number" 
-                          required
-                          value={formData.maxUtilizadores}
-                          onChange={e => setFormData({ ...formData, maxUtilizadores: Number(e.target.value) })}
-                          title="Máximo de Usuários"
-                          className="w-full bg-slate-50 border-2 border-slate-50 rounded-lg py-2.5 px-5 outline-none focus:border-primary-600 focus:bg-white transition-all font-bold text-slate-900 text-sm"
-                        />
-                        <p className="text-[8px] text-slate-400 mt-1 uppercase font-bold tracking-tighter">* Use 999 para ilimitados</p>
-                      </div>
-                    </div>
-
-                  <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
-                    <div>
-                       <p className="text-xs font-bold text-slate-700">Estado de Venda</p>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ativo / Inativo</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.active}
-                        onChange={e => setFormData({ ...formData, active: e.target.checked })}
-                        className="sr-only peer"
-                        title="Ativar ou Desativar Plano"
-                        placeholder="Ativo"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 rounded-lg shadow-xl shadow-primary-500/30 transition-all flex items-center justify-center gap-3 uppercase tracking-wide text-xs mt-4"
-                  >
-                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <SaveIcon className="w-4 h-4" />}
-                    Guardar Configuração
-                  </button>
-                </form>
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Nome do Plano</label>
+                <input 
+                  type="text" 
+                  required
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Micro Empresa"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                />
               </div>
-            </motion.div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Tipo</label>
+                  <select 
+                    value={formData.type}
+                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium cursor-pointer"
+                  >
+                    <option value="DEMO">DEMO</option>
+                    <option value="SEMESTRAL">SEMESTRAL</option>
+                    <option value="ANUAL">ANUAL</option>
+                    <option value="CORPORATIVO">CORPORATIVO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Preço (Kz)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={formData.price}
+                    onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Duração (Dias)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={formData.durationDays}
+                    onChange={e => setFormData({ ...formData, durationDays: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Max Utilizadores</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={formData.maxUtilizadores}
+                    onChange={e => setFormData({ ...formData, maxUtilizadores: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <span className="font-semibold text-slate-700">Plano Ativo</span>
+                <input 
+                  type="checkbox" 
+                  checked={formData.active}
+                  onChange={e => setFormData({ ...formData, active: e.target.checked })}
+                  className="w-4 h-4 text-indigo-600 rounded cursor-pointer"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-xs"
+              >
+                {isLoading ? "A guardar..." : "Guardar Plano"}
+              </button>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
-  );
-}
-
-function FeatureItem({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-3 text-slate-600 text-sm font-bold">
-      <div className="p-1 bg-primary-50 rounded-lg">
-        <CheckCircle className="w-3.5 h-3.5 text-primary-600" />
-      </div>
-      {text}
-    </div>
-  );
-}
-
-function SaveIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
   );
 }

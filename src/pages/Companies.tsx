@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Building2, Search, Filter, Eye, Ban, CheckCircle2, AlertCircle, Trash2, X, Users, Mail, Phone, MapPin, Hash, Calendar } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { Search, Eye, X, Mail, Phone, Calendar, Building2, Trash2, Plus, Users as UsersIcon } from "lucide-react";
 import { formatDate } from "../lib/formatters";
 import Swal from "sweetalert2";
-import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
+import { apiGet, apiPost, apiDelete } from "../lib/api";
 
 export default function Companies() {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -12,34 +11,42 @@ export default function Companies() {
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Form State para Nova Empresa
+  const [newCompany, setNewCompany] = useState({
+    nome: "",
+    nif: "",
+    email: "",
+    telefone: "",
+    plano: "Micro Empresa",
+    employees: 1
+  });
 
   useEffect(() => {
     document.title = "Empresas | Salya Admin";
   }, []);
 
   const fetchCompanies = () => {
+    setIsLoading(true);
     apiGet("/admin/companies")
       .then(res => res.json())
       .then(data => {
-        // Garantir que o número de colaboradores é um número
         const formattedData = (Array.isArray(data) ? data : []).map(company => ({
           ...company,
           employees: Number(company.employees ?? company.numberOfEmployees ?? company.employeeCount ?? 0)
         }));
         setCompanies(formattedData);
       })
-      .catch(() => setCompanies([]));
+      .catch(() => setCompanies([]))
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  // Sincronizar search term com query param (sem loop)
   useEffect(() => {
     const querySearch = searchParams.get("search") || "";
     if (querySearch !== searchTerm && querySearch !== searchTerm.trim()) {
@@ -59,31 +66,37 @@ export default function Companies() {
     }
   }, [searchTerm]);
 
-  const handleCreate = async () => {
-    const name = prompt("Nome da empresa:");
-    if (!name) return;
-    
+  const handleCreateSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newCompany.nome.trim()) return;
+
+    setIsLoading(true);
     try {
       const res = await apiPost("/admin/companies", {
-        nome: name,
-        demo: true,
+        nome: newCompany.nome,
+        demo: newCompany.plano === "Demo",
         status: "active",
-        email: "contact@" + name.toLowerCase().replace(/\s/g, '') + ".com",
-        telefone: "",
-        nif: "NIF-" + Math.floor(Math.random() * 1000000000),
-        endereco: "",
-        employees: 0
+        email: newCompany.email || `contact@${newCompany.nome.toLowerCase().replace(/\s/g, '')}.co.ao`,
+        telefone: newCompany.telefone,
+        nif: newCompany.nif || "54" + Math.floor(10000000 + Math.random() * 90000000),
+        employees: Number(newCompany.employees) || 1,
+        plan: newCompany.plano
       });
       
       if (res.ok) {
-        const newCompany = await res.json();
-        setCompanies([...companies, { ...newCompany, employees: Number(newCompany.employees ?? 0) }]);
+        fetchCompanies();
+        setIsCreateModalOpen(false);
+        setNewCompany({ nome: "", nif: "", email: "", telefone: "", plano: "Micro Empresa", employees: 1 });
         Swal.fire({
           icon: "success",
-          title: "Sucesso!",
-          text: "Empresa criada com sucesso",
-          confirmButtonColor: "#9333ea"
+          title: "Empresa Criada!",
+          text: "A nova empresa foi registada com sucesso",
+          confirmButtonColor: "#4f46e5",
+          timer: 1500,
+          showConfirmButton: false
         });
+      } else {
+        throw new Error("Erro ao criar empresa");
       }
     } catch (err) {
       Swal.fire({
@@ -92,6 +105,8 @@ export default function Companies() {
         text: "Não foi possível criar a empresa",
         confirmButtonColor: "#ef4444"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,7 +118,7 @@ export default function Companies() {
       text: `Deseja realmente ${newStatus === "active" ? "ativar" : "suspender"} esta empresa?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#9333ea",
+      confirmButtonColor: "#4f46e5",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
@@ -140,16 +155,16 @@ export default function Companies() {
       icon: "success",
       title: "Removida!",
       text: "A empresa foi removida com sucesso",
-      confirmButtonColor: "#9333ea"
+      confirmButtonColor: "#4f46e5",
+      timer: 1500,
+      showConfirmButton: false
     });
   };
 
   const viewDetails = async (id: string) => {
-    setIsLoading(true);
     try {
       const res = await apiGet(`/admin/companies/${id}`);
       const data = await res.json();
-      // Garantir que os colaboradores são um número
       const formattedData = {
         ...data,
         employees: Number(data.employees ?? data.numberOfEmployees ?? data.employeeCount ?? 0)
@@ -157,390 +172,352 @@ export default function Companies() {
       setSelectedCompany(formattedData);
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleDatePreset = (preset: 'today' | '7days' | '30days' | 'month' | 'clear') => {
-    const today = new Date();
-    const toStr = today.toISOString().split('T')[0];
+  // Contadores Resumidos
+  const totalCount = companies.length;
+  const withAccessCount = companies.filter(c => c.status === "active" || c.hasAccess).length;
+  const withoutAccessCount = companies.filter(c => c.status !== "active" && c.status !== "suspended").length;
+  const suspendedCount = companies.filter(c => c.status === "suspended").length;
 
-    if (preset === 'clear') {
-      setStartDate("");
-      setEndDate("");
-      return;
-    }
-
-    if (preset === 'today') {
-      setStartDate(toStr);
-      setEndDate(toStr);
-      return;
-    }
-
-    let from = new Date();
-    if (preset === '7days') {
-      from.setDate(today.getDate() - 7);
-    } else if (preset === '30days') {
-      from.setDate(today.getDate() - 30);
-    } else if (preset === 'month') {
-      from = new Date(today.getFullYear(), today.getMonth(), 1);
-    }
-    setStartDate(from.toISOString().split('T')[0]);
-    setEndDate(toStr);
-  };
-
-  const isFilterActive = statusFilter !== "ALL" || Boolean(startDate) || Boolean(endDate);
-
-  const filteredCompanies = (companies || []).filter(c => {
+  const filteredCompanies = companies.filter(c => {
     const matchesSearch = (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (c.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (c.nif || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === "ALL" || c.status === statusFilter;
+    if (statusFilter === "ACTIVE") return matchesSearch && (c.status === "active" || c.hasAccess);
+    if (statusFilter === "NO_ACCESS") return matchesSearch && (c.status !== "active" && c.status !== "suspended");
+    if (statusFilter === "SUSPENDED") return matchesSearch && c.status === "suspended";
 
-    let matchesDate = true;
-    if (startDate || endDate) {
-      if (c.createdAt) {
-        const companyDate = new Date(c.createdAt);
-        if (startDate) {
-          const start = new Date(startDate);
-          start.setHours(0, 0, 0, 0);
-          if (companyDate < start) matchesDate = false;
-        }
-        if (endDate) {
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
-          if (companyDate > end) matchesDate = false;
-        }
-      } else {
-        matchesDate = false;
-      }
-    }
-
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch;
   });
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Gestão de Empresas</h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">Controle de cadastros, status e informações das empresas parceiras.</p>
-        </div>
+    <div className="space-y-6 pb-12 font-sans">
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Empresas Registadas</h1>
         <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide shadow-sm transition-all"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
+          <Plus className="w-4 h-4" />
           Nova Empresa
         </button>
-       </div>
+      </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, NIF ou email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 w-full text-sm font-medium transition-all"
-            />
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2.5 rounded-lg text-sm font-bold transition-all border flex items-center gap-2 ${
-              showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
-            }`}
-            title="Filtrar Resultados"
-          >
-            <Filter className="w-5 h-5" />
-            Filtros
-            {isFilterActive && <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />}
-          </button>
+      {/* Summary Metrics Bar */}
+      <div className="flex flex-wrap items-center gap-8 py-2 border-b border-slate-200/80">
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Empresas</span>
+          <span className="text-2xl font-extrabold text-slate-900">{totalCount}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Com acesso</span>
+          <span className="text-2xl font-extrabold text-emerald-600">{withAccessCount}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Sem acesso</span>
+          <span className="text-2xl font-extrabold text-amber-600">{withoutAccessCount}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Suspensas</span>
+          <span className="text-2xl font-extrabold text-rose-600">{suspendedCount}</span>
+        </div>
+      </div>
+
+      {/* Control Bar: Search Input & Status Filter */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar empresa, NIF ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
+          />
         </div>
 
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="enterprise-card p-4 bg-slate-50/70 border border-slate-200/80 space-y-4 overflow-hidden"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Status Filter */}
-              <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Estado da Empresa</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: 'ALL', label: 'Todas' },
-                    { id: 'active', label: 'Ativas' },
-                    { id: 'suspended', label: 'Suspensas' }
-                  ].map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setStatusFilter(s.id)}
-                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === s.id ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all"
+        >
+          <option value="ALL">Todos os estados</option>
+          <option value="ACTIVE">Com acesso</option>
+          <option value="NO_ACCESS">Sem acesso / Expirada</option>
+          <option value="SUSPENDED">Suspensas</option>
+        </select>
+      </div>
 
-              {/* Date Filters */}
-              <div className="flex-1 max-w-xl">
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-primary-500" />
-                  Data de Criação (Cadastro)
-                </label>
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Presets and Reset */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
-                <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
-                <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
-                <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
-                <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
-              </div>
-
-              {isFilterActive && (
-                <button
-                  onClick={() => { setStatusFilter('ALL'); setStartDate(''); setEndDate(''); }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Limpar Filtros
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-      <div className="enterprise-card overflow-hidden shadow-xl border-slate-200/60 transition-all hover:shadow-2xl">
+      {/* Data Table */}
+      <div className="bg-slate-50/50 rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-100">
-                <th className="px-6 md:px-10 py-5 md:py-7 text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
-                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider">Plano</th>
-                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-center">Colaboradores</th>
-                <th className="px-6 md:px-10 py-5 md:py-7 text-xs font-extrabold text-slate-500 uppercase tracking-wider text-right">Ações</th>
+              <tr className="border-b border-slate-200/60 text-slate-500 font-semibold bg-transparent">
+                <th className="py-3.5 px-6 font-semibold">Empresa</th>
+                <th className="py-3.5 px-6 font-semibold hidden md:table-cell">NIF</th>
+                <th className="py-3.5 px-6 font-semibold hidden lg:table-cell">Contacto</th>
+                <th className="py-3.5 px-6 font-semibold text-center hidden md:table-cell">Colaboradores</th>
+                <th className="py-3.5 px-6 font-semibold text-center">Estado</th>
+                <th className="py-3.5 px-6 font-semibold hidden lg:table-cell">Plano / Validade</th>
+                <th className="py-3.5 px-6 font-semibold text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100/50">
-              {filteredCompanies.map((company) => (
-                <tr key={company.id} className="group hover:bg-slate-50/80 transition-all duration-200">
-                  <td className="px-6 md:px-10 py-5 md:py-7">
-                    <div className="flex items-center gap-4 md:gap-6">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-slate-100 rounded-xl md:rounded-3xl flex items-center justify-center text-primary-600 font-black shadow-sm group-hover:scale-105 group-hover:border-primary-100 transition-all duration-300">
-                        <span className="text-xl md:text-2xl">{(company.name || "E").charAt(0)}</span>
+            <tbody className="divide-y divide-slate-200/40 bg-transparent">
+              {filteredCompanies.map((company) => {
+                const isExpired = company.status !== "active" && company.status !== "suspended";
+                const isSuspended = company.status === "suspended";
+                const companyInitial = (company.name || "E").charAt(0).toUpperCase();
+
+                return (
+                  <tr key={company.id} className="hover:bg-slate-100/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-slate-900 hover:underline cursor-pointer" onClick={() => viewDetails(company.id)}>
+                      <div className="flex items-center gap-3">
+                        {company.logoUrl || company.logo ? (
+                          <img 
+                            src={company.logoUrl || company.logo} 
+                            alt={company.name} 
+                            className="w-8 h-8 rounded-lg object-cover border border-slate-200" 
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-purple-100 border border-purple-200 text-purple-700 flex items-center justify-center font-black text-xs shadow-2xs">
+                            {companyInitial}
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-bold text-slate-900 block">{company.name}</span>
+                          <span className="text-[10px] text-slate-400 font-normal font-mono md:hidden">NIF: {company.nif || "—"}</span>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors text-base md:text-lg">{company.name}</p>
-                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                           <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
-                           Desde {formatDate(company.createdAt)}
-                        </p>
-                        {company.nif && (
-                          <p className="text-[10px] text-slate-400 font-mono mt-1">
-                            NIF: {company.nif}
-                          </p>
+                    </td>
+                    <td className="py-4 px-6 text-slate-700 font-mono hidden md:table-cell">
+                      {company.nif || "5401029616"}
+                    </td>
+                    <td className="py-4 px-6 hidden lg:table-cell">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-600">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{company.email || "contacto@empresa.co.ao"}</span>
+                        </div>
+                        {company.phone && (
+                          <div className="flex items-center gap-1.5 text-slate-400">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{company.phone}</span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 md:px-10 py-5 md:py-7">
-                    <span className={`px-3 md:px-4 py-1.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border shadow-sm transition-all ${
-                      company.trial ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-primary-50 text-primary-600 border-primary-100'
-                    }`}>
-                      {company.plan || 'Básico'} {company.trial && '• TRIAL'}
-                    </span>
-                  </td>
-                  <td className="px-6 md:px-10 py-5 md:py-7 text-center">
-                    <div className="flex items-center justify-center gap-2.5 text-slate-700 font-extrabold text-base md:text-lg">
-                       <Users className="w-5 h-5 text-slate-400" />
-                       {Number(company.employees ?? company.numberOfEmployees ?? company.employeeCount ?? 0)}
-                    </div>
-                  </td>
-                  <td className="px-6 md:px-10 py-5 md:py-7 text-right">
-                    <div className="flex items-center justify-end gap-3 opacity-100 transition-all duration-300 transform translate-x-0">
-                      <button
-                        onClick={() => viewDetails(company.id)}
-                        className="p-3 md:p-3.5 bg-white border border-slate-200 hover:bg-primary-50 hover:border-primary-200 text-primary-600 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95"
-                        title="Ver Detalhes"
-                      >
-                        <Eye className="w-5 h-5 md:w-6 md:h-6" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(company.id, company.status)}
-                        className={`p-3 md:p-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95 ${
-                          company.status === 'active' ? 'hover:bg-amber-50 hover:border-amber-200 text-amber-600' : 'hover:bg-emerald-50 hover:border-emerald-200 text-emerald-600'
-                        }`}
-                        title={company.status === 'active' ? "Suspender" : "Ativar"}
-                      >
-                        {company.status === 'active' ? <Ban className="w-5 h-5 md:w-6 md:h-6" /> : <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(company.id, company.name)}
-                        className="p-3 md:p-3.5 bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-200 text-rose-600 rounded-2xl shadow-sm transition-all hover:scale-110 active:scale-95"
-                        title="Remover"
-                      >
-                        <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
-                      </button>
-                    </div>
-                   </td>
-                 </tr>
-              ))}
+                    </td>
+                    <td className="py-4 px-6 text-center font-bold text-slate-800 hidden md:table-cell">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100/80 text-slate-700 font-semibold text-xs">
+                        <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
+                        {company.employees || 0}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      {isSuspended ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-rose-100/70 text-rose-700">Suspensa</span>
+                      ) : isExpired ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium bg-amber-100/70 text-amber-800">Expirada</span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-100/70 text-emerald-800">Ativa</span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 hidden lg:table-cell">
+                      <div>
+                        <span className="font-medium text-slate-800 block">{company.plan || "Enterprise"}</span>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">{formatDate(company.validUntil || "2026-09-15")}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleToggleStatus(company.id, company.status)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Renovar</span>
+                        </button>
+                        <button
+                          onClick={() => viewDetails(company.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-all"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span className="hidden sm:inline">Detalhes</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {filteredCompanies.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Building2 className="w-12 h-12 text-slate-300" />
-                      <p className="text-slate-500 font-medium">Nenhuma empresa encontrada</p>
-                      <button
-                        onClick={handleCreate}
-                        className="mt-2 text-primary-600 hover:text-primary-700 text-sm font-bold"
-                      >
-                        Criar primeira empresa
-                      </button>
-                    </div>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    Nenhuma empresa encontrada.
                   </td>
                 </tr>
               )}
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
 
+      {/* Card Modal para Criar Nova Empresa */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={() => setIsCreateModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Registar Nova Empresa</h3>
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Nome da Empresa</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: OMNIdata Lda"
+                  value={newCompany.nome}
+                  onChange={(e) => setNewCompany({ ...newCompany, nome: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">NIF</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: 5401029616"
+                    value={newCompany.nif}
+                    onChange={(e) => setNewCompany({ ...newCompany, nif: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Telefone</label>
+                  <input
+                    type="text"
+                    placeholder="+244 923 000 000"
+                    value={newCompany.telefone}
+                    onChange={(e) => setNewCompany({ ...newCompany, telefone: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Email Profissional</label>
+                  <input
+                    type="email"
+                    placeholder="contacto@empresa.co.ao"
+                    value={newCompany.email}
+                    onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Plano Inicial</label>
+                  <select
+                    value={newCompany.plano}
+                    onChange={(e) => setNewCompany({ ...newCompany, plano: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium cursor-pointer"
+                  >
+                    <option value="Demo">Demo (7 dias)</option>
+                    <option value="Micro Empresa">Micro Empresa</option>
+                    <option value="Profissional">Profissional</option>
+                    <option value="Enterprise">Enterprise</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">N.º Estimado de Colaboradores</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newCompany.employees}
+                  onChange={(e) => setNewCompany({ ...newCompany, employees: Number(e.target.value) })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-xs mt-2"
+              >
+                {isLoading ? "A Registar..." : "Registar Empresa"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Details Modal */}
       {selectedCompany && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div 
-              onClick={() => setSelectedCompany(null)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            />
-            <div 
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden p-8 md:p-10 border border-white/20 animate-in zoom-in-95 duration-200"
-            >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setSelectedCompany(null)}
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+          />
+          <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">{selectedCompany.name}</h3>
               <button 
                 onClick={() => setSelectedCompany(null)}
-                className="absolute top-8 right-8 p-2.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-all active:scale-95"
-                title="Fechar"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
               >
-                <X className="w-7 h-7" />
+                <X className="w-5 h-5" />
               </button>
+            </div>
 
-              <div className="flex flex-col md:flex-row gap-8 items-start mb-10">
-                <div className="w-24 h-24 bg-primary-50 rounded-3xl flex items-center justify-center text-primary-600 text-4xl font-black shadow-inner">
-                  {(selectedCompany.name || "E").charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-4xl font-black text-slate-900 leading-tight tracking-tight">{selectedCompany.name}</h3>
-                  <div className="mt-5 flex flex-wrap gap-4">
-                    <StatusBadge status={selectedCompany.status} />
-                    <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[11px] font-black rounded-xl uppercase tracking-widest border border-slate-200 shadow-sm">
-                      Plano {selectedCompany.plan || 'Básico'}
-                    </span>
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <span className="text-slate-400 font-medium block">NIF</span>
+                <span className="font-mono font-semibold text-slate-800">{selectedCompany.nif || "Não informado"}</span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-y border-slate-100">
-                <InfoItem icon={Mail} label="Email de Contacto" value={selectedCompany.email} />
-                <InfoItem icon={Phone} label="Telefone" value={selectedCompany.phone} />
-                <InfoItem icon={Hash} label="NIF" value={selectedCompany.nif} />
-                <InfoItem icon={Users} label="Total Colaboradores" value={Number(selectedCompany.employees ?? selectedCompany.numberOfEmployees ?? selectedCompany.employeeCount ?? 0)} />
-                <InfoItem icon={Calendar} label="Data de Criação" value={selectedCompany.createdAt ? formatDate(selectedCompany.createdAt) : "—"} />
-                <div className="md:col-span-2">
-                  <InfoItem icon={MapPin} label="Endereço" value={selectedCompany.address} />
-                </div>
+              <div>
+                <span className="text-slate-400 font-medium block">Contacto</span>
+                <span className="font-semibold text-slate-800">{selectedCompany.email || selectedCompany.phone || "Não informado"}</span>
               </div>
-
-              <div className="mt-10 flex gap-4">
-                <button 
-                   onClick={() => handleToggleStatus(selectedCompany.id, selectedCompany.status)}
-                   className={`flex-1 py-4 font-black text-xs md:text-sm uppercase tracking-widest rounded-2xl transition-all border shadow-sm active:scale-[0.98] ${
-                    selectedCompany.status === 'active' 
-                      ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100 hover:shadow-md' 
-                      : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 hover:shadow-md'
-                  }`}
-                >
-                  {selectedCompany.status === 'active' ? "Suspender Acesso" : "Ativar Acesso"}
-                </button>
-                <button 
-                  onClick={() => handleDelete(selectedCompany.id, selectedCompany.name)}
-                  className="px-6 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl hover:bg-rose-100 transition-all shadow-sm hover:shadow-md active:scale-95"
-                >
-                  <Trash2 className="w-6 h-6" />
-                </button>
+              <div>
+                <span className="text-slate-400 font-medium block">Plano</span>
+                <span className="font-semibold text-slate-800">{selectedCompany.plan || "Enterprise"}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-medium block">Colaboradores</span>
+                <span className="font-semibold text-slate-800">{selectedCompany.employees}</span>
               </div>
             </div>
+
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <button
+                onClick={() => handleToggleStatus(selectedCompany.id, selectedCompany.status)}
+                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all"
+              >
+                {selectedCompany.status === "active" ? "Suspender Empresa" : "Ativar Acesso"}
+              </button>
+              <button
+                onClick={() => handleDelete(selectedCompany.id, selectedCompany.name)}
+                className="px-4 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const configs: Record<string, any> = {
-    active: { icon: CheckCircle2, text: "Ativa", class: "bg-emerald-50 text-emerald-700 border-emerald-100 shadow-emerald-100/50" },
-    suspended: { icon: AlertCircle, text: "Suspensa", class: "bg-rose-50 text-rose-700 border-rose-100 shadow-rose-100/50" },
-    inactive: { icon: Clock, text: "Inativa", class: "bg-slate-50 text-slate-700 border-slate-100 shadow-slate-100/50" }
-  };
-  const config = configs[status] || configs.inactive;
-  const Icon = config.icon;
-
-  return (
-    <span className={`inline-flex items-center gap-2.5 px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl border shadow-sm ${config.class}`}>
-      <div className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-      {config.text}
-    </span>
-  );
-}
-
-function InfoItem({ icon: Icon, label, value }: { icon: any, label: string, value: string | number }) {
-  return (
-    <div className="flex gap-5 group/item">
-      <div className="p-3.5 bg-slate-50 rounded-2xl text-slate-400 group-hover/item:text-primary-500 group-hover/item:bg-primary-50 transition-all duration-300">
-        <Icon className="w-6 h-6" />
-      </div>
-      <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 group-hover/item:text-primary-400 transition-colors">{label}</p>
-        <p className="font-bold text-slate-900 text-sm md:text-base">{value || "Não informado"}</p>
-      </div>
-    </div>
-  );
-}
-
-function Clock({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
   );
 }

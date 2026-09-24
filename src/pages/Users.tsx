@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCcw, Unlock, Eye, Edit, Trash2, FileText, Building2, Calendar, X, RotateCcw } from "lucide-react";
+import { Search, UserPlus, Filter, Shield, MoreHorizontal, Ban, RefreshCw, Unlock, Eye, Edit, Trash2, FileText, Building2, Calendar, X, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Swal from "sweetalert2";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
@@ -22,29 +22,102 @@ export default function Users() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = "Usuários | Salya Admin";
+    document.title = "Utilizadores | Salya Admin";
   }, []);
 
   const fetchUsers = () => {
     apiGet("/admin/users")
       .then(res => res.json())
       .then(usersData => {
-        // Buscar empresas para mapear os nomes
         apiGet("/admin/companies")
           .then(res => res.json())
           .then(companiesData => {
-            // Mapear empresas por ID
+            const companiesList = Array.isArray(companiesData) ? companiesData : [];
             const companiesMap: Record<string, any> = {};
-            (Array.isArray(companiesData) ? companiesData : []).forEach((company: any) => {
-              companiesMap[String(company.id)] = company;
+
+            companiesList.forEach((company: any) => {
+              if (company.id !== undefined && company.id !== null) {
+                companiesMap[String(company.id)] = company;
+              }
+              if (company.userId) {
+                companiesMap[`user_${String(company.userId)}`] = company;
+              }
+              if (company.ownerId) {
+                companiesMap[`owner_${String(company.ownerId)}`] = company;
+              }
+              if (company.email) {
+                companiesMap[`email_${String(company.email).toLowerCase()}`] = company;
+              }
             });
             setCompanies(companiesMap);
 
-            // Enriquecer os usuários com o nome da empresa
-            const enrichedUsers = (Array.isArray(usersData) ? usersData : []).map((user: any) => ({
-              ...user,
-              companyName: companiesMap[String(user.companyId)]?.name || user.companyName || null
-            }));
+            const enrichedUsers = (() => {
+              // Deduplicate raw users list by ID or Email
+              const uniqueUsersMap = new Map<string, any>();
+              (Array.isArray(usersData) ? usersData : []).forEach((u: any) => {
+                const key = u.id !== undefined && u.id !== null 
+                  ? `id_${String(u.id)}` 
+                  : (u.email ? `email_${String(u.email).toLowerCase().trim()}` : JSON.stringify(u));
+                if (!uniqueUsersMap.has(key)) {
+                  uniqueUsersMap.set(key, u);
+                }
+              });
+              const uniqueUsersList = Array.from(uniqueUsersMap.values());
+
+              return uniqueUsersList.map((user: any) => {
+                let resolvedCompanyName: string | null = null;
+                const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'Super Admin' || user.type === 'ADMIN';
+
+                if (!isAdmin) {
+                  // 1. Explicit company name fields on user object
+                  if (user.companyName) {
+                    resolvedCompanyName = user.companyName;
+                  } else if (user.company?.name) {
+                    resolvedCompanyName = user.company.name;
+                  } else if (user.Company?.name) {
+                    resolvedCompanyName = user.Company.name;
+                  } else if (user.empresa?.name) {
+                    resolvedCompanyName = user.empresa.name;
+                  } else if (user.empresaName) {
+                    resolvedCompanyName = user.empresaName;
+                  }
+
+                  // 2. Explicit foreign key on user (companyId / company_id / empresaId)
+                  const uCompId = user.companyId ?? user.company_id ?? user.CompanyId ?? user.empresaId ?? user.empresa_id;
+                  if (!resolvedCompanyName && uCompId !== undefined && uCompId !== null && uCompId !== 0) {
+                    const matched = companiesMap[String(uCompId)];
+                    if (matched) {
+                      resolvedCompanyName = matched.name || matched.nomeComercial || matched.companyName || null;
+                    }
+                  }
+
+                  // 3. Foreign key on company referencing user ID (company.userId or company.ownerId)
+                  if (!resolvedCompanyName && user.id !== undefined && user.id !== null) {
+                    const matchedByUser = companiesMap[`user_${String(user.id)}`] || companiesMap[`owner_${String(user.id)}`];
+                    if (matchedByUser) {
+                      resolvedCompanyName = matchedByUser.name || matchedByUser.nomeComercial || null;
+                    }
+                  }
+
+                  // 4. Strict owner email match (only if explicit ID was missing)
+                  if (!resolvedCompanyName && user.email) {
+                    const foundByEmail = companiesList.find((c: any) =>
+                      (c.ownerEmail && c.ownerEmail.toLowerCase().trim() === user.email.toLowerCase().trim()) ||
+                      (c.userEmail && c.userEmail.toLowerCase().trim() === user.email.toLowerCase().trim())
+                    );
+                    if (foundByEmail) {
+                      resolvedCompanyName = foundByEmail.name || foundByEmail.nomeComercial || foundByEmail.companyName || null;
+                    }
+                  }
+                }
+
+                return {
+                  ...user,
+                  companyName: isAdmin ? (user.companyName || 'Administração') : resolvedCompanyName
+                };
+              });
+            })();
+
             setUsers(enrichedUsers);
           })
           .catch(() => {
@@ -59,8 +132,6 @@ export default function Users() {
     fetchUsers();
   }, []);
 
-
-  // Fechar menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -89,10 +160,10 @@ export default function Users() {
 
     const result = await Swal.fire({
       title: "Tem a certeza?",
-      text: `Deseja realmente ${actionLabel} este usuário?`,
+      text: `Deseja realmente ${actionLabel} este utilizador?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#9333ea",
+      confirmButtonColor: "#4f46e5",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Sim, confirmar!",
       cancelButtonText: "Cancelar"
@@ -106,8 +177,8 @@ export default function Users() {
     Swal.fire({
       icon: "success",
       title: "Sucesso!",
-      text: `Usuário ${actionLabel} com sucesso`,
-      confirmButtonColor: "#9333ea",
+      text: `Utilizador ${actionLabel} com sucesso`,
+      confirmButtonColor: "#4f46e5",
       timer: 1500,
       showConfirmButton: false
     });
@@ -119,7 +190,7 @@ export default function Users() {
       text: `Enviar link de redefinição de palavra-passe para ${email}?`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#4f46e5",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Enviar",
       cancelButtonText: "Cancelar"
@@ -136,7 +207,7 @@ export default function Users() {
           icon: "success",
           title: "Email Enviado!",
           text: "Link de redefinição enviado com sucesso",
-          confirmButtonColor: "#2563eb",
+          confirmButtonColor: "#4f46e5",
           timer: 2000,
           showConfirmButton: false
         });
@@ -152,18 +223,18 @@ export default function Users() {
     Swal.fire({
       title: user.name,
       html: `
-        <div style="text-align: left; font-size: 14px; line-height: 1.6;">
+        <div style="text-align: left; font-size: 13px; line-height: 1.6;">
           <p><strong>Email:</strong> ${user.email}</p>
           <p><strong>Telefone:</strong> ${user.phone || 'Não informado'}</p>
           <p><strong>Papel:</strong> ${user.role}</p>
-          <p><strong>Empresa:</strong> ${user.companyName || 'Não vinculado'}</p>
+          <p><strong>Empresa:</strong> ${user.companyName || 'Sem Empresa'}</p>
           <p><strong>Plano Atual:</strong> ${user.activePlanName || user.planType || 'DEMO'}</p>
           <p><strong>Estado Subscrição:</strong> ${user.subscriptionStatus || 'N/A'}</p>
           <p><strong>Status Conta:</strong> ${user.status}</p>
           <p><strong>Data Cadastro:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
         </div>
       `,
-      confirmButtonColor: "#9333ea",
+      confirmButtonColor: "#4f46e5",
       confirmButtonText: "Fechar"
     });
   };
@@ -174,8 +245,8 @@ export default function Users() {
       if (!res.ok) throw new Error("Failed to fetch user history");
       const data = await res.json();
       
-      const subsHtml = data.subscriptions.map((s: any) => `
-        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+      const subsHtml = data.subscriptions?.map((s: any) => `
+        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 12px;">
           <div style="display:flex; justify-content: space-between; font-weight: bold;">
             <span>${s.planName} ${s.durationDays ? `(${s.durationDays} dias)` : ''}</span>
             <span style="color: ${s.status === 'ATIVA' ? '#10b981' : '#6b7280'}">${s.status}</span>
@@ -187,8 +258,8 @@ export default function Users() {
         </div>
       `).join('') || '<p style="text-align:center; color:#999; padding:20px;">Nenhuma subscrição encontrada</p>';
 
-      const paymentsHtml = data.payments.map((p: any) => `
-        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+      const paymentsHtml = data.payments?.map((p: any) => `
+        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 12px;">
           <div style="display:flex; justify-content: space-between;">
             <span style="font-weight: bold;">Kz ${p.amount.toLocaleString()}</span>
             <span style="color: ${p.status === 'CONFIRMADO' ? '#10b981' : '#f59e0b'}">${p.status}</span>
@@ -200,17 +271,17 @@ export default function Users() {
       `).join('') || '<p style="text-align:center; color:#999; padding:20px;">Nenhum pagamento encontrado</p>';
 
       Swal.fire({
-        title: `Histórico: ${data.user.name}`,
+        title: `Histórico: ${data.user?.name || 'Utilizador'}`,
         html: `
           <div style="text-align: left; max-height: 400px; overflow-y: auto;">
-            <h4 style="margin-top:0; color:#9333ea; border-bottom: 2px solid #9333ea; padding-bottom:4px;">Subscrições</h4>
+            <h4 style="margin-top:0; color:#4f46e5; border-bottom: 2px solid #4f46e5; padding-bottom:4px;">Subscrições</h4>
             ${subsHtml}
-            <h4 style="margin-top:20px; color:#9333ea; border-bottom: 2px solid #9333ea; padding-bottom:4px;">Pagamentos</h4>
+            <h4 style="margin-top:20px; color:#4f46e5; border-bottom: 2px solid #4f46e5; padding-bottom:4px;">Pagamentos</h4>
             ${paymentsHtml}
           </div>
         `,
         width: '600px',
-        confirmButtonColor: "#2563eb",
+        confirmButtonColor: "#4f46e5",
         confirmButtonText: "Fechar"
       });
     } catch (err) {
@@ -220,27 +291,27 @@ export default function Users() {
 
   const handleEditUser = (user: any) => {
     Swal.fire({
-      title: 'Editar Usuário',
+      title: 'Editar Utilizador',
       html: `
         <div style="text-align: left; display: flex; flex-direction: column; gap: 12px;">
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nome Completo</label>
-            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" placeholder="Nome" value="${user.name.replace(/"/g, '&quot;')}">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nome Completo</label>
+            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" placeholder="Nome" value="${user.name.replace(/"/g, '&quot;')}">
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Email</label>
-            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="email" placeholder="Email" value="${user.email}">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Email</label>
+            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" type="email" placeholder="Email" value="${user.email}">
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Papel / Cargo</label>
-            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px; display: flex;">
-              <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>Usuário Comum</option>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Papel / Cargo</label>
+            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px; display: flex;">
+              <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>Utilizador Comum</option>
               <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>Administrador</option>
             </select>
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nova Senha (deixe vazio para não alterar)</label>
-            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="password" placeholder="••••••••">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nova Senha (opcional)</label>
+            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" type="password" placeholder="••••••••">
           </div>
         </div>
       `,
@@ -248,7 +319,7 @@ export default function Users() {
       showCancelButton: true,
       confirmButtonText: 'Salvar Alterações',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#9333ea',
+      confirmButtonColor: '#4f46e5',
       width: '450px',
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
@@ -267,10 +338,10 @@ export default function Users() {
           const res = await apiPut(`/admin/users/${user.id}`, result.value);
           if (res.ok) {
             fetchUsers();
-            Swal.fire('Atualizado!', 'Usuário atualizado com sucesso.', 'success');
+            Swal.fire('Atualizado!', 'Utilizador atualizado com sucesso.', 'success');
           }
         } catch (err) {
-          Swal.fire('Erro!', 'Não foi possível atualizar o usuário.', 'error');
+          Swal.fire('Erro!', 'Não foi possível atualizar o utilizador.', 'error');
         }
       }
     });
@@ -278,7 +349,7 @@ export default function Users() {
 
   const handleDeleteUser = async (user: any) => {
     const result = await Swal.fire({
-      title: 'Excluir Usuário?',
+      title: 'Excluir Utilizador?',
       text: `Esta ação é irreversível. Deseja remover ${user.name}?`,
       icon: 'warning',
       showCancelButton: true,
@@ -294,50 +365,50 @@ export default function Users() {
       const res = await apiDelete(`/admin/users/${user.id}`);
       if (res.ok) {
         setUsers(users.filter(u => u.id !== user.id));
-        Swal.fire('Removido!', 'Usuário excluído com sucesso.', 'success');
+        Swal.fire('Removido!', 'Utilizador excluído com sucesso.', 'success');
       } else {
         throw new Error('Delete failed');
       }
     } catch (err) {
-      Swal.fire('Erro!', 'Não foi possível excluir o usuário.', 'error');
+      Swal.fire('Erro!', 'Não foi possível excluir o utilizador.', 'error');
     }
   };
 
   const handleCreateUser = async () => {
     const { value: formValues } = await Swal.fire({
-      title: 'Criar Novo Usuário',
+      title: 'Criar Novo Utilizador',
       html: `
         <div style="text-align: left; display: flex; flex-direction: column; gap: 12px;">
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Nome Completo</label>
-            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" placeholder="Nome">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nome Completo</label>
+            <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" placeholder="Nome">
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Email</label>
-            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="email" placeholder="Email">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Email</label>
+            <input id="swal-email" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" type="email" placeholder="Email">
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Papel / Cargo</label>
-            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px; display: flex;">
-              <option value="USER">Usuário Comum</option>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Papel / Cargo</label>
+            <select id="swal-role" class="swal2-select" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px; display: flex;">
+              <option value="USER">Utilizador Comum</option>
               <option value="ADMIN">Administrador</option>
             </select>
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">ID da Empresa (opcional)</label>
-            <input id="swal-companyId" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" placeholder="ID da empresa">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">ID da Empresa (opcional)</label>
+            <input id="swal-companyId" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" placeholder="ID da empresa">
           </div>
-          <div style="margin-bottom: 2px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Senha (provisória)</label>
-            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 44px; border-radius: 12px; font-size: 14px;" type="password" placeholder="••••••••">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Senha Provisória</label>
+            <input id="swal-password" class="swal2-input" style="width: 100%; margin: 0; height: 40px; border-radius: 10px; font-size: 13px;" type="password" placeholder="••••••••">
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: 'Criar Usuário',
+      confirmButtonText: 'Criar Utilizador',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#9333ea',
+      confirmButtonColor: '#4f46e5',
       width: '450px',
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
@@ -367,7 +438,6 @@ export default function Users() {
 
         if (res.ok) {
           const newUser = await res.json();
-          // Enriquecer o novo usuário com o nome da empresa
           const enrichedUser = {
             ...newUser,
             companyName: companies[String(newUser.companyId)]?.name || null
@@ -375,9 +445,9 @@ export default function Users() {
           setUsers([enrichedUser, ...users]);
           Swal.fire({
             icon: "success",
-            title: "Usuário Criado!",
-            text: "Novo usuário adicionado com sucesso",
-            confirmButtonColor: "#9333ea",
+            title: "Utilizador Criado!",
+            text: "Novo utilizador adicionado com sucesso",
+            confirmButtonColor: "#4f46e5",
             timer: 2000,
             showConfirmButton: false
           });
@@ -386,7 +456,7 @@ export default function Users() {
         Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Não foi possível criar o usuário",
+          text: "Não foi possível criar o utilizador",
           confirmButtonColor: "#ef4444"
         });
       }
@@ -403,7 +473,7 @@ export default function Users() {
         setShowSimilarModal(true);
       }
     } catch (err) {
-      Swal.fire("Erro", "Falha ao detectar usuários semelhantes", "error");
+      Swal.fire("Erro", "Falha ao detectar utilizadores semelhantes", "error");
     } finally {
       setIsDetectingSimilar(false);
     }
@@ -445,8 +515,8 @@ export default function Users() {
     const company = u.companyName?.toLowerCase() || "";
 
     const matchesSearch = name.includes(searchTerm.toLowerCase()) ||
-                         email.includes(searchTerm.toLowerCase()) ||
-                         company.includes(searchTerm.toLowerCase());
+                          email.includes(searchTerm.toLowerCase()) ||
+                          company.includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === "ALL" || u.role === filterRole;
 
     let matchesDate = true;
@@ -471,368 +541,287 @@ export default function Users() {
     return matchesSearch && matchesRole && matchesDate;
   });
 
-  // Sincronizar search term com query param (sem loop)
-  useEffect(() => {
-    const querySearch = searchParams.get("search") || "";
-    if (querySearch !== searchTerm && querySearch !== searchTerm.trim()) {
-      setSearchTerm(querySearch);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    const currentQuery = searchParams.get("search") || "";
-    const trimmed = searchTerm.trim();
-    if (trimmed !== currentQuery) {
-      if (trimmed) {
-        setSearchParams({ search: trimmed }, { replace: true });
-      } else {
-        setSearchParams({}, { replace: true });
-      }
-    }
-  }, [searchTerm]);
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.status === 'active' || u.status === 'ACTIVE').length;
+  const adminUsers = users.filter(u => u.role === 'ADMIN').length;
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Usuários</h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">Controle total de acessos, bloqueios e criação de usuários.</p>
-        </div>
-        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3">
-          <button
-            onClick={handleCreateUser}
-            className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary-500/20 whitespace-nowrap"
-            title="Criar Novo Usuário"
-          >
-            <UserPlus className="w-5 h-5" />
-            Novo Usuário
-          </button>
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Utilizadores</h1>
+        <div className="flex items-center gap-2">
           <button
             onClick={handleDetectSimilar}
             disabled={isDetectingSimilar}
-            className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:border-amber-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all shadow-sm disabled:opacity-50 whitespace-nowrap"
-            title="Detectar Duplicados"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
           >
-            {isDetectingSimilar ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Eye className="w-5 h-5" />}
+            {isDetectingSimilar ? <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" /> : <Eye className="w-4 h-4 text-slate-500" />}
             Detectar Duplicados
+          </button>
+          <button
+            onClick={handleCreateUser}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+          >
+            <UserPlus className="w-4 h-4" />
+            Novo Utilizador
           </button>
         </div>
       </div>
 
-      <div className="enterprise-card overflow-hidden min-w-0">
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, email ou empresa..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-primary-500 focus:bg-white transition-all text-sm font-medium"
-            />
-          </div>
+      {/* Summary Metrics Bar */}
+      <div className="flex items-center gap-8 py-2 border-b border-slate-200/80">
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Total de Contas</span>
+          <span className="text-2xl font-extrabold text-slate-900">{totalUsers}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Ativos</span>
+          <span className="text-2xl font-extrabold text-emerald-600">{activeUsers}</span>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-slate-400 block mb-1">Administradores</span>
+          <span className="text-2xl font-extrabold text-indigo-600">{adminUsers}</span>
+        </div>
+      </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all ${
-                showFilters || isFilterActive ? 'bg-primary-50 text-primary-600 border border-primary-200 shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'
-              }`}
-              title="Filtros"
-            >
-              <Filter className="w-4 h-4" />
-              Filtro
-              {isFilterActive && (
-                <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
-              )}
-            </button>
-          </div>
+      {/* Control Bar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, email ou empresa"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
+          />
         </div>
 
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-4 border-b border-slate-100 bg-slate-50/70 space-y-4"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Role Filters */}
-              <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Papel / Cargo</label>
-                <div className="flex flex-wrap gap-2">
-                  {['ALL', 'ADMIN', 'USER'].map(role => (
-                    <button
-                      key={role}
-                      onClick={() => setFilterRole(role)}
-                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${filterRole === role ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
-                    >
-                      {role === 'ALL' ? 'TODOS' : role}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-xl text-xs font-semibold transition-all ${
+            showFilters || isFilterActive ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Filter className="w-3.5 h-3.5" />
+          Filtros
+          {isFilterActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />}
+        </button>
+      </div>
 
-              {/* Date Filters */}
-              <div className="flex-1 max-w-xl">
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-primary-500" />
-                  Data de Criação
-                </label>
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">De:</span>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 shadow-sm">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Até:</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent"
-                    />
-                  </div>
-                </div>
+      {showFilters && (
+        <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-2xl space-y-4 text-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Papel / Cargo</label>
+              <div className="flex gap-2">
+                {['ALL', 'ADMIN', 'USER'].map(role => (
+                  <button
+                    key={role}
+                    onClick={() => setFilterRole(role)}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      filterRole === role ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {role === 'ALL' ? 'Todos' : role}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Presets and Reset */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Atalhos:</span>
-                <button onClick={() => handleDatePreset('today')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Hoje</button>
-                <button onClick={() => handleDatePreset('7days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 7 dias</button>
-                <button onClick={() => handleDatePreset('30days')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Últimos 30 dias</button>
-                <button onClick={() => handleDatePreset('month')} className="px-2.5 py-1 bg-white hover:bg-primary-50 text-slate-600 hover:text-primary-600 border border-slate-200 rounded-md text-[11px] font-bold transition-all">Este Mês</button>
-              </div>
-
-              {isFilterActive && (
-                <button
-                  onClick={() => { setFilterRole('ALL'); setStartDate(''); setEndDate(''); }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md text-[11px] font-bold transition-all border border-rose-100"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Limpar Filtros
-                </button>
-              )}
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-700 outline-none"
+              />
+              <span className="text-slate-400">até</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-700 outline-none"
+              />
             </div>
-          </motion.div>
-        )}
+          </div>
+        </div>
+      )}
 
+      {/* Data Table */}
+      <div className="bg-slate-50/50 rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-slate-50/50">
-              <tr>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Usuário</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Email</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Empresa</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Data Cadastro</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Papel</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="text-left px-4 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-right">Ações</th>
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200/60 text-slate-500 font-semibold bg-transparent">
+                <th className="py-3.5 px-6 font-semibold">Utilizador</th>
+                <th className="py-3.5 px-6 font-semibold hidden md:table-cell">Email</th>
+                <th className="py-3.5 px-6 font-semibold hidden lg:table-cell">Empresa</th>
+                <th className="py-3.5 px-6 font-semibold hidden lg:table-cell">Registo</th>
+                <th className="py-3.5 px-6 font-semibold hidden md:table-cell">Papel</th>
+                <th className="py-3.5 px-6 font-semibold text-center">Estado</th>
+                <th className="py-3.5 px-6 font-semibold text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              <AnimatePresence>
-                {filteredUsers.map((user, idx) => (
-                  <motion.tr
-                    key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.04 }}
-                    className="hover:bg-slate-50/60 transition-colors"
-                  >
-                    <td className="px-4 md:px-6 py-3 md:py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-extrabold text-xs">
-                          {(user.name || "U").charAt(0).toUpperCase()}
-                        </div>
-                        <span className="font-extrabold text-slate-900 text-sm">{user.name}</span>
+            <tbody className="divide-y divide-slate-200/40 bg-transparent">
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="hover:bg-slate-100/60 transition-colors">
+                  <td className="py-4 px-6 font-bold text-slate-900">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                        {(user.name || "U").charAt(0).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-mono text-xs">{user.email}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4">
-                      {user.companyName ? (
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="text-slate-600 font-medium text-xs">{user.companyName}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-slate-600 font-medium text-xs whitespace-nowrap">
-                      {user.createdAt ? formatDate(user.createdAt) : "—"}
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
-                        user.role === 'ADMIN' ? 'bg-primary-50 text-primary-700 border-primary-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                      }`}>
-                        {user.role}
+                      <div>
+                        <span className="block">{user.name}</span>
+                        <span className="text-[10px] text-slate-400 font-normal md:hidden">{user.email}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6 text-slate-600 font-mono hidden md:table-cell">{user.email}</td>
+                  <td className="py-4 px-6 text-slate-600 hidden lg:table-cell">
+                    {user.companyName ? (
+                      <span className="font-semibold text-slate-800">{user.companyName}</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold text-[11px]">
+                        Sem Empresa
                       </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${
-                        user.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        {(user.status || "UNKNOWN").toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4">
-                      <div className="flex items-center gap-1.5 relative">
-                        <button
-                          onClick={() => handleToggleBlock(user.id, user.status)}
-                          className={`p-2 rounded-lg transition-all border ${
-                            user.status === 'active'
-                              ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-100'
-                              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100'
-                          }`}
-                          title={user.status === 'active' ? 'Bloquear' : 'Desbloquear'}
-                        >
-                          {user.status === 'active' ? <Ban className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => handleResetPassword(user.id, user.email)}
-                          className="p-2 rounded-lg bg-slate-50 text-slate-500 hover:text-primary-600 border border-slate-200 transition-all"
-                          title="Resetar senha"
-                        >
-                          <RefreshCcw className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
-                          className={`p-2 rounded-lg transition-all border ${
-                            openMenuId === user.id
-                              ? 'bg-primary-50 text-primary-600 border-primary-200'
-                              : 'bg-slate-50 text-slate-500 hover:text-slate-700 border-slate-200'
-                          }`}
-                          title="Mais opções"
-                        >
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </button>
+                    )}
+                  </td>
+                  <td className="py-4 px-6 text-slate-600 font-mono hidden lg:table-cell">
+                    {user.createdAt ? formatDate(user.createdAt) : "—"}
+                  </td>
+                  <td className="py-4 px-6 hidden md:table-cell">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      user.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200/80 text-slate-700'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium ${
+                      user.status === 'active' ? 'bg-emerald-100/70 text-emerald-800' : 'bg-rose-100/70 text-rose-800'
+                    }`}>
+                      {user.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end gap-1.5 relative">
+                      <button
+                        onClick={() => handleToggleBlock(user.id, user.status)}
+                        className={`p-1.5 rounded-lg border transition-all ${
+                          user.status === 'active'
+                            ? 'bg-white border-slate-200 text-rose-600 hover:bg-rose-50'
+                            : 'bg-white border-slate-200 text-emerald-600 hover:bg-emerald-50'
+                        }`}
+                        title={user.status === 'active' ? 'Bloquear' : 'Desbloquear'}
+                      >
+                        {user.status === 'active' ? <Ban className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => handleResetPassword(user.id, user.email)}
+                        className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg transition-all"
+                        title="Resetar senha"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
+                        className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg transition-all"
+                        title="Mais opções"
+                      >
+                        <MoreHorizontal className="w-3.5 h-3.5" />
+                      </button>
 
-                        {openMenuId === user.id && (
-                          <div ref={menuRef} className="absolute right-0 top-full mt-2 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden">
-                            <button
-                              onClick={() => { handleViewUser(user); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> Perfil
-                            </button>
-                            <button
-                              onClick={() => { handleViewHistory(user.id); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-                            >
-                              <FileText className="w-3.5 h-3.5" /> Histórico
-                            </button>
-                            <button
-                              onClick={() => { handleEditUser(user); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-                            >
-                              <Edit className="w-3.5 h-3.5" /> Editar
-                            </button>
-                            <button
-                              onClick={() => { handleDeleteUser(user); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Excluir
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
+                      {openMenuId === user.id && (
+                        <div ref={menuRef} className="absolute right-0 top-full mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden text-left">
+                          <button
+                            onClick={() => { handleViewUser(user); setOpenMenuId(null); }}
+                            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-400" /> Perfil
+                          </button>
+                          <button
+                            onClick={() => { handleViewHistory(user.id); setOpenMenuId(null); }}
+                            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-slate-400" /> Histórico
+                          </button>
+                          <button
+                            onClick={() => { handleEditUser(user); setOpenMenuId(null); }}
+                            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar
+                          </button>
+                          <button
+                            onClick={() => { handleDeleteUser(user); setOpenMenuId(null); }}
+                            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-t border-slate-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    Nenhum utilizador encontrado com os critérios fornecidos.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-16">
-            <Shield className="w-16 h-16 text-slate-300 mx-auto mb-6" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Nenhum usuário encontrado</h3>
-            <p className="text-slate-500 font-medium">Tente ajustar os filtros ou criar um novo usuário</p>
-          </div>
-        )}
       </div>
 
-      {/* Similar Users Modal */}
-      <AnimatePresence>
-        {showSimilarModal && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSimilarModal(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-0 z-[101] flex items-center justify-center p-4"
-            >
-              <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
-                <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Possíveis Duplicados</h2>
-                    <p className="text-slate-500 text-sm">Usuários com nomes ou domínios semelhantes detectados.</p>
-                  </div>
-                  <button onClick={() => setShowSimilarModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                    <X className="w-6 h-6 text-slate-400" />
-                  </button>
-                </div>
-                
-                <div className="p-8 overflow-y-auto space-y-4">
-                  {similarUsers.length === 0 ? (
-                    <div className="text-center py-12">
-                      <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nenhum duplicado óbvio encontrado</p>
-                    </div>
-                  ) : (
-                    similarUsers.map((pair, i) => (
-                      <div key={i} className="p-6 rounded-lg bg-slate-50 border border-slate-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full tracking-widest">
-                            {pair.reason}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-8 relative">
-                          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 font-black text-xs z-10">VS</div>
-                          <div className="space-y-1">
-                            <p className="font-black text-slate-900 text-sm">{pair.user1.name}</p>
-                            <p className="text-xs text-slate-500 truncate">{pair.user1.email}</p>
-                          </div>
-                          <div className="space-y-1 text-right">
-                            <p className="font-black text-slate-900 text-sm">{pair.user2.name}</p>
-                            <p className="text-xs text-slate-500 truncate">{pair.user2.email}</p>
-                          </div>
-                        </div>
+      {/* Modal de Duplicados */}
+      {showSimilarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={() => setShowSimilarModal(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
+          <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden p-6 border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Utilizadores Semelhantes</h3>
+              <button onClick={() => setShowSimilarModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="max-h-[60vh] overflow-y-auto space-y-3">
+              {similarUsers.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-6">Nenhum registo duplicado detectado.</p>
+              ) : (
+                similarUsers.map((pair, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+                    <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md font-bold mb-2">
+                      {pair.reason}
+                    </span>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="font-bold text-slate-900">{pair.user1?.name}</p>
+                        <p className="text-slate-500">{pair.user1?.email}</p>
                       </div>
-                    ))
-                  )}
-                </div>
+                      <div>
+                        <p className="font-bold text-slate-900">{pair.user2?.name}</p>
+                        <p className="text-slate-500">{pair.user2?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-                <div className="p-8 border-t border-slate-100 bg-slate-50">
-                  <button 
-                    onClick={() => setShowSimilarModal(false)}
-                    className="w-full py-2.5 bg-slate-900 text-white rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-lg"
-                  >
-                    Entendido
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            <button
+              onClick={() => setShowSimilarModal(false)}
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-all"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
