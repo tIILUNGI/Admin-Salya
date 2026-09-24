@@ -387,7 +387,7 @@ export default function Login() {
         className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-slate-800"
       >
         {/* Left Branding Box */}
-        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white md:w-1/2 p-8 sm:p-12 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-[300px] md:min-h-[460px]">
+        <div className="bg-linear-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white md:w-1/2 p-8 sm:p-12 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-75 md:min-h-115">
           <div className="absolute inset-0 bg-indigo-500/10 backdrop-blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col items-center my-auto">
