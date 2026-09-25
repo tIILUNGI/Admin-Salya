@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, User, Globe, Download } from "lucide-react";
 import { formatDate } from "../lib/formatters";
 import { apiGet } from "../lib/api";
+import { exportCSV, formatDateForCSV } from "../lib/csvExport";
 import Swal from "sweetalert2";
 
 export default function Logs() {
@@ -28,22 +29,19 @@ export default function Logs() {
   }, []);
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Usuário", "Ação", "Detalhes", "Data/Hora"];
-    const rows = logs.map(l => [
-      l.id || "",
-      `"${l.user || ""}"`,
-      l.action || "",
-      `"${l.details || ""}"`,
-      l.timestamp || ""
-    ]);
-    const csvContent = [headers, ...rows].map(row => row.join(";")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `logs_auditoria_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    exportCSV({
+      filename: 'logs_auditoria_salya',
+      reportTitle: 'Relatório de Logs de Auditoria do Sistema',
+      headers: ['ID', 'Utilizador', 'Ação', 'Detalhes', 'Data e Hora'],
+      rows: logs.map(l => [
+        l.id || '',
+        l.user || '',
+        l.action || '',
+        l.details || '',
+        formatDateForCSV(l.timestamp)
+      ]),
+      includeMetadata: true
+    });
     Swal.fire({
       icon: "success",
       title: "Exportado!",

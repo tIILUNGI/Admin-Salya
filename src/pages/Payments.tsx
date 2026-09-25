@@ -4,6 +4,7 @@ import { Search, CheckCircle2, Clock, CreditCard, Download, Check, X, Eye } from
 import { formatCurrency, formatDate } from "../lib/formatters";
 import Swal from "sweetalert2";
 import { apiGet, apiPost } from "../lib/api";
+import { exportCSV, formatDateForCSV } from "../lib/csvExport";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -126,25 +127,25 @@ export default function Payments() {
   };
 
   const handleExportPayments = () => {
-    const headers = ["ID", "Empresa", "Plano", "Valor", "Método", "Data", "Status", "Referência"];
-    const rows = payments.map(p => [
-      p.id,
-      p.companyName ?? "",
-      p.planName ?? "",
-      p.amount.toString(),
-      p.method,
-      p.date,
-      p.status,
-      p.reference
-    ]);
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `pagamentos_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    exportCSV({
+      filename: 'pagamentos_salya',
+      reportTitle: 'Relatório Financeiro de Pagamentos Salya',
+      headers: ['ID', 'Empresa / Cliente', 'Email', 'Plano', 'Valor (Kz)', 'Método', 'Data', 'Estado', 'Referência'],
+      rows: payments.map(p => [
+        p.id,
+        p.companyName || p.userName || '—',
+        p.userEmail || '—',
+        p.planName || '—',
+        Number(p.amount) || 0,
+        p.method || 'Multicaixa Express',
+        formatDateForCSV(p.date),
+        p.status === 'CONFIRMADO' ? 'Validado' : p.status === 'PENDENTE' ? 'Pendente' : p.status,
+        p.reference || '—'
+      ]),
+      includeMetadata: true,
+      includeTotals: true,
+      currencyColumns: [4]
+    });
     Swal.fire({
       icon: "success",
       title: "Exportado!",

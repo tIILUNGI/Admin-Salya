@@ -3,6 +3,7 @@ import { Calendar, Plus, Search, Download, X, ChevronDown, ChevronUp, RefreshCw,
 import { formatDate, formatCurrency } from "../lib/formatters";
 import Swal from "sweetalert2";
 import { apiGet, apiPost, apiPut } from "../lib/api";
+import { exportCSV, formatDateForCSV } from "../lib/csvExport";
 
 const getPlanLabel = (planId: string, customName?: string) => {
   if (customName && customName.trim()) return customName;
@@ -114,23 +115,21 @@ export default function Subscriptions() {
       Swal.fire({ icon: "info", title: "Aviso", text: "Não há dados para exportar." });
       return;
     }
-    const headers = ["ID", "Empresa", "Plano", "Início", "Fim", "Estado"];
-    const rows = subs.map(s => [
-      s.id,
-      `"${s.companyName || companies[String(s.companyId)]?.name || 'Empresa'}"`,
-      `"${getPlanLabel(s.planId, s.planName)}"`,
-      s.startDate || "2026-09-14",
-      s.endDate || "2026-09-15",
-      s.status || "active"
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `subscricoes_salya_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCSV({
+      filename: 'subscricoes_salya',
+      reportTitle: 'Relatório de Subscrições Salya SaaS',
+      headers: ['ID', 'Empresa', 'Plano', 'Data Início', 'Data Fim', 'Estado'],
+      rows: subs.map(s => [
+        s.id,
+        s.companyName || companies[String(s.companyId)]?.name || 'Empresa',
+        getPlanLabel(s.planId, s.planName),
+        formatDateForCSV(s.startDate || s.createdAt),
+        formatDateForCSV(s.endDate || s.validUntil),
+        s.status === 'active' || s.status === 'ATIVA' ? 'Ativa' : 'Expirada'
+      ]),
+      includeMetadata: true,
+      includeTotals: true
+    });
   };
 
   // Group Subscriptions by Company

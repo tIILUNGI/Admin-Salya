@@ -16,9 +16,10 @@ const getApiBaseUrl = (): string => {
     return envUrl;
   }
   
-  // 2. Se está em desenvolvimento local, usa localhost
+  // 2. Se está em desenvolvimento local, usa caminho relativo para
+  //    aproveitar o proxy do Vite (evita problemas de CORS)
   if (isLocalDevelopment()) {
-    return 'http://localhost:8080/api';
+    return '/api';
   }
   
   // 3. Caso contrário, usa produção

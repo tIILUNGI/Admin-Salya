@@ -240,7 +240,7 @@ export default function Login() {
   if (isRegistering) {
     if (registrationStep === "choosePlan") {
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans">
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
           <div className="w-full max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -256,7 +256,7 @@ export default function Login() {
               </button>
 
               <div className="text-center mb-8">
-                <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl inline-block mb-3 shadow-2xs">
+                <div className="bg-purple-50 border border-purple-100 p-3 rounded-2xl inline-block mb-3 shadow-2xs">
                   <img src="/logo.png" alt="Salya Logo" className="h-8 mx-auto object-contain" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900">Escolha o seu Plano</h2>
@@ -272,13 +272,13 @@ export default function Login() {
                       setSelectedPlanId(String(plan.id));
                       setRegistrationStep("form");
                     }}
-                    className="rounded-2xl border border-slate-200 p-5 text-left hover:border-indigo-500 transition-all bg-slate-50/70 hover:bg-white text-xs"
+                    className="rounded-2xl border border-slate-200 p-5 text-left hover:border-purple-600 transition-all bg-slate-50/70 hover:bg-white text-xs"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-bold text-slate-900 text-sm">{plan.name}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{plan.type}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">{plan.type}</span>
                     </div>
-                    <p className="font-extrabold text-indigo-600 text-base mb-2">{plan.price ? `Kz ${plan.price.toLocaleString()}` : "Gratuito"}</p>
+                    <p className="font-extrabold text-purple-600 text-base mb-2">{plan.price ? `Kz ${plan.price.toLocaleString()}` : "Gratuito"}</p>
                     <p className="text-slate-500">{plan.durationDays} dias de acesso</p>
                   </button>
                 ))}
@@ -290,7 +290,7 @@ export default function Login() {
     }
 
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
         <div className="w-full max-w-md">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -310,7 +310,7 @@ export default function Login() {
               <h2 className="text-lg font-bold text-slate-900">Criar Nova Conta</h2>
               {selectedPlan && (
                 <p className="mt-1 text-slate-500">
-                  Plano: <strong className="text-indigo-600">{selectedPlan.name}</strong>
+                  Plano: <strong className="text-purple-600">{selectedPlan.name}</strong>
                 </p>
               )}
             </div>
@@ -323,7 +323,7 @@ export default function Login() {
                   required
                   value={registerData.name}
                   onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-purple-600 font-medium"
                   placeholder="Seu nome"
                 />
               </div>
@@ -335,7 +335,7 @@ export default function Login() {
                   required
                   value={registerData.email}
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-purple-600 font-medium"
                   placeholder="exemplo@email.com"
                 />
               </div>
@@ -347,7 +347,7 @@ export default function Login() {
                   required
                   value={registerData.password}
                   onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-purple-600 font-medium"
                   placeholder="Mínimo 6 caracteres"
                 />
               </div>
@@ -359,7 +359,7 @@ export default function Login() {
                   required
                   value={registerData.confirmPassword}
                   onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-indigo-500 font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 outline-none focus:bg-white focus:border-purple-600 font-medium"
                   placeholder="Confirme a senha"
                 />
               </div>
@@ -367,7 +367,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-4"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-4 shadow-md shadow-purple-600/20"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                 {isLoading ? "Criando..." : "Criar Conta"}
@@ -380,18 +380,22 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 sm:p-6 font-sans">
+    <div className="min-h-screen bg-[#0d0718] flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      {/* Glow Effects matching Salya Logo */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-900/30 rounded-full blur-3xl pointer-events-none" />
+
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-slate-800"
+        className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-purple-950/40 relative z-10"
       >
-        {/* Left Branding Box */}
-        <div className="bg-linear-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white md:w-1/2 p-8 sm:p-12 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-75 md:min-h-115">
-          <div className="absolute inset-0 bg-indigo-500/10 backdrop-blur-3xl pointer-events-none" />
+        {/* Left Branding Box - Official Purple Identity (#8e34eb / #7c3aed) */}
+        <div className="bg-linear-to-br from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white md:w-1/2 p-8 sm:p-12 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-75 md:min-h-115">
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col items-center my-auto">
-            <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl border border-white/20 mb-6 flex items-center justify-center">
+            <div className="bg-white p-4 rounded-2xl shadow-2xl border border-white/20 mb-6 flex items-center justify-center">
               <img 
                 src="/logo.png" 
                 alt="Salya Logo" 
@@ -399,12 +403,12 @@ export default function Login() {
               />
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white mb-2">SALYA ADMIN</h1>
-            <p className="text-xs text-indigo-200 max-w-xs font-medium leading-relaxed">
+            <p className="text-xs text-purple-100 max-w-xs font-medium leading-relaxed">
               Painel Corporativo de Gestão de Subscrições, Empresas e Auditoria
             </p>
           </div>
 
-          <div className="relative z-10 text-[10px] text-indigo-300 font-medium tracking-wide">
+          <div className="relative z-10 text-[10px] text-purple-200/80 font-medium tracking-wide">
             © Salya Payroll. Todos os direitos reservados.
           </div>
         </div>
@@ -412,8 +416,8 @@ export default function Login() {
         {/* Right Form Box */}
         <div className="flex flex-col justify-center p-8 sm:p-12 bg-white md:w-1/2 text-xs">
           <div className="mb-6">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full font-bold mb-3">
-              <Shield className="w-3.5 h-3.5" /> Área Reservada
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-full font-bold mb-3 border border-purple-100">
+              <Shield className="w-3.5 h-3.5 text-purple-600" /> Área Reservada
             </div>
             <h2 className="text-2xl font-bold text-slate-900">Acesso Restrito</h2>
             <p className="text-slate-500 mt-1 font-medium">Introduza as suas credenciais de administrador.</p>
@@ -428,7 +432,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-indigo-500 font-medium text-slate-900 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-600 font-medium text-slate-900 transition-all"
                   placeholder="admin@salya.ao"
                 />
                 <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -441,7 +445,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+                  className="text-[11px] font-semibold text-purple-600 hover:text-purple-800 hover:underline transition-colors"
                 >
                   Esqueceu a palavra-passe?
                 </button>
@@ -452,7 +456,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-indigo-500 font-medium text-slate-900 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-600 font-medium text-slate-900 transition-all"
                   placeholder="••••••••"
                 />
                 <button
@@ -474,7 +478,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 mt-2 cursor-pointer"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               {isLoading ? "A Autenticar..." : "Iniciar Sessão"}

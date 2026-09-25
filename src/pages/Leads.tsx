@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiGet, apiDelete } from "../lib/api";
+import { exportCSV, formatDateForCSV } from "../lib/csvExport";
 import {
   Search, Download, Trash2
 } from "lucide-react";
@@ -107,17 +108,23 @@ export default function Leads() {
     }
   };
 
-  const exportCSV = () => {
-    const header = ["ID", "Nome", "Email", "Consentimento", "Data Registo", "Último Acesso", "Total Simulações"];
-    const rows = leads.map(l => [
-      l.id, `"${l.nome}"`, l.email, l.consentimento ? "Sim" : "Não",
-      fmtDate(l.createdAt), fmtDate(l.ultimoAcesso), l.totalSimulacoes,
-    ]);
-    const csv = [header, ...rows].map(r => r.join(";")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `leads_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+  const handleExportCSV = () => {
+    exportCSV({
+      filename: 'leads_registados',
+      reportTitle: 'Relatório de Leads Registados',
+      headers: ['ID', 'Nome', 'Email', 'Consentimento RGPD', 'Data de Registo', 'Último Acesso', 'Total Simulações'],
+      rows: leads.map(l => [
+        l.id,
+        l.nome,
+        l.email,
+        l.consentimento ? 'Sim (Autorizado)' : 'Não',
+        formatDateForCSV(l.createdAt),
+        formatDateForCSV(l.ultimoAcesso),
+        l.totalSimulacoes || 0
+      ]),
+      includeMetadata: true,
+      includeTotals: true
+    });
   };
 
   return (
@@ -127,7 +134,7 @@ export default function Leads() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Leads Registados</h1>
         <div className="flex items-center gap-2">
           <button
-            onClick={exportCSV}
+            onClick={handleExportCSV}
             disabled={leads.length === 0}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
           >
