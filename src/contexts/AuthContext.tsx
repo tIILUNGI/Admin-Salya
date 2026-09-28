@@ -10,7 +10,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("admin_token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get("token");
+    if (urlToken) {
+      localStorage.setItem("admin_token", urlToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return true;
+    }
+    return !!localStorage.getItem("admin_token");
+  });
 
   const login = (token: string) => {
     localStorage.setItem("admin_token", token);

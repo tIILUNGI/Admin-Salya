@@ -6,8 +6,6 @@ import Login from "./pages/Login";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-export { useAuth };
-
 // Carregamento dinâmico por rota (Code-Splitting) no Admin
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Companies = lazy(() => import("./pages/Companies"));
