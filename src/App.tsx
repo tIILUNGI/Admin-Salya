@@ -2,11 +2,11 @@ import { ReactNode, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import AdminLayout from "./components/layout/AdminLayout";
-import Login from "./pages/Login";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 // Carregamento dinâmico por rota (Code-Splitting) no Admin
+const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Companies = lazy(() => import("./pages/Companies"));
 const Users = lazy(() => import("./pages/Users"));
@@ -31,7 +31,7 @@ export default function App() {
             <Suspense fallback={
               <div className="flex h-screen w-full items-center justify-center bg-slate-50">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-700 border-t-transparent"></div>
                   <p className="text-xs font-semibold text-slate-500">A carregar painel admin...</p>
                 </div>
               </div>

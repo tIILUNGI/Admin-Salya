@@ -154,7 +154,7 @@ export default function Profile() {
         {/* Left Column: Avatar & Quick Info */}
         <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-6 flex flex-col items-center text-center shadow-2xs">
           <div className="relative mb-4">
-            <div className="w-20 h-20 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-2xl shadow-2xs overflow-hidden">
+            <div className="w-20 h-20 rounded-2xl bg-purple-700 text-white flex items-center justify-center font-bold text-2xl shadow-2xs overflow-hidden">
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -179,7 +179,7 @@ export default function Profile() {
           </div>
 
           <h3 className="font-bold text-slate-900 text-base">{profile.name}</h3>
-          <span className="inline-block px-2.5 py-0.5 mt-1 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-bold uppercase">
+          <span className="inline-block px-2.5 py-0.5 mt-1 bg-purple-100 text-purple-800 rounded-full text-[10px] font-bold uppercase">
             {profile.role || "ADMIN"}
           </span>
 
@@ -190,7 +190,7 @@ export default function Profile() {
             </div>
             <div>
               <span className="text-slate-400 block font-medium text-[11px]">Estado da Conta</span>
-              <span className="font-semibold text-emerald-600">Ativo</span>
+              <span className="font-semibold text-purple-700">Ativo</span>
             </div>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function Profile() {
               <button 
                 type="button"
                 onClick={() => setIsEditing(!isEditing)}
-                className="text-xs font-bold text-indigo-600 hover:underline"
+                className="text-xs font-bold text-purple-700 hover:underline cursor-pointer"
               >
                 {isEditing ? "Cancelar" : "Editar"}
               </button>
@@ -217,7 +217,7 @@ export default function Profile() {
                   disabled={!isEditing}
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-medium disabled:bg-slate-100/70"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-purple-600 font-medium disabled:bg-slate-100/70"
                 />
               </div>
 
@@ -228,7 +228,7 @@ export default function Profile() {
                   disabled={!isEditing}
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-medium disabled:bg-slate-100/70"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-purple-600 font-medium disabled:bg-slate-100/70"
                 />
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function Profile() {
               <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" /> Salvar Alterações
                 </button>

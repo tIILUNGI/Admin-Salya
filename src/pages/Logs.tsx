@@ -86,7 +86,7 @@ export default function Logs() {
             placeholder="Pesquisar em utilizadores ou detalhes..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-purple-600 transition-all"
           />
         </div>
 
@@ -95,9 +95,9 @@ export default function Logs() {
             <button 
               key={cat}
               onClick={() => setFilterAction(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border cursor-pointer ${
                 filterAction === cat 
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' 
+                  ? 'bg-purple-700 text-white border-purple-700 shadow-2xs' 
                   : 'bg-slate-50/70 text-slate-700 border-slate-200 hover:bg-slate-100'
               }`}
             >

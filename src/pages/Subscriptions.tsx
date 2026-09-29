@@ -188,7 +188,7 @@ export default function Subscriptions() {
               if (subs.length > 0) handleRenew(subs[0]);
               else Swal.fire({ icon: "info", title: "Info", text: "Nenhuma subscrição disponível para renovar." });
             }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Atribuir ou renovar
@@ -204,11 +204,11 @@ export default function Subscriptions() {
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Com Acesso Ativo</span>
-          <span className="text-2xl font-extrabold text-emerald-600">{activeCount}</span>
+          <span className="text-2xl font-extrabold text-purple-700">{activeCount}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Sem Acesso / Expiradas</span>
-          <span className="text-2xl font-extrabold text-amber-600">{expiredCount}</span>
+          <span className="text-2xl font-extrabold text-slate-600">{expiredCount}</span>
         </div>
       </div>
 
@@ -284,7 +284,7 @@ export default function Subscriptions() {
                           <UsersIcon className="w-3 h-3 text-slate-400" />
                           {employees} COLABORADORES
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[10px]">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold text-[10px]">
                           🟢 {activeCountCompany} ATIVA
                         </span>
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold text-[10px]">
@@ -340,7 +340,7 @@ export default function Subscriptions() {
                       </div>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-slate-500 font-medium">Colaboradores:</span>
-                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{employees}</span>
+                        <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">{employees}</span>
                       </div>
                     </div>
                   </div>
@@ -363,8 +363,8 @@ export default function Subscriptions() {
                           {/* Left: ID, Plan Name & Badges */}
                           <div className="flex items-center gap-3">
                             <span className="text-xs font-mono font-bold text-slate-400">#{idx + 1}</span>
-                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
-                              <Zap className="w-4 h-4 fill-amber-400" />
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 border border-purple-200/60 flex items-center justify-center shrink-0">
+                              <Zap className="w-4 h-4 fill-purple-600" />
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-slate-900 text-xs">{planLabel}</span>
@@ -376,7 +376,7 @@ export default function Subscriptions() {
                                   RECENTE
                                 </span>
                               )}
-                              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[10px] uppercase">
+                              <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold text-[10px] uppercase">
                                 TRIAL {sub.durationDays || 30} DIAS
                               </span>
                               <span className="text-[10px] font-mono text-slate-400">
@@ -393,7 +393,7 @@ export default function Subscriptions() {
                             </div>
 
                             <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold ${
-                              isActive ? "bg-emerald-100/80 text-emerald-800" : "bg-rose-100/80 text-rose-800"
+                              isActive ? "bg-purple-100 text-purple-800" : "bg-slate-200 text-slate-700"
                             }`}>
                               {isActive ? "ATIVA" : "EXPIRADA"}
                             </span>
@@ -401,14 +401,14 @@ export default function Subscriptions() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleRenew(sub)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-2xs"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer"
                               >
                                 <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
                                 RENOVAR
                               </button>
                               <button
                                 onClick={() => handleChangePlan(sub)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
                               >
                                 ⚙️ MUDAR
                               </button>
@@ -449,7 +449,7 @@ export default function Subscriptions() {
               <button onClick={() => setShowRenewModal(false)} className="flex-1 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">
                 Cancelar
               </button>
-              <button onClick={confirmRenewal} disabled={isLoading} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
+              <button onClick={confirmRenewal} disabled={isLoading} className="flex-1 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer">
                 {isLoading ? "Renovando..." : "Confirmar Renovação"}
               </button>
             </div>
@@ -489,7 +489,7 @@ export default function Subscriptions() {
               <button onClick={() => setShowChangePlanModal(false)} className="flex-1 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">
                 Cancelar
               </button>
-              <button onClick={confirmChangePlan} disabled={isLoading} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
+              <button onClick={confirmChangePlan} disabled={isLoading} className="flex-1 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer">
                 {isLoading ? "A Alterar..." : "Salvar Alterações"}
               </button>
             </div>

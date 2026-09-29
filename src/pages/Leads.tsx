@@ -152,11 +152,11 @@ export default function Leads() {
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Registados Hoje</span>
-          <span className="text-2xl font-extrabold text-emerald-600">{stats.registadosHoje}</span>
+          <span className="text-2xl font-extrabold text-purple-700">{stats.registadosHoje}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Autorizados RGPD</span>
-          <span className="text-2xl font-extrabold text-indigo-600">{stats.comConsentimento}</span>
+          <span className="text-2xl font-extrabold text-purple-700">{stats.comConsentimento}</span>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ export default function Leads() {
                 <tr key={lead.id} className="hover:bg-slate-100/60 transition-colors">
                   <td className="py-4 px-6 font-bold text-slate-900">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                      <div className="w-7 h-7 rounded-lg bg-purple-700 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
                         {(lead.nome || "L").charAt(0).toUpperCase()}
                       </div>
                       <span>{lead.nome}</span>
@@ -217,7 +217,7 @@ export default function Leads() {
                   <td className="py-4 px-6 text-center font-bold text-slate-800">{lead.totalSimulacoes || 0}</td>
                   <td className="py-4 px-6 text-center">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium ${
-                      lead.consentimento ? "bg-emerald-100/70 text-emerald-800" : "bg-slate-200/70 text-slate-700"
+                      lead.consentimento ? "bg-purple-100 text-purple-800" : "bg-slate-200 text-slate-700"
                     }`}>
                       {lead.consentimento ? "Autorizado" : "Não"}
                     </span>

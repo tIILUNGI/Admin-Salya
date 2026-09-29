@@ -380,72 +380,61 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0718] flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
-      {/* Glow Effects matching Salya Logo */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-900/30 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 font-sans">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-purple-950/40 relative z-10"
+        transition={{ duration: 0.25 }}
+        className="w-full max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row border border-slate-200/60"
       >
-        {/* Left Branding Box - Official Purple Identity (#8e34eb / #7c3aed) */}
-        <div className="bg-linear-to-br from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white md:w-1/2 p-8 sm:p-12 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-75 md:min-h-115">
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col items-center my-auto">
-            <div className="bg-white p-4 rounded-2xl shadow-2xl border border-white/20 mb-6 flex items-center justify-center">
+        {/* Left Branding Box */}
+        <div className="bg-gradient-to-br from-[#7c3aed] via-[#6d28d9] to-[#5b21b6] text-white md:w-5/12 p-10 flex flex-col justify-center items-center text-center min-h-56 md:min-h-auto">
+          <div className="flex flex-col items-center gap-5">
+            {/* Logo em caixa branca arredondada — igual à imagem */}
+            <div className="bg-white rounded-2xl shadow-lg px-6 py-4 flex items-center justify-center">
               <img 
                 src="/logo.png" 
                 alt="Salya Logo" 
-                className="h-12 w-auto object-contain" 
+                className="h-9 w-auto object-contain" 
               />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white mb-2">SALYA ADMIN</h1>
-            <p className="text-xs text-purple-100 max-w-xs font-medium leading-relaxed">
-              Painel Corporativo de Gestão de Subscrições, Empresas e Auditoria
-            </p>
-          </div>
-
-          <div className="relative z-10 text-[10px] text-purple-200/80 font-medium tracking-wide">
-            © Salya Payroll. Todos os direitos reservados.
+            {/* Título SALYA ADMIN */}
+            <div className="text-lg font-black text-white tracking-[0.25em] uppercase">
+              SALYA ADMIN
+            </div>
           </div>
         </div>
 
         {/* Right Form Box */}
-        <div className="flex flex-col justify-center p-8 sm:p-12 bg-white md:w-1/2 text-xs">
+        <div className="flex flex-col justify-center p-8 sm:p-10 bg-white md:w-7/12">
           <div className="mb-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-full font-bold mb-3 border border-purple-100">
-              <Shield className="w-3.5 h-3.5 text-purple-600" /> Área Reservada
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900">Acesso Restrito</h2>
-            <p className="text-slate-500 mt-1 font-medium">Introduza as suas credenciais de administrador.</p>
+            <h2 className="text-xl font-bold text-slate-900">Acesso Restrito</h2>
+            <p className="text-xs text-slate-400 mt-1 font-medium">Introduza as suas credenciais de administrador.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1.5">Email Profissional</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Email Profissional</label>
               <div className="relative">
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-600 font-medium text-slate-900 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-500 text-xs font-medium text-slate-900 transition-all"
                   placeholder="admin@salya.ao"
                 />
-                <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block font-semibold text-slate-700">Palavra-passe</label>
+                <label className="block text-xs font-semibold text-slate-600">Palavra-passe</label>
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-[11px] font-semibold text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+                  className="text-[11px] font-semibold text-purple-500 hover:text-purple-700 hover:underline transition-colors"
                 >
                   Esqueceu a palavra-passe?
                 </button>
@@ -456,13 +445,13 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-600 font-medium text-slate-900 transition-all"
-                  placeholder="••••••••"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-10 outline-none focus:bg-white focus:border-purple-500 text-xs font-medium text-slate-900 transition-all"
+                  placeholder="••••••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -470,7 +459,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl font-medium">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-xl text-xs font-medium">
                 {error}
               </div>
             )}
@@ -478,10 +467,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 mt-2 cursor-pointer"
+              className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-1 cursor-pointer shadow-sm"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-              {isLoading ? "A Autenticar..." : "Iniciar Sessão"}
+              <span className="text-sm">{isLoading ? "A Autenticar..." : "Iniciar Sessão"}</span>
             </button>
           </form>
         </div>

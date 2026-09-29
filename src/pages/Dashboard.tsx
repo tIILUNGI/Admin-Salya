@@ -59,12 +59,12 @@ export default function Dashboard() {
       });
 
       const planColors: Record<string, string> = {
-        "Plano Demo": "#818cf8",
-        "DEMO": "#818cf8",
-        "Micro Empresa": "#4f46e5",
-        "Profissional": "#06b6d4",
-        "Enterprise": "#10b981",
-        "CORPORATIVO": "#8b5cf6"
+        "Plano Demo": "#a78bfa",
+        "DEMO": "#a78bfa",
+        "Micro Empresa": "#7e22ce",
+        "Profissional": "#6d28d9",
+        "Enterprise": "#4c1d95",
+        "CORPORATIVO": "#9333ea"
       };
 
       const companiesByPlanChart = Object.keys(planCounts).length > 0
@@ -74,10 +74,10 @@ export default function Dashboard() {
             fill: planColors[name] || "#6366f1"
           }))
         : [
-            { name: 'Plano Demo', count: companies.filter(c => c.plan === 'DEMO').length || 1, fill: '#818cf8' },
-            { name: 'Micro Empresa', count: companies.filter(c => !c.plan || c.plan === 'Micro Empresa').length || companies.length || 1, fill: '#4f46e5' },
-            { name: 'Profissional', count: companies.filter(c => c.plan === 'Profissional').length || 0, fill: '#06b6d4' },
-            { name: 'Enterprise', count: companies.filter(c => c.plan === 'Enterprise').length || 0, fill: '#10b981' }
+            { name: 'Plano Demo', count: companies.filter(c => c.plan === 'DEMO').length || 1, fill: '#a78bfa' },
+            { name: 'Micro Empresa', count: companies.filter(c => !c.plan || c.plan === 'Micro Empresa').length || companies.length || 1, fill: '#7e22ce' },
+            { name: 'Profissional', count: companies.filter(c => c.plan === 'Profissional').length || 0, fill: '#6d28d9' },
+            { name: 'Enterprise', count: companies.filter(c => c.plan === 'Enterprise').length || 0, fill: '#4c1d95' }
           ];
 
       // Dynamic New Companies (Last 6 months)
@@ -229,10 +229,10 @@ export default function Dashboard() {
   ];
 
   const companiesByPlanData = data?.companiesByPlanChart || [
-    { name: 'Plano Demo', count: 8, fill: '#818cf8' },
-    { name: 'Micro Empresa', count: 12, fill: '#4f46e5' },
-    { name: 'Profissional', count: 5, fill: '#06b6d4' },
-    { name: 'Enterprise', count: 2, fill: '#10b981' }
+    { name: 'Plano Demo', count: 8, fill: '#a78bfa' },
+    { name: 'Micro Empresa', count: 12, fill: '#7e22ce' },
+    { name: 'Profissional', count: 5, fill: '#6d28d9' },
+    { name: 'Enterprise', count: 2, fill: '#4c1d95' }
   ];
 
   return (
@@ -241,7 +241,6 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Visão geral do Painel Admin</h1>
-          <p className="text-xs text-slate-500 font-medium">Gestão centralizada de empresas, receitas e subscrições Salya.</p>
         </div>
 
         {/* Botões de Ações Rápidas */}
@@ -255,7 +254,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => navigate("/companies")}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
           >
             <Plus className="w-4 h-4" />
             Criar Empresa
@@ -264,14 +263,14 @@ export default function Dashboard() {
             onClick={() => navigate("/subscriptions")}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-2xs"
           >
-            <CreditCard className="w-4 h-4 text-indigo-600" />
+            <CreditCard className="w-4 h-4 text-purple-700" />
             Atribuir Subscrição
           </button>
           <button
             onClick={() => navigate("/payments")}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-2xs"
           >
-            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <DollarSign className="w-4 h-4 text-purple-700" />
             Validar Pagamento
           </button>
           <button
@@ -299,11 +298,11 @@ export default function Dashboard() {
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{metrics.totalCompanies}</span>
               </div>
-              <span className="text-xs font-semibold text-emerald-600 mt-2 block">
-                +5 novas este mês
+              <span className="text-xs font-medium text-slate-400 mt-2 block">
+                empresas registadas
               </span>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <Building2 className="w-5 h-5" />
             </div>
           </motion.div>
@@ -325,7 +324,7 @@ export default function Dashboard() {
                 {metrics.totalCompanies} empresas totais
               </span>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <CreditCard className="w-5 h-5" />
             </div>
           </motion.div>
@@ -365,11 +364,11 @@ export default function Dashboard() {
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{metrics.expiringSoon || 0}</span>
               </div>
-              <span className="text-xs font-semibold text-amber-600 mt-2 block">
+              <span className="text-xs font-semibold text-purple-700 mt-2 block">
                 nos próximos 7 dias
               </span>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <Clock className="w-5 h-5" />
             </div>
           </motion.div>
@@ -394,18 +393,18 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Ativas */}
               <div className="bg-slate-50/60 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="text-[11px] font-medium text-slate-500 block">Ativas</span>
-                  <span className="text-xl font-bold text-emerald-600">{metrics.activeSubscriptions}</span>
+                  <span className="text-xl font-bold text-purple-700">{metrics.activeSubscriptions}</span>
                 </div>
               </div>
 
               {/* Expiram em 7 dias */}
               <div className="bg-slate-50/60 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-100/80 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
@@ -416,12 +415,12 @@ export default function Dashboard() {
 
               {/* Expiradas */}
               <div className="bg-slate-50/60 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-rose-100/80 text-rose-600 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0">
                   <XCircle className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="text-[11px] font-medium text-slate-500 block">Expiradas</span>
-                  <span className="text-xl font-bold text-rose-600">{metrics.expiredSubscriptions}</span>
+                  <span className="text-xl font-bold text-slate-800">{metrics.expiredSubscriptions}</span>
                 </div>
               </div>
             </div>
@@ -475,10 +474,10 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <TrendingUp className="w-4 h-4 text-purple-700" />
                 <h3 className="text-sm font-bold text-slate-900">Evolução de Receita</h3>
               </div>
-              <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+              <span className="text-xs font-extrabold text-purple-700 bg-purple-100 px-2.5 py-1 rounded-lg">
                 {formatCurrency(metrics.monthlyRevenue || 850000)} /mês
               </span>
             </div>
@@ -488,8 +487,8 @@ export default function Dashboard() {
                 <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradRevenueDash" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.85}/>
-                      <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                      <stop offset="0%" stopColor="#9333ea" stopOpacity={0.85}/>
+                      <stop offset="100%" stopColor="#9333ea" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -502,12 +501,12 @@ export default function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="valor"
-                    stroke="#4f46e5"
+                    stroke="#9333ea"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#gradRevenueDash)"
-                    dot={{ fill: '#4f46e5', r: 4, strokeWidth: 2, stroke: '#fff' }}
-                    activeDot={{ r: 6, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ fill: '#9333ea', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 6, fill: '#9333ea', strokeWidth: 2, stroke: '#fff' }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -523,7 +522,7 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <PieChartIcon className="w-4 h-4 text-indigo-600" />
+                <PieChartIcon className="w-4 h-4 text-purple-700" />
                 <h3 className="text-sm font-bold text-slate-900">Empresas por Plano</h3>
               </div>
               <span className="text-xs font-semibold text-slate-500">Distribuição Ativa</span>
@@ -575,21 +574,21 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-linear-to-br from-indigo-900 via-slate-900 to-indigo-950 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-xl"
+          className="bg-linear-to-br from-purple-900 via-slate-900 to-slate-950 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-xl"
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div>
-              <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest block">Receita & Subscrições Corporativas</span>
+              <span className="text-xs font-bold text-purple-300 uppercase tracking-widest block">Receita & Subscrições Corporativas</span>
               <h3 className="text-2xl font-black text-white mt-1">Faturação Total Salya SaaS</h3>
               <p className="text-slate-300 text-sm mt-1">Visão integrada das métricas de faturação e subscrições ativas.</p>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/10">
-                <span className="text-[10px] font-bold text-indigo-300 uppercase block">Receita Estimada</span>
+                <span className="text-[10px] font-bold text-purple-300 uppercase block">Receita Estimada</span>
                 <span className="text-xl font-extrabold text-white">{formatCurrency(metrics.monthlyRevenue || 850000)}</span>
               </div>
               <div className="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/10">
-                <span className="text-[10px] font-bold text-indigo-300 uppercase block">Acumulado Anual</span>
+                <span className="text-[10px] font-bold text-purple-300 uppercase block">Acumulado Anual</span>
                 <span className="text-xl font-extrabold text-white">{formatCurrency(metrics.annualRevenue || 10200000)}</span>
               </div>
             </div>
@@ -646,7 +645,7 @@ export default function Dashboard() {
                 <div className="text-left md:text-right text-xs text-slate-500">
                   <p><strong className="text-slate-700">Data de Emissão:</strong> {formatDate(new Date().toISOString())}</p>
                   <p><strong className="text-slate-700">Emissor:</strong> Administração do Sistema</p>
-                  <p><strong className="text-slate-700">Estado do Sistema:</strong> <span className="text-emerald-600 font-bold">100% Operacional</span></p>
+                  <p><strong className="text-slate-700">Estado do Sistema:</strong> <span className="text-purple-700 font-bold">100% Operacional</span></p>
                 </div>
               </div>
 
@@ -658,17 +657,17 @@ export default function Dashboard() {
                     <span className="text-[11px] font-bold text-slate-500 block">Total de Empresas</span>
                     <span className="text-2xl font-black text-slate-900">{metrics.totalCompanies}</span>
                   </div>
-                  <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
-                    <span className="text-[11px] font-bold text-emerald-700 block">Subscrições Ativas</span>
-                    <span className="text-2xl font-black text-emerald-900">{metrics.activeSubscriptions}</span>
+                  <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                    <span className="text-[11px] font-bold text-purple-700 block">Subscrições Ativas</span>
+                    <span className="text-2xl font-black text-purple-900">{metrics.activeSubscriptions}</span>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
                     <span className="text-[11px] font-bold text-purple-700 block">Receita Mensal Reais</span>
                     <span className="text-2xl font-black text-purple-900">{formatCurrency(metrics.monthlyRevenue)}</span>
                   </div>
-                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
-                    <span className="text-[11px] font-bold text-blue-700 block">Acumulado Anual</span>
-                    <span className="text-2xl font-black text-blue-900">{formatCurrency(metrics.annualRevenue)}</span>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span className="text-[11px] font-bold text-slate-700 block">Acumulado Anual</span>
+                    <span className="text-2xl font-black text-slate-900">{formatCurrency(metrics.annualRevenue)}</span>
                   </div>
                 </div>
               </div>
@@ -711,7 +710,7 @@ export default function Dashboard() {
                         <td className="p-3">TOTAL GERAL</td>
                         <td className="p-3 text-center">{metrics.totalCompanies}</td>
                         <td className="p-3 text-right">100%</td>
-                        <td className="p-3 text-right text-emerald-600">Consolidado</td>
+                        <td className="p-3 text-right text-purple-700 font-bold">Consolidado</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -736,7 +735,7 @@ export default function Dashboard() {
                           <td className="p-3 font-semibold text-slate-900">{item.month}</td>
                           <td className="p-3 text-right font-extrabold text-slate-900">{formatCurrency(item.valor)}</td>
                           <td className="p-3 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px]">
+                            <span className="px-2 py-0.5 bg-purple-100 text-purple-800 font-bold rounded-full text-[10px]">
                               Validado
                             </span>
                           </td>

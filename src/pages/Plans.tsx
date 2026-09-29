@@ -134,7 +134,7 @@ export default function Plans() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Planos de Subscrição</h1>
         <button
           onClick={() => openModal()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Novo Plano
@@ -155,9 +155,9 @@ export default function Plans() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  plan.type === 'DEMO' ? 'bg-emerald-50 border border-emerald-100 text-emerald-600' :
-                  plan.type === 'CORPORATIVO' ? 'bg-purple-50 border border-purple-100 text-purple-600' :
-                  'bg-indigo-50 border border-indigo-100 text-indigo-600'
+                  plan.type === 'DEMO' ? 'bg-purple-50 border border-purple-100 text-purple-700' :
+                  plan.type === 'CORPORATIVO' ? 'bg-purple-50 border border-purple-100 text-purple-700' :
+                  'bg-purple-50 border border-purple-100 text-purple-700'
                 }`}>
                   <Package className="w-5 h-5" />
                 </div>
@@ -181,10 +181,9 @@ export default function Plans() {
 
               <div className="mb-1">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide mb-2 ${
-                  plan.type === 'DEMO' ? 'bg-emerald-100/70 text-emerald-700' :
-                  plan.type === 'CORPORATIVO' ? 'bg-purple-100/70 text-purple-700' :
-                  plan.type === 'ANUAL' ? 'bg-blue-100/70 text-blue-700' :
-                  'bg-indigo-100/70 text-indigo-700'
+                  plan.type === 'DEMO' ? 'bg-purple-100 text-purple-800' :
+                  plan.type === 'CORPORATIVO' ? 'bg-purple-100 text-purple-800' :
+                  'bg-purple-100 text-purple-800'
                 }`}>{plan.type}</span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-3">{plan.name}</h3>
@@ -193,7 +192,7 @@ export default function Plans() {
               <div className="mb-5 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                 {plan.type === 'DEMO' ? (
                   <div>
-                    <span className="text-2xl font-black text-emerald-600">Gratuito</span>
+                    <span className="text-2xl font-black text-purple-700">Gratuito</span>
                     <span className="text-xs text-slate-400 font-medium block mt-0.5">Período de avaliação</span>
                   </div>
                 ) : (
@@ -206,7 +205,7 @@ export default function Plans() {
                     <div className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-200/50 text-[11px]">
                       <div>
                         <span className="text-slate-400 block font-medium">Mensal est.</span>
-                        <span className="font-bold text-indigo-600">{formatCurrency(Math.round(plan.price / (plan.durationDays / 30)))}</span>
+                        <span className="font-bold text-purple-700">{formatCurrency(Math.round(plan.price / (plan.durationDays / 30)))}</span>
                       </div>
                       <div className="w-px h-6 bg-slate-200" />
                       <div>
@@ -220,20 +219,20 @@ export default function Plans() {
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-slate-600">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-purple-700 shrink-0" />
                   <span>{plan.maxEntidades || 1} Entidade(s)</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-purple-700 shrink-0" />
                   <span>{plan.maxUtilizadores >= 999 ? 'Utilizadores Ilimitados' : `${plan.maxUtilizadores || 1} Utilizador(es)`}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-purple-700 shrink-0" />
                   <span>Validade de {plan.durationDays} dias</span>
                 </div>
                 {(plan.maxFuncionarios || plan.maxColaboradores) && (
                   <div className="flex items-center gap-2 text-slate-600">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-purple-700 shrink-0" />
                     <span>Até {plan.maxFuncionarios || plan.maxColaboradores} Colaboradores</span>
                   </div>
                 )}
@@ -242,7 +241,7 @@ export default function Plans() {
 
             <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                plan.active ? "bg-emerald-100/70 text-emerald-800" : "bg-slate-200/70 text-slate-700"
+                plan.active ? "bg-purple-100 text-purple-800" : "bg-slate-200 text-slate-700"
               }`}>
                 {plan.active ? "Disponível" : "Indisponível"}
               </span>
@@ -334,14 +333,14 @@ export default function Plans() {
                   type="checkbox" 
                   checked={formData.active}
                   onChange={e => setFormData({ ...formData, active: e.target.checked })}
-                  className="w-4 h-4 text-indigo-600 rounded cursor-pointer"
+                  className="w-4 h-4 text-purple-700 rounded cursor-pointer"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-xs"
+                className="w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl transition-all shadow-xs cursor-pointer"
               >
                 {isLoading ? "A guardar..." : "Guardar Plano"}
               </button>

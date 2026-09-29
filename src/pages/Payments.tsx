@@ -192,11 +192,11 @@ export default function Payments() {
       <div className="flex items-center gap-8 py-2 border-b border-slate-200/80">
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Total Confirmado</span>
-          <span className="text-2xl font-extrabold text-emerald-600">{formatCurrency(totalPaid)}</span>
+          <span className="text-2xl font-extrabold text-purple-700">{formatCurrency(totalPaid)}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Pendente</span>
-          <span className="text-2xl font-extrabold text-amber-600">{formatCurrency(totalPending)}</span>
+          <span className="text-2xl font-extrabold text-slate-600">{formatCurrency(totalPending)}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Transações</span>
@@ -256,7 +256,7 @@ export default function Payments() {
                     </td>
                     <td className="py-4 px-6 text-center">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium ${
-                        isConfirmed ? "bg-emerald-100/70 text-emerald-800" : isPending ? "bg-amber-100/70 text-amber-800" : "bg-slate-200/70 text-slate-700"
+                        isConfirmed ? "bg-purple-100 text-purple-800" : isPending ? "bg-slate-200 text-slate-700" : "bg-slate-200 text-slate-700"
                       }`}>
                         {isConfirmed ? "Validado" : isPending ? "Pendente" : pay.status}
                       </span>
@@ -269,7 +269,7 @@ export default function Payments() {
                         {isPending && (
                           <button
                             onClick={() => handleConfirmPayment(pay.reference)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" /> Validar
                           </button>
@@ -313,7 +313,7 @@ export default function Payments() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-slate-400 block font-medium">Valor</span>
-                  <span className="font-bold text-emerald-600 text-sm">{formatCurrency(selectedPayment.amount)}</span>
+                  <span className="font-bold text-purple-700 text-sm">{formatCurrency(selectedPayment.amount)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-medium">Método</span>

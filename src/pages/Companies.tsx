@@ -200,7 +200,7 @@ export default function Companies() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Empresas Registadas</h1>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shadow-2xs"
         >
           <Plus className="w-4 h-4" />
           Nova Empresa
@@ -215,15 +215,15 @@ export default function Companies() {
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Com acesso</span>
-          <span className="text-2xl font-extrabold text-emerald-600">{withAccessCount}</span>
+          <span className="text-2xl font-extrabold text-slate-800">{withAccessCount}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Sem acesso</span>
-          <span className="text-2xl font-extrabold text-amber-600">{withoutAccessCount}</span>
+          <span className="text-2xl font-extrabold text-slate-500">{withoutAccessCount}</span>
         </div>
         <div>
           <span className="text-xs font-medium text-slate-400 block mb-1">Suspensas</span>
-          <span className="text-2xl font-extrabold text-rose-600">{suspendedCount}</span>
+          <span className="text-2xl font-extrabold text-slate-400">{suspendedCount}</span>
         </div>
       </div>
 
@@ -236,7 +236,7 @@ export default function Companies() {
             placeholder="Pesquisar empresa, NIF ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-purple-600 transition-all"
           />
         </div>
 
@@ -284,7 +284,7 @@ export default function Companies() {
                             className="w-8 h-8 rounded-lg object-cover border border-slate-200" 
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-purple-100 border border-purple-200 text-purple-700 flex items-center justify-center font-black text-xs shadow-2xs">
+                          <div className="w-8 h-8 rounded-lg bg-purple-100 border border-purple-200 text-purple-800 flex items-center justify-center font-black text-xs shrink-0">
                             {companyInitial}
                           </div>
                         )}
@@ -319,11 +319,11 @@ export default function Companies() {
                     </td>
                     <td className="py-4 px-6 text-center">
                       {isSuspended ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-rose-100/70 text-rose-700">Suspensa</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-slate-200 text-slate-600">Suspensa</span>
                       ) : isExpired ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium bg-amber-100/70 text-amber-800">Expirada</span>
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium bg-slate-200 text-slate-600">Expirada</span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-100/70 text-emerald-800">Ativa</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-slate-900 text-white">Ativa</span>
                       )}
                     </td>
                     <td className="py-4 px-6 hidden lg:table-cell">
@@ -336,7 +336,7 @@ export default function Companies() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleToggleStatus(company.id, company.status)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
                         >
                           <Calendar className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Renovar</span>
@@ -455,7 +455,7 @@ export default function Companies() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-xs mt-2"
+                className="w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl transition-all shadow-xs mt-2 cursor-pointer"
               >
                 {isLoading ? "A Registar..." : "Registar Empresa"}
               </button>
@@ -504,7 +504,7 @@ export default function Companies() {
             <div className="flex gap-3 pt-4 border-t border-slate-100">
               <button
                 onClick={() => handleToggleStatus(selectedCompany.id, selectedCompany.status)}
-                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all"
+                className="flex-1 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-all cursor-pointer"
               >
                 {selectedCompany.status === "active" ? "Suspender Empresa" : "Ativar Acesso"}
               </button>
