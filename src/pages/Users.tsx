@@ -26,14 +26,25 @@ export default function Users() {
   }, []);
 
   const fetchUsers = () => {
-    apiGet("/admin/users")
-      .then(res => res.json())
-      .then(usersData => {
-        apiGet("/admin/companies")
-          .then(res => res.json())
-          .then(companiesData => {
-            const companiesList = Array.isArray(companiesData) ? companiesData : [];
+    Promise.allSettled([
+      apiGet("/admin/users").then(res => res.json()),
+      apiGet("/admin/companies").then(res => res.json())
+    ]).then(([usersResult, companiesResult]) => {
+      if (usersResult.status === "rejected") {
+        setUsers([]);
+        return;
+      }
+
+      const usersData = usersResult.value;
+      if (companiesResult.status === "rejected") {
+        setCompanies({});
+        setUsers(Array.isArray(usersData) ? usersData : []);
+        return;
+      }
+
+      const companiesList = Array.isArray(companiesResult.value) ? companiesResult.value : [];
             const companiesMap: Record<string, any> = {};
+            const companiesByOwnerEmail = new Map<string, any>();
 
             companiesList.forEach((company: any) => {
               if (company.id !== undefined && company.id !== null) {
@@ -48,6 +59,12 @@ export default function Users() {
               if (company.email) {
                 companiesMap[`email_${String(company.email).toLowerCase()}`] = company;
               }
+              [company.ownerEmail, company.userEmail].forEach((email: string | undefined) => {
+                const normalizedEmail = email?.toLowerCase().trim();
+                if (normalizedEmail && !companiesByOwnerEmail.has(normalizedEmail)) {
+                  companiesByOwnerEmail.set(normalizedEmail, company);
+                }
+              });
             });
             setCompanies(companiesMap);
 
@@ -101,10 +118,7 @@ export default function Users() {
 
                   // 4. Strict owner email match (only if explicit ID was missing)
                   if (!resolvedCompanyName && user.email) {
-                    const foundByEmail = companiesList.find((c: any) =>
-                      (c.ownerEmail && c.ownerEmail.toLowerCase().trim() === user.email.toLowerCase().trim()) ||
-                      (c.userEmail && c.userEmail.toLowerCase().trim() === user.email.toLowerCase().trim())
-                    );
+                    const foundByEmail = companiesByOwnerEmail.get(user.email.toLowerCase().trim());
                     if (foundByEmail) {
                       resolvedCompanyName = foundByEmail.name || foundByEmail.nomeComercial || foundByEmail.companyName || null;
                     }
@@ -119,13 +133,7 @@ export default function Users() {
             })();
 
             setUsers(enrichedUsers);
-          })
-          .catch(() => {
-            setCompanies({});
-            setUsers(Array.isArray(usersData) ? usersData : []);
-          });
-      })
-      .catch(() => setUsers([]));
+    });
   };
 
   useEffect(() => {

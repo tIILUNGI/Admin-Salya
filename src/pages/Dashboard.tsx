@@ -3,9 +3,12 @@ import { TrendingUp, Building2, Clock, Users, CheckCircle2, CreditCard, XCircle,
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, LabelList } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency, formatDate } from "../lib/formatters";
-import { apiGet } from "../lib/api";
+import { apiGet, getApiCacheVersion } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 import { exportCSV } from "../lib/csvExport";
+
+const DASHBOARD_CACHE_TTL_MS = 15000;
+let dashboardSnapshot: { savedAt: number; apiCacheVersion: number; data: any } | null = null;
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null);
@@ -17,7 +20,37 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
+    const cachedSnapshot = dashboardSnapshot;
+    if (
+      cachedSnapshot &&
+      Date.now() - cachedSnapshot.savedAt < DASHBOARD_CACHE_TTL_MS &&
+      cachedSnapshot.apiCacheVersion === getApiCacheVersion()
+    ) {
+      setData(cachedSnapshot.data);
+      return;
+    }
+
     try {
+      const summaryResponse = await apiGet("/admin/dashboard/summary").catch(() => null);
+      if (summaryResponse?.ok) {
+        const summary = await summaryResponse.json().catch(() => null);
+        if (summary?.metrics) {
+          const summaryData = {
+            metrics: summary.metrics,
+            newCompaniesChart: Array.isArray(summary.newCompaniesChart) ? summary.newCompaniesChart : [],
+            revenueChart: Array.isArray(summary.revenueChart) ? summary.revenueChart : [],
+            companiesByPlanChart: Array.isArray(summary.companiesByPlanChart) ? summary.companiesByPlanChart : []
+          };
+          dashboardSnapshot = {
+            savedAt: Date.now(),
+            apiCacheVersion: getApiCacheVersion(),
+            data: summaryData
+          };
+          setData(summaryData);
+          return;
+        }
+      }
+
       // Fetch dynamic system data in parallel
       const [compRes, userRes, subRes, payRes] = await Promise.allSettled([
         apiGet("/admin/companies").then(r => r.ok ? r.json() : []),
@@ -172,7 +205,7 @@ export default function Dashboard() {
             { month: months[now.getMonth()], valor: monthlyRev },
           ];
 
-      setData({
+      const dashboardData = {
         metrics: {
           totalCompanies: companies.length,
           totalUsers: users.length,
@@ -187,7 +220,13 @@ export default function Dashboard() {
         newCompaniesChart,
         revenueChart: revenueChartData,
         companiesByPlanChart
-      });
+      };
+      dashboardSnapshot = {
+        savedAt: Date.now(),
+        apiCacheVersion: getApiCacheVersion(),
+        data: dashboardData
+      };
+      setData(dashboardData);
     } catch (err) {
       console.error("Erro ao calcular métricas do dashboard:", err);
     }

@@ -27,6 +27,21 @@ const getApiBaseUrl = (): string => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+const GET_CACHE_TTL_MS = 15000;
+const GET_CACHE_MAX_ENTRIES = 100;
+const getResponseCache = new Map<string, {
+  expiresAt: number;
+  response: Promise<Response>;
+}>();
+let getResponseCacheVersion = 0;
+
+const clearGetResponseCache = () => {
+  getResponseCache.clear();
+  getResponseCacheVersion += 1;
+};
+
+export const getApiCacheVersion = () => getResponseCacheVersion;
+
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('admin_token');
 
@@ -40,11 +55,48 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const method = (config.method || 'GET').toUpperCase();
+    const isGet = method === 'GET';
+    if (!isGet) clearGetResponseCache();
+
+    const cacheKey = `${token || 'anonymous'}:${API_BASE_URL}${endpoint}`;
+    let cached = isGet ? getResponseCache.get(cacheKey) : undefined;
+    if (cached && cached.expiresAt <= Date.now()) {
+      getResponseCache.delete(cacheKey);
+      cached = undefined;
+    }
+
+    let responsePromise = cached?.response;
+    if (!responsePromise) {
+      const cacheEntry = { expiresAt: Date.now() + GET_CACHE_TTL_MS, response: Promise.resolve(new Response()) };
+      responsePromise = fetch(`${API_BASE_URL}${endpoint}`, config).then((response) => {
+        if (!response.ok) {
+          getResponseCache.delete(cacheKey);
+        } else {
+          cacheEntry.expiresAt = Date.now() + GET_CACHE_TTL_MS;
+        }
+        return response;
+      }).catch((error) => {
+        getResponseCache.delete(cacheKey);
+        throw error;
+      });
+
+      if (isGet) {
+        cacheEntry.response = responsePromise;
+        getResponseCache.set(cacheKey, cacheEntry);
+        if (getResponseCache.size > GET_CACHE_MAX_ENTRIES) {
+          const oldestKey = getResponseCache.keys().next().value;
+          if (oldestKey) getResponseCache.delete(oldestKey);
+        }
+      }
+    }
+
+    const response = (await responsePromise).clone();
 
     // Only handle 401 Unauthorized for primary protected endpoints (ignore 403 Forbidden and background polling like /notificacoes)
     if (response.status === 401 && !endpoint.startsWith('/auth') && !endpoint.includes('notificacoes')) {
       localStorage.removeItem('admin_token');
+      clearGetResponseCache();
       
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
