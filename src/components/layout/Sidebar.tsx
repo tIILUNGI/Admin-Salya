@@ -10,7 +10,8 @@ import {
   ShieldCheck,
   ChevronRight,
   ChevronLeft,
-  Mail
+  Mail,
+  Ticket
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { clsx, type ClassValue } from "clsx";
@@ -42,6 +43,7 @@ const navCategories = [
   {
     title: "Operação",
     items: [
+      { path: "/vouchers", label: "Vouchers", icon: Ticket },
       { path: "/leads", label: "Leads Folha", icon: Mail },
       { path: "/logs", label: "Auditoria & Logs", icon: ShieldCheck }
     ]

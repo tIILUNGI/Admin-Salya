@@ -16,6 +16,7 @@ const Plans = lazy(() => import("./pages/Plans"));
 const Logs = lazy(() => import("./pages/Logs"));
 const Leads = lazy(() => import("./pages/Leads"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Vouchers = lazy(() => import("./pages/Vouchers"));
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -52,6 +53,7 @@ export default function App() {
                   <Route path="subscriptions" element={<Subscriptions />} />
                   <Route path="payments" element={<Payments />} />
                   <Route path="plans" element={<Plans />} />
+                  <Route path="vouchers" element={<Vouchers />} />
                   <Route path="logs" element={<Logs />} />
                   <Route path="leads" element={<Leads />} />
                   <Route path="profile" element={<Profile />} />
